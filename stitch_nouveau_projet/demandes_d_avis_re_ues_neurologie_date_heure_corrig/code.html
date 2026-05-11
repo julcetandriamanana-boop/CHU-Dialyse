@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Demandes d'avis reçues - Neurology Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#edeeef",
+                        "surface-variant": "#e1e3e4",
+                        "on-background": "#191c1d",
+                        "background": "#f8f9fa",
+                        "primary": "#00478d",
+                        "on-tertiary-fixed": "#410003",
+                        "outline-variant": "#c2c6d4",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#f3f4f5",
+                        "secondary-container": "#d2e1f2",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed": "#001b3d",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#ffdad6",
+                        "on-surface-variant": "#424752",
+                        "primary-fixed-dim": "#a9c7ff",
+                        "outline": "#727783",
+                        "inverse-on-surface": "#f0f1f2",
+                        "secondary-fixed-dim": "#b9c8d8",
+                        "inverse-surface": "#2e3132",
+                        "surface-tint": "#005db6",
+                        "tertiary": "#940010",
+                        "on-secondary": "#ffffff",
+                        "surface": "#f8f9fa",
+                        "secondary": "#51606e",
+                        "primary-fixed": "#d6e3ff",
+                        "tertiary-container": "#bb1b21",
+                        "surface-dim": "#d9dadb",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-tertiary-fixed-variant": "#930010",
+                        "on-secondary-container": "#556472",
+                        "surface-bright": "#f8f9fa",
+                        "on-secondary-fixed": "#0e1d29",
+                        "surface-container-high": "#e7e8e9",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb3ac",
+                        "on-primary-fixed-variant": "#00468c",
+                        "on-surface": "#191c1d",
+                        "secondary-fixed": "#d5e4f5",
+                        "on-secondary-fixed-variant": "#3a4856",
+                        "on-primary-container": "#c8daff",
+                        "primary-container": "#005eb8",
+                        "on-tertiary-container": "#ffceca",
+                        "on-tertiary": "#ffffff",
+                        "inverse-primary": "#a9c7ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(24px);
+        }
+        .ambient-shadow {
+            box-shadow: 0 4px 40px rgba(25, 28, 29, 0.06);
+        }
+        /* Custom scrollbar for a cleaner medical look */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e1e3e4; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #727783; }
+        
+        /* Smooth scrolling for table body */
+        .custom-scrollbar-container {
+            scrollbar-gutter: stable;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-screen w-72 bg-slate-50 flex flex-col p-6 gap-y-4 z-50">
+<div class="flex items-center gap-3 mb-8">
+<img alt="CHU Andrainjato Logo" class="w-12 h-12 rounded-lg object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0uiGy8ScMjL6ZLQy7_SbLYlroJWfo78U1O4eeUMeLWpk2HKguGLGHHLChg1RlUhL5-GvJCkZZWJlDOGm1m0pJ-0gDFnkYrfag2UyCyUZclqEkh1ioIClAiyD5we9kq9xabonQTSOjhWFFTLF14LONOkKdpIjyyRMSMn5HDfVRrU4TD8nV9Gf9r_hXLUjFBYdKhV4HZwBuWMJuGmxbqw6ceHnNcWyCNRuN-PilD2vmd6ZIvO5-zBnWKhp-bAtrIxsE3YijfC_SbrT5A" style=""/>
+<div>
+<h2 class="text-lg font-bold text-blue-900 leading-tight uppercase" style="">CHU Andrainjato</h2>
+<p class="text-[10px] text-slate-500 font-bold tracking-widest uppercase" style="">Fianarantsoa</p>
+</div>
+</div>
+<nav class="flex flex-col gap-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 transition-colors rounded-lg font-manrope font-semibold tracking-tight text-sm" href="#" style="">
+<span class="material-symbols-outlined" style="">dashboard</span>
+            Tableau de bord
+        </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 transition-colors rounded-lg font-manrope font-semibold tracking-tight text-sm" href="#" style="">
+<span class="material-symbols-outlined" style="">psychiatry</span>Demandes d'avis</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 transition-colors rounded-lg font-manrope font-semibold tracking-tight text-sm" href="#" style="">
+<span class="material-symbols-outlined" style="">water_drop</span>
+            Dialyses effectuées
+        </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 transition-colors rounded-lg font-manrope font-semibold tracking-tight text-sm" href="#" style="">
+<span class="material-symbols-outlined" style="">event</span>
+            Rendez-vous
+        </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 transition-colors rounded-lg font-manrope font-semibold tracking-tight text-sm" href="#" style="">
+<span class="material-symbols-outlined" style="">inventory_2</span>
+            Archives
+        </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 transition-colors rounded-lg font-manrope font-semibold tracking-tight text-sm" href="#" style="">
+<span class="material-symbols-outlined" style="">description</span>
+            Rapports
+        </a>
+</nav>
+<div class="mt-auto">
+<div class="flex items-center gap-3 p-2 bg-slate-100 rounded-xl">
+<img alt="Clinique Profile" class="w-10 h-10 rounded-lg object-cover" data-alt="professional headshot of a mature male doctor in white clinical attire with a calm and confident expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLPM50xQhG_A1queZciBtttxCs9_VcQ__c-5d5rqi7UL3C8K7hHYah_h7FbooFP7o-MDdj5hXmxVzrjSEeimT4jRTkGs_hvl9QOT_iewd699-dc9LLwFceIMHjMM5g4zcns68oUszNwXgVAzaaifnefdvtHhg_DSjDCsN3eZxClfpQO98Hr0N19MOJzbuF2WO9KBpEXV1KpSTi4UNT-1Q5CJgwG8c_LYdKnAAUuoiiSID4opDatWZhJVnFtsUUuQgXm9w7tDq_ChHR" style=""/>
+<div class="overflow-hidden">
+<p class="text-xs font-bold text-on-surface truncate" style="">Clinique Utilisateur</p>
+<p class="text-[10px] text-slate-500 truncate" style="">service@chu-andrainjato.mg</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-72 h-20 bg-white/80 backdrop-blur-xl flex justify-between items-center px-10 w-full z-40 shadow-sm shadow-blue-900/5">
+<div class="flex items-center bg-surface-container-low px-4 py-2 rounded-full w-96 group focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+<span class="material-symbols-outlined text-outline" style="">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-full font-body placeholder:text-outline" placeholder="Rechercher un dossier ou un patient..." type="text"/>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<button class="hover:bg-blue-50 rounded-full p-2 text-slate-500 transition-colors relative" style="">
+<span class="material-symbols-outlined" style="">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-tertiary rounded-full border-2 border-white"></span>
+</button>
+<button class="hover:bg-blue-50 rounded-full p-2 text-slate-500 transition-colors" style="">
+<span class="material-symbols-outlined" style="">chat_bubble</span>
+</button>
+<button class="hover:bg-blue-50 rounded-full p-2 text-slate-500 transition-colors" style="">
+<span class="material-symbols-outlined" style="">settings</span>
+</button>
+</div>
+<div class="h-8 w-px bg-surface-variant"></div>
+<div class="flex items-center gap-3">
+<p class="text-sm font-semibold font-manrope text-blue-900" style="">Tableau de Bord</p>
+<img alt="Profile" class="w-9 h-9 rounded-full border-2 border-white shadow-sm" data-alt="Close up thumbnail of a doctor portrait for profile identification" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeCRI-dV2uAutA0iNJIuQ3rrpfexvsSWX6TN3Q-nN0g-4KADQdJALEwV84HS1DCmVIb_wTc1PbHu2vM1WmF_Q7VizxwEm7WUAtyO54QedirTbd9wpmEwfD8ew_NtRjdR9Dtd4tdhvj2_LgEB59gkFdB0Wxga452YofnlftV1LLIDDrYexPl37BUgSp4S0Rf_SZclUrtUrkTvj6uqWD6OQlj1vj_Fta73uTc_k6E8ZswmGFo1VTBsmT2wPzTlKqT3ifmNAX9EZ9br6u" style=""/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-72 pt-28 px-10 pb-12">
+<!-- Header Section -->
+<section class="mb-10 flex justify-between items-end">
+<div>
+<nav class="flex items-center gap-2 text-xs text-secondary font-medium mb-2">
+<span class="" style="">Espace Clinique</span>
+<span class="material-symbols-outlined text-xs" style="">chevron_right</span>
+<span class="text-primary font-bold" style="">Demandes d'avis</span>
+</nav>
+<h1 class="text-4xl font-extrabold text-on-surface tracking-tight" style="">Demandes d'avis reçues</h1>
+<p class="text-secondary mt-2 max-w-lg" style="">Gérez les demandes de consultation entrantes. Donnez la priorité aux alertes STAT pour assurer la continuité des soins critiques.</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-5 py-2.5 bg-surface-container-highest text-on-surface-variant rounded-md font-semibold text-sm hover:bg-surface-variant transition-colors" style="">
+<span class="material-symbols-outlined text-sm" style="">filter_list</span>
+                Filtrer
+            </button>
+<button class="flex items-center gap-2 px-5 py-2.5 bg-surface-container-highest text-on-surface-variant rounded-md font-semibold text-sm hover:bg-surface-variant transition-colors" style="">
+<span class="material-symbols-outlined text-sm" style="">file_download</span>
+                Exporter
+            </button>
+</div>
+</section>
+<!-- Bento Grid Summaries -->
+<div class="grid grid-cols-4 gap-6 mb-10">
+<div class="bg-surface-container-lowest p-6 rounded-xl ambient-shadow flex flex-col justify-between h-32 border-l-4 border-primary">
+<div class="flex justify-between items-start">
+<p class="text-xs font-bold text-secondary uppercase tracking-widest" style="">Total Demandes</p>
+<span class="material-symbols-outlined text-primary opacity-50" style="">description</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-extrabold font-headline" style="">24</span>
+<span class="text-xs text-green-600 font-bold font-body" style="">+12%</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl ambient-shadow flex flex-col justify-between h-32 border-l-4 border-amber-400">
+<div class="flex justify-between items-start">
+<p class="text-xs font-bold text-secondary uppercase tracking-widest" style="">En Attente</p>
+<span class="material-symbols-outlined text-amber-500 opacity-50" style="">hourglass_empty</span>
+</div>
+<div class="text-3xl font-extrabold font-headline" style="">09</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl ambient-shadow flex flex-col justify-between h-32 border-l-4 border-orange-500">
+<div class="flex justify-between items-start">
+<p class="text-xs font-bold text-secondary uppercase tracking-widest" style="">Urgent</p>
+<span class="material-symbols-outlined text-orange-500 opacity-50" style="">priority_high</span>
+</div>
+<div class="text-3xl font-extrabold font-headline" style="">04</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl ambient-shadow flex flex-col justify-between h-32 border-l-4 border-tertiary">
+<div class="flex justify-between items-start">
+<p class="text-xs font-bold text-secondary uppercase tracking-widest" style="">STAT</p>
+<span class="material-symbols-outlined text-tertiary animate-pulse" style="">emergency</span>
+</div>
+<div class="text-3xl font-extrabold font-headline text-tertiary" style="">02</div>
+</div>
+</div>
+<!-- Clinical Requests Table with fixed header and smooth scroll -->
+<div class="bg-surface-container-lowest rounded-xl ambient-shadow overflow-hidden border border-surface-variant/20">
+<div class="max-h-[600px] overflow-y-auto custom-scrollbar-container scroll-smooth">
+<table class="w-full text-left border-collapse min-w-[1000px]">
+<thead class="sticky top-0 z-20 bg-surface-container-low shadow-sm">
+<tr><th class="px-6 py-5 text-xs font-bold text-secondary uppercase tracking-wider font-manrope">Patient Name</th><th class="px-6 py-5 text-xs font-bold text-secondary uppercase tracking-wider font-manrope">ID</th><th class="px-6 py-5 text-xs font-bold text-secondary uppercase tracking-wider font-manrope">Age/Gender</th><th class="px-6 py-5 text-xs font-bold text-secondary uppercase tracking-wider font-manrope">Reason</th><th class="px-6 py-5 text-xs font-bold text-secondary uppercase tracking-wider font-manrope text-center">Urgency</th><th class="px-6 py-5 text-xs font-bold text-secondary uppercase tracking-wider font-manrope">DATE &amp; HEURE</th><th class="px-6 py-5 text-xs font-bold text-secondary uppercase tracking-wider font-manrope">Médecin Référent</th><th class="px-6 py-5 text-xs font-bold text-secondary uppercase tracking-wider font-manrope">Date &amp; Heure</th><th class="px-6 py-5 text-xs font-bold text-secondary uppercase tracking-wider font-manrope text-right">Actions</th></tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low"><!-- STAT Row 1 -->
+<tr class="bg-error-container/10 group transition-colors hover:bg-error-container/20"><td class="px-6 py-5"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center font-bold text-xs">MA</div><span class="font-bold text-on-surface font-manrope">Marc Andreou</span></div></td><td class="px-6 py-5 text-sm font-medium text-secondary">#NX-8821</td><td class="px-6 py-5 text-sm text-on-surface">54Y / M</td><td class="px-6 py-5 text-sm text-on-surface italic max-w-xs truncate">Encéphalopathie aiguë &amp; déséquilibre dialyse</td><td class="px-6 py-5 text-center"><span class="px-3 py-1 bg-tertiary text-white rounded-full text-[10px] font-black uppercase tracking-tighter">STAT</span></td><td class="px-6 py-5 text-sm text-on-surface font-medium">12 Oct 2023, 14:20</td><td class="px-6 py-5 text-sm text-on-surface font-medium">Dr. Sarah Méline</td><td class="px-6 py-5 text-sm text-on-surface font-medium">12 Oct 2023, 14:20</td><td class="px-6 py-5 text-right"><button class="px-4 py-1.5 border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition-all flex items-center gap-2 ml-auto"><span class="material-symbols-outlined text-sm">visibility</span> Détails</button></td></tr>
+<!-- Urgent Row -->
+<tr class="group transition-colors hover:bg-surface-container-low"><td class="px-6 py-5"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-bold text-xs">LS</div><span class="font-bold text-on-surface font-manrope">Léa Salmon</span></div></td><td class="px-6 py-5 text-sm font-medium text-secondary">#NX-4432</td><td class="px-6 py-5 text-sm text-on-surface">32Y / F</td><td class="px-6 py-5 text-sm text-on-surface italic max-w-xs truncate">Migraine sévère réfractaire post-séance</td><td class="px-6 py-5 text-center"><span class="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-[10px] font-bold uppercase tracking-tight">Urgent</span></td><td class="px-6 py-5 text-sm text-on-surface font-medium">12 Oct 2023, 12:45</td><td class="px-6 py-5 text-sm text-on-surface font-medium">Dr. Marc Laurent</td><td class="px-6 py-5 text-sm text-on-surface font-medium">12 Oct 2023, 12:45</td><td class="px-6 py-5 text-right"><button class="px-4 py-1.5 border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition-all flex items-center gap-2 ml-auto"><span class="material-symbols-outlined text-sm">visibility</span> Détails</button></td></tr>
+<!-- Normal Row -->
+<tr class="group transition-colors hover:bg-surface-container-low"><td class="px-6 py-5"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center font-bold text-xs">JP</div><span class="font-bold text-on-surface font-manrope">Jean Petit</span></div></td><td class="px-6 py-5 text-sm font-medium text-secondary">#NX-1029</td><td class="px-6 py-5 text-sm text-on-surface">67Y / M</td><td class="px-6 py-5 text-sm text-on-surface italic max-w-xs truncate">Contrôle neuropathie diabétique</td><td class="px-6 py-5 text-center"><span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] font-bold uppercase tracking-tight">Normal</span></td><td class="px-6 py-5 text-sm text-on-surface font-medium">11 Oct 2023, 16:15</td><td class="px-6 py-5 text-sm text-on-surface font-medium">Dr. Aline Russo</td><td class="px-6 py-5 text-sm text-on-surface font-medium">11 Oct 2023, 16:15</td><td class="px-6 py-5 text-right"><button class="px-4 py-1.5 border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition-all flex items-center gap-2 ml-auto"><span class="material-symbols-outlined text-sm">visibility</span> Détails</button></td></tr>
+<!-- STAT Row 2 -->
+<tr class="bg-error-container/10 group transition-colors hover:bg-error-container/20"><td class="px-6 py-5"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center font-bold text-xs">CD</div><span class="font-bold text-on-surface font-manrope">Claire Dubois</span></div></td><td class="px-6 py-5 text-sm font-medium text-secondary">#NX-5501</td><td class="px-6 py-5 text-sm text-on-surface">45Y / F</td><td class="px-6 py-5 text-sm text-on-surface italic max-w-xs truncate">Suspicion AVC hémorragique per-dialyse</td><td class="px-6 py-5 text-center"><span class="px-3 py-1 bg-tertiary text-white rounded-full text-[10px] font-black uppercase tracking-tighter">STAT</span></td><td class="px-6 py-5 text-sm text-on-surface font-medium">11 Oct 2023, 09:10</td><td class="px-6 py-5 text-sm text-on-surface font-medium">Dr. Thomas Hedi</td><td class="px-6 py-5 text-sm text-on-surface font-medium">11 Oct 2023, 09:10</td><td class="px-6 py-5 text-right"><button class="px-4 py-1.5 border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition-all flex items-center gap-2 ml-auto"><span class="material-symbols-outlined text-sm">visibility</span> Détails</button></td></tr>
+<!-- Row 5 -->
+<tr class="group transition-colors hover:bg-surface-container-low"><td class="px-6 py-5"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-bold text-xs">AM</div><span class="font-bold text-on-surface font-manrope">Arthur Martin</span></div></td><td class="px-6 py-5 text-sm font-medium text-secondary">#NX-1122</td><td class="px-6 py-5 text-sm text-on-surface">58Y / M</td><td class="px-6 py-5 text-sm text-on-surface italic max-w-xs truncate">Évaluation tremblements essentiels</td><td class="px-6 py-5 text-center"><span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] font-bold uppercase tracking-tight">Normal</span></td><td class="px-6 py-5 text-sm text-on-surface font-medium">11 Oct 2023, 11:30</td><td class="px-6 py-5 text-sm text-on-surface font-medium">Dr. Julie Becker</td><td class="px-6 py-5 text-sm text-on-surface font-medium">11 Oct 2023, 11:30</td><td class="px-6 py-5 text-right"><button class="px-4 py-1.5 border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary hover:text-white transition-all flex items-center gap-2 ml-auto"><span class="material-symbols-outlined text-sm">visibility</span> Détails</button></td></tr></tbody>
+</table>
+</div>
+<div class="p-4 bg-surface-container-low/50 flex justify-center items-center border-t border-surface-variant/30 text-xs font-semibold text-secondary italic" style="">
+    Défilez pour voir les 24 demandes
+</div>
+</div>
+<!-- Information Panel -->
+<div class="mt-8 grid grid-cols-12 gap-8">
+<div class="col-span-8">
+<div class="bg-surface-container-high p-8 rounded-2xl h-full flex flex-col justify-center">
+<div class="flex items-center gap-4 mb-4">
+<span class="material-symbols-outlined text-primary" style="">info</span>
+<h4 class="font-bold font-manrope text-xl text-on-surface" style="">Protocole STAT</h4>
+</div>
+<div class="grid grid-cols-3 gap-6">
+<div class="flex items-start gap-3">
+<span class="w-1.5 h-1.5 bg-tertiary rounded-full mt-2 shrink-0"></span>
+<p class="text-sm text-secondary font-medium" style="">Réponse requise sous 15 minutes.</p>
+</div>
+<div class="flex items-start gap-3">
+<span class="w-1.5 h-1.5 bg-primary rounded-full mt-2 shrink-0"></span>
+<p class="text-sm text-secondary font-medium" style="">Examen clinique au chevet obligatoire.</p>
+</div>
+<div class="flex items-start gap-3">
+<span class="w-1.5 h-1.5 bg-primary rounded-full mt-2 shrink-0"></span>
+<p class="text-sm text-secondary font-medium" style="">Rapport d'avis immédiat dans le dossier.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,363 @@
+<!DOCTYPE html><html class="light" lang="fr"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Archives Centrales - Vitalis Core</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<!-- Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-dim": "#d9dadb",
+                    "secondary-fixed": "#d5e4f5",
+                    "error-container": "#ffdad6",
+                    "surface-tint": "#005db6",
+                    "tertiary-fixed": "#ffdad6",
+                    "primary-container": "#005eb8",
+                    "on-background": "#191c1d",
+                    "secondary": "#51606e",
+                    "on-tertiary-fixed-variant": "#930010",
+                    "primary-fixed": "#d6e3ff",
+                    "inverse-on-surface": "#f0f1f2",
+                    "on-primary-container": "#c8daff",
+                    "inverse-primary": "#a9c7ff",
+                    "tertiary": "#940010",
+                    "on-error-container": "#93000a",
+                    "error": "#ba1a1a",
+                    "outline-variant": "#c2c6d4",
+                    "inverse-surface": "#2e3132",
+                    "on-surface": "#191c1d",
+                    "on-secondary-fixed-variant": "#3a4856",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb3ac",
+                    "secondary-container": "#d2e1f2",
+                    "on-primary-fixed": "#001b3d",
+                    "on-secondary-container": "#556472",
+                    "primary": "#00478d",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-fixed": "#410003",
+                    "on-secondary-fixed": "#0e1d29",
+                    "on-secondary": "#ffffff",
+                    "surface-variant": "#e1e3e4",
+                    "outline": "#727783",
+                    "surface-container-highest": "#e1e3e4",
+                    "surface-container-high": "#e7e8e9",
+                    "surface-bright": "#f8f9fa",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#edeeef",
+                    "tertiary-container": "#bb1b21",
+                    "secondary-fixed-dim": "#b9c8d8",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#424752",
+                    "surface-container-low": "#f3f4f5",
+                    "on-tertiary-container": "#ffceca",
+                    "surface": "#f8f9fa",
+                    "primary-fixed-dim": "#a9c7ff",
+                    "background": "#f8f9fa",
+                    "on-primary-fixed-variant": "#00468c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-manrope { font-family: 'Manrope', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(24px);
+        }
+    </style>
+<style>.custom-scrollbar::-webkit-scrollbar { width: 6px; } .custom-scrollbar::-webkit-scrollbar-track { background: transparent; } .custom-scrollbar::-webkit-scrollbar-thumb { background: #e1e3e4; border-radius: 10px; } .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #d1d3d4; }</style></head>
+<body class="bg-background text-on-surface">
+<!-- SideNavBar Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-950 flex flex-col py-6 px-4 shadow-[40px_0_40px_rgba(25,28,29,0.06)] z-50">
+<div class="mb-10 px-2 flex items-center gap-3"><img alt="CHU Andrainjato Logo" class="w-full h-auto object-contain px-2" src="https://lh3.googleusercontent.com/aida/ADBb0uiGy8ScMjL6ZLQy7_SbLYlroJWfo78U1O4eeUMeLWpk2HKguGLGHHLChg1RlUhL5-GvJCkZZWJlDOGm1m0pJ-0gDFnkYrfag2UyCyUZclqEkh1ioIClAiyD5we9kq9xabonQTSOjhWFFTLF14LONOkKdpIjyyRMSMn5HDfVRrU4TD8nV9Gf9r_hXLUjFBYdKhV4HZwBuWMJuGmxbqw6ceHnNcWyCNRuN-PilD2vmd6ZIvO5-zBnWKhp-bAtrIxsE3YijfC_SbrT5A" style=""></div>
+<nav class="flex-1 space-y-2">
+<!-- Nav Item: Tableau de bord -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-md text-slate-500 hover:bg-slate-200/50 transition-colors duration-200 group" href="{{DATA:SCREEN:SCREEN_39}}" style="">
+<span class="material-symbols-outlined group-hover:text-primary" style="">dashboard</span>
+<span class="text-sm font-medium" style="">Tableau de bord</span>
+</a><a class="flex items-center gap-3 px-4 py-3 rounded-md text-slate-500 hover:bg-slate-200/50 transition-colors duration-200 group" href="#" style="">
+<span class="material-symbols-outlined group-hover:text-primary" style="">assignment_late</span>
+<span class="text-sm font-medium" style="">Demandes d'avis</span>
+</a>
+<!-- Nav Item: Liste des prescriptions -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-md text-slate-500 hover:bg-slate-200/50 transition-colors duration-200 group" href="{{DATA:SCREEN:SCREEN_6}}" style="">
+<span class="material-symbols-outlined group-hover:text-primary" style="">medical_services</span>
+<span class="text-sm font-medium" style=""><br><a class="flex items-center px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-100/50 transition-all duration-300 font-headline text-sm font-medium cursor-text" href="https://app-companion-430619.appspot.com/projects/16389974090793003264?usegapi=1&amp;jsh=m%3B%2F_%2Fscs%2Fabc-static%2F_%2Fjs%2Fk%3Dgapi.lb.fr.e9Q5SQ1CfG4.O%2Fd%3D1%2Frs%3DAHpOoo-2NTqsVv2RhOsBD7sZguxoviu-vQ%2Fm%3D__features__#" spellcheck="false" data-stitch-added-classes="cursor-text" style="--tw-border-spacing-y: 0; --tw-translate-x: 0; --tw-translate-y: 0; --tw-rotate: 0; --tw-skew-x: 0; --tw-skew-y: 0; --tw-scale-x: 1; --tw-scale-y: 1; --tw-pan-x: ; --tw-pan-y: ; --tw-pinch-zoom: ; --tw-scroll-snap-strictness: proximity; --tw-gradient-from-position: ; --tw-gradient-via-position: ; --tw-gradient-to-position: ; --tw-ordinal: ; --tw-slashed-zero: ; --tw-numeric-figure: ; --tw-numeric-spacing: ; --tw-numeric-fraction: ; --tw-ring-inset: ; --tw-ring-offset-width: 0px; --tw-ring-offset-color: #fff; --tw-ring-color: rgb(59 130 246 / 0.5); --tw-ring-offset-shadow: 0 0 #0000; --tw-ring-shadow: 0 0 #0000; --tw-shadow: 0 0 #0000; --tw-shadow-colored: 0 0 #0000; --tw-blur: ; --tw-brightness: ; --tw-contrast: ; --tw-grayscale: ; --tw-hue-rotate: ; --tw-invert: ; --tw-saturate: ; --tw-sepia: ; --tw-drop-shadow: ; --tw-backdrop-blur: ; --tw-backdrop-brightness: ; --tw-backdrop-contrast: ; --tw-backdrop-grayscale: ; --tw-backdrop-hue-rotate: ; --tw-backdrop-invert: ; --tw-backdrop-opacity: ; --tw-backdrop-saturate: ; --tw-backdrop-sepia: ; --tw-contain-size: ; --tw-contain-layout: ; --tw-contain-paint: ; --tw-contain-style: ; color: rgb(37, 99, 235); padding: 0.625rem 0.75rem; font-family: Manrope; --tw-text-opacity: 1; transition-duration: 300ms; background-color: rgba(241, 245, 249, 0.5); --tw-space-y-reverse: 0; margin-top: 4px; margin-bottom: 0px; outline: none !important;">Dialyses efféctuée</a></span>
+</a>
+<!-- Nav Item: Rendez-vous -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-md text-slate-500 hover:bg-slate-200/50 transition-colors duration-200 group" href="{{DATA:SCREEN:SCREEN_23}}" style="">
+<span class="material-symbols-outlined group-hover:text-primary" style="">event</span>
+<span class="text-sm font-medium" style="">Rendez-vous</span>
+</a>
+<!-- Nav Item: Archives (ACTIVE) -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-md text-blue-700 dark:text-blue-400 font-bold border-r-4 border-blue-700 dark:border-blue-400 bg-blue-50/50 dark:bg-blue-900/20 translate-x-1 transition-transform" href="#" style="">
+<span class="material-symbols-outlined" style="font-variation-settings: &quot;FILL&quot; 1;">archive</span>
+<span class="text-sm" style="">Archives</span>
+</a>
+<!-- Nav Item: Rapport -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-md text-slate-500 hover:bg-slate-200/50 transition-colors duration-200 group" href="{{DATA:SCREEN:SCREEN_36}}" style="">
+<span class="material-symbols-outlined group-hover:text-primary" style="">assessment</span>
+<span class="text-sm font-medium" style="">Rapport</span>
+</a>
+<!-- Nav Item: Documents Kit -->
+</nav>
+<div class="mt-auto pt-6 border-t border-slate-200/60">
+<div class="flex items-center gap-3 px-2">
+<img alt="Dr. User Profile" class="w-10 h-10 rounded-full border-2 border-primary/20" data-alt="professional portrait of a male doctor in clinical white coat with a friendly expression in a bright medical setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDvN0lCoJ9cfDNqhPqkrxKAd3FUkaZ_UWAHua2w7ypBvubDeh8A8w36pWXFpqUyhMMjTtvZ-gEgI8op3OhbrKFkffPixQjeFw0zp-G2mOwwdBgrcl9qkRJaSkpcs4GrSlzygn0CTb8AioLXXMTyhounZtFqntHRJ4w3Bh95ieIFv_OLrKjXab6d_wUrwIbE5NjjsbS4bJ2mNKaJtwPacMMwWWeKHaoZDoasbWbkx9_FPQyZBwVr1Ul-aDrfchFUVd2DGF3aeoINTRo" style="">
+<div class="overflow-hidden">
+<p class="text-sm font-bold text-slate-900 truncate" style="">Dr. Jean Dupont</p>
+<p class="text-xs text-slate-500 truncate" style="">Chef de service</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Shell -->
+<header class="fixed top-0 right-0 left-64 h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl flex items-center justify-between px-8 w-full border-b border-slate-200/15 z-40">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" style="">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-md py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Rechercher une archive..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 text-slate-600">
+<button class="hover:text-blue-600 transition-all focus:ring-2 focus:ring-blue-500/20 rounded-md p-1" style="">
+<span class="material-symbols-outlined" style="">notifications</span>
+</button>
+<button class="hover:text-blue-600 transition-all focus:ring-2 focus:ring-blue-500/20 rounded-md p-1" style="">
+<span class="material-symbols-outlined" style="">settings</span>
+</button>
+</div>
+<div class="h-8 w-px bg-slate-200"></div>
+<span class="text-sm font-semibold text-slate-900 font-manrope" style="">Archives Centrales</span>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 mt-16 p-8 min-h-screen">
+<!-- Header Section -->
+<section class="mb-8">
+<h2 class="text-3xl font-extrabold text-on-surface font-manrope tracking-tight" style="">Archives Centrales</h2>
+<p class="text-secondary mt-1 max-w-2xl font-body" style="">Consultez l'historique complet des dossiers, prescriptions et comptes-rendus de l'unité de dialyse.</p>
+</section>
+<div class="flex flex-col lg:flex-row gap-8">
+<!-- Main Content: Search, Filters & List -->
+<div class="flex-1 space-y-6">
+<!-- Filters Bar -->
+<div class="glass-panel p-4 rounded-xl border border-outline-variant/15 flex flex-wrap items-center gap-4">
+<div class="flex-1 min-w-[200px]">
+<label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block" style="">Recherche par Patient</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" style="">person</span>
+<input class="w-full bg-surface-container-low border-none rounded-md py-2 pl-9 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Nom ou ID..." type="text">
+</div>
+</div>
+<div class="w-48">
+<label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block" style="">Type de document</label>
+<select class="w-full bg-surface-container-low border-none rounded-md py-2 px-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer">
+<option>Tous les types</option>
+<option>Prescription</option>
+<option>Compte-rendu</option>
+<option>Labo</option>
+</select>
+</div>
+<div class="w-40">
+<label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block" style="">Date</label>
+<input class="w-full bg-surface-container-low border-none rounded-md py-2 px-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer" type="date">
+</div>
+<button class="self-end h-10 px-6 bg-primary text-white rounded-md font-bold text-sm hover:opacity-90 transition-opacity" style="">
+                        Filtrer
+                    </button>
+</div>
+<!-- Archive List (Bento-style list) -->
+<div class="space-y-3 overflow-y-auto max-h-[calc(100vh-380px)] pr-2 custom-scrollbar">
+<div class="grid grid-cols-12 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+<div class="col-span-4" style="">Patient</div>
+<div class="col-span-3" style="">Document</div>
+<div class="col-span-3" style="">Date d'archivage</div>
+<div class="col-span-2 text-right" style="">Actions</div>
+</div>
+<!-- List Item 1 -->
+<div class="group relative bg-surface-container-low hover:bg-surface-container-high transition-colors duration-200 rounded-xl p-6 grid grid-cols-12 items-center">
+<div class="col-span-4 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs" style="">MA</div>
+<div>
+<p class="font-bold text-on-surface" style="">Marie Autier</p>
+<p class="text-xs text-secondary font-mono" style="">ID: #DX-9021</p>
+</div>
+</div>
+<div class="col-span-3">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-[11px] font-bold" style="">
+<span class="material-symbols-outlined text-[14px]" style="">prescriptions</span>
+                                Prescription
+                            </span>
+</div>
+<div class="col-span-3">
+<p class="text-sm font-medium text-secondary" style="">12 Octobre 2023</p>
+<p class="text-[10px] text-slate-400" style="">Archivé par System Admin</p>
+</div>
+<div class="col-span-2 flex justify-end gap-2">
+<button class="p-2 hover:bg-white rounded-lg transition-colors text-primary" title="Voir" style="">
+<span class="material-symbols-outlined" style="">visibility</span>
+</button>
+<button class="p-2 hover:bg-white rounded-lg transition-colors text-primary" title="Télécharger" style="">
+<span class="material-symbols-outlined" style="">download</span>
+</button>
+</div>
+</div>
+<!-- List Item 2 -->
+<div class="group relative bg-surface-container-low hover:bg-surface-container-high transition-colors duration-200 rounded-xl p-6 grid grid-cols-12 items-center">
+<div class="col-span-4 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xs" style="">JL</div>
+<div>
+<p class="font-bold text-on-surface" style="">Jean-Luc Picard</p>
+<p class="text-xs text-secondary font-mono" style="">ID: #DX-1701</p>
+</div>
+</div>
+<div class="col-span-3">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold border border-blue-100" style="">
+<span class="material-symbols-outlined text-[14px]" style="">lab_research</span>
+                                Labo
+                            </span>
+</div>
+<div class="col-span-3">
+<p class="text-sm font-medium text-secondary" style="">08 Octobre 2023</p>
+<p class="text-[10px] text-slate-400" style="">Archivé par Lab_Tech_04</p>
+</div>
+<div class="col-span-2 flex justify-end gap-2">
+<button class="p-2 hover:bg-white rounded-lg transition-colors text-primary" style="">
+<span class="material-symbols-outlined" style="">visibility</span>
+</button>
+<button class="p-2 hover:bg-white rounded-lg transition-colors text-primary" style="">
+<span class="material-symbols-outlined" style="">download</span>
+</button>
+</div>
+</div>
+<!-- List Item 3 -->
+<div class="group relative bg-surface-container-low hover:bg-surface-container-high transition-colors duration-200 rounded-xl p-6 grid grid-cols-12 items-center">
+<div class="col-span-4 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-xs" style="">SK</div>
+<div>
+<p class="font-bold text-on-surface" style="">Sarah Konor</p>
+<p class="text-xs text-secondary font-mono" style="">ID: #DX-800</p>
+</div>
+</div>
+<div class="col-span-3">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-highest text-on-surface-variant text-[11px] font-bold" style="">
+<span class="material-symbols-outlined text-[14px]" style="">description</span>
+                                Compte-rendu
+                            </span>
+</div>
+<div class="col-span-3">
+<p class="text-sm font-medium text-secondary" style="">05 Octobre 2023</p>
+<p class="text-[10px] text-slate-400" style="">Archivé par Dr. Dupont</p>
+</div>
+<div class="col-span-2 flex justify-end gap-2">
+<button class="p-2 hover:bg-white rounded-lg transition-colors text-primary" style="">
+<span class="material-symbols-outlined" style="">visibility</span>
+</button>
+<button class="p-2 hover:bg-white rounded-lg transition-colors text-primary" style="">
+<span class="material-symbols-outlined" style="">download</span>
+</button>
+</div>
+</div>
+<!-- List Item 4 -->
+<div class="group relative bg-surface-container-low hover:bg-surface-container-high transition-colors duration-200 rounded-xl p-6 grid grid-cols-12 items-center">
+<div class="col-span-4 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-xs" style="">BM</div>
+<div>
+<p class="font-bold text-on-surface" style="">Benoît Magimel</p>
+<p class="text-xs text-secondary font-mono" style="">ID: #DX-4432</p>
+</div>
+</div>
+<div class="col-span-3">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-[11px] font-bold" style="">
+<span class="material-symbols-outlined text-[14px]" style="">prescriptions</span>
+                                Prescription
+                            </span>
+</div>
+<div class="col-span-3">
+<p class="text-sm font-medium text-secondary" style="">30 Septembre 2023</p>
+<p class="text-[10px] text-slate-400" style="">Archivé par System Admin</p>
+</div>
+<div class="col-span-2 flex justify-end gap-2">
+<button class="p-2 hover:bg-white rounded-lg transition-colors text-primary" style="">
+<span class="material-symbols-outlined" style="">visibility</span>
+</button>
+<button class="p-2 hover:bg-white rounded-lg transition-colors text-primary" style="">
+<span class="material-symbols-outlined" style="">download</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+</div>
+<!-- Statistics Sidebar -->
+<aside class="w-full lg:w-80 space-y-6">
+<!-- Archive Summary Card -->
+<div class="bg-gradient-to-br from-primary to-primary-container p-6 rounded-2xl text-white shadow-xl">
+<div class="flex justify-between items-start mb-6">
+<span class="material-symbols-outlined text-3xl opacity-50" style="">inventory_2</span>
+<span class="bg-white/20 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider" style="">Mise à jour: 2h</span>
+</div>
+<p class="text-blue-100 text-sm font-medium" style="">Total documents archivés</p>
+<h3 class="text-4xl font-extrabold font-manrope mt-1" style="">12,482</h3>
+<div class="mt-6 flex items-center gap-2">
+<span class="flex items-center text-emerald-300 text-xs font-bold" style="">
+<span class="material-symbols-outlined text-sm" style="">trending_up</span>
+                            +12%
+                        </span>
+<span class="text-blue-200 text-[10px]" style="">depuis le mois dernier</span>
+</div>
+</div>
+<!-- Trend Chart Section -->
+<div class="bg-white p-6 rounded-2xl border border-outline-variant/15">
+<h4 class="text-sm font-bold text-on-surface font-manrope mb-4" style="">Volume d'archives</h4>
+<div class="h-32 flex items-end justify-between gap-1">
+<!-- Simulated Sparkline Chart -->
+<div class="w-full bg-primary/5 rounded-t-sm h-[30%] hover:bg-primary/20 transition-all cursor-pointer" title="Jan: 450"></div>
+<div class="w-full bg-primary/5 rounded-t-sm h-[45%] hover:bg-primary/20 transition-all cursor-pointer" title="Feb: 620"></div>
+<div class="w-full bg-primary/5 rounded-t-sm h-[40%] hover:bg-primary/20 transition-all cursor-pointer" title="Mar: 580"></div>
+<div class="w-full bg-primary/10 rounded-t-sm h-[60%] hover:bg-primary/20 transition-all cursor-pointer" title="Apr: 890"></div>
+<div class="w-full bg-primary/10 rounded-t-sm h-[55%] hover:bg-primary/20 transition-all cursor-pointer" title="May: 750"></div>
+<div class="w-full bg-primary/20 rounded-t-sm h-[75%] hover:bg-primary/20 transition-all cursor-pointer" title="Jun: 920"></div>
+<div class="w-full bg-primary/40 rounded-t-sm h-[70%] hover:bg-primary/20 transition-all cursor-pointer" title="Jul: 880"></div>
+<div class="w-full bg-primary/60 rounded-t-sm h-[85%] hover:bg-primary/20 transition-all cursor-pointer" title="Aug: 1100"></div>
+<div class="w-full bg-primary/80 rounded-t-sm h-[95%] hover:bg-primary/20 transition-all cursor-pointer" title="Sep: 1250"></div>
+<div class="w-full bg-primary rounded-t-sm h-[100%] hover:bg-primary/20 transition-all cursor-pointer" title="Oct: 1400"></div>
+</div>
+<div class="flex justify-between mt-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+<span class="" style="">Jan</span>
+<span class="" style="">Oct</span>
+</div>
+</div>
+<!-- Storage Info -->
+</aside>
+</div>
+</main>
+</body></html>

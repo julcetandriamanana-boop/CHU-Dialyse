@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Conformance Kit - Hémodialyse - CHU Andrainjato</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script></head>
+<body class="bg-surface font-body text-on-surface p-4 md:p-6 lg:p-10">
+<!-- BEGIN: MainContainer -->
+<!-- Updated max-w-none for full width layout -->
+<main class="print-container w-full max-w-none mx-auto bg-white border border-outline-variant shadow-sm p-6 md:p-10 lg:p-16 min-h-screen flex flex-col" data-purpose="form-wrapper">
+<!-- BEGIN: HeaderSection -->
+<header class="flex flex-col md:flex-row justify-between items-center mb-12 border-b-4 border-on-surface pb-6" data-purpose="form-header">
+<div class="flex items-center mb-4 md:mb-0">
+<!-- Placeholder for CHU Andrainjato Logo -->
+<img alt="CHU Andrainjato Logo" class="w-16 h-16 object-contain mr-4" src="https://lh3.googleusercontent.com/aida/ADBb0uiSco477d2uQie3OYbwn0PKjyn8cUlMECnhFVQAWzjWHm1bkaOIKbus0ne0sQfCLZwdNjsjRz4quk6ardqsuixzz5PzqBJVw7_6cHBZrlCzfuB2WWgOZIkHzT3LxSZQPSxALGHS4K8tu6zuRjR64EklSJ-cJhGv2lwINZLUTl9PFBsrIwal_evYcTiXu2b_1a6BKwunElSkNAbrJUE-w00wwc-9uCziYzLS0uC79BBrMcAKFD7YqeB1o2ygLINpnpYHl6GL8PUOghI"/>
+<div class="text-left">
+<p class="font-extrabold text-sm uppercase tracking-wider">CHU Andrainjato</p>
+<p class="text-[10px] uppercase opacity-75">Service d'Hémodialyse</p>
+</div>
+</div>
+<h1 class="text-xl md:text-2xl lg:text-3xl font-extrabold uppercase tracking-widest text-center md:text-right text-primary">
+        ORDONNANCE KIT : PREMIÈRE SÉANCE D'HÉMODIALYSE
+      </h1>
+</header>
+<!-- END: HeaderSection -->
+<!-- BEGIN: PatientInformation -->
+<section class="space-y-6 mb-12" data-purpose="patient-details">
+<div class="flex items-end w-full">
+<span class="font-bold whitespace-nowrap text-sm uppercase">Nom et Prénom du patient :</span>
+<div class="flex-grow ml-2"><input aria-label="Nom et Prénom du patient" class="focus:border-primary focus:ring-0 transition-colors border-outline-variant rounded-lg" type="text"/></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="flex items-end">
+<span class="font-bold whitespace-nowrap text-sm uppercase">Age :</span>
+<div class="flex-grow ml-2"><input aria-label="Age" class="focus:border-primary focus:ring-0 transition-colors border-outline-variant rounded-lg" type="text"/></div>
+</div>
+<div class="flex items-end">
+<span class="font-bold whitespace-nowrap text-sm uppercase">Sexe :</span>
+<div class="flex-grow ml-2"><input aria-label="Sexe" class="focus:border-primary focus:ring-0 transition-colors border-outline-variant rounded-lg" type="text"/></div>
+</div>
+<div class="flex items-end">
+<span class="font-bold whitespace-nowrap text-sm uppercase">Poids (kg) :</span>
+<div class="flex-grow ml-2"><input aria-label="Poids en kilogrammes" class="focus:border-primary focus:ring-0 transition-colors border-outline-variant rounded-lg" type="text"/></div>
+</div>
+</div>
+<div class="flex items-end w-full">
+<span class="font-bold whitespace-nowrap text-sm uppercase">Adresse :</span>
+<div class="flex-grow ml-2"><input aria-label="Adresse" class="focus:border-primary focus:ring-0 transition-colors border-outline-variant rounded-lg" type="text"/></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="flex items-end">
+<span class="font-bold whitespace-nowrap text-sm uppercase">Service :</span>
+<div class="flex-grow ml-2"><input aria-label="Service" class="focus:border-primary focus:ring-0 transition-colors border-outline-variant rounded-lg" type="text"/></div>
+</div>
+<div class="flex items-end">
+<span class="font-bold whitespace-nowrap text-sm uppercase">Date de l'ordonnance :</span>
+<div class="flex-grow ml-2"><input aria-label="Date de l'ordonnance" class="focus:border-primary focus:ring-0 transition-colors border-outline-variant rounded-lg" type="text"/></div>
+</div>
+</div>
+</section>
+<!-- END: PatientInformation -->
+<!-- BEGIN: PharmacyTableSection -->
+<section class="mb-16" data-purpose="pharmacy-table-container">
+<h2 class="font-bold italic mb-6 text-lg text-secondary">1- PHARMACIE : <span class="font-normal text-sm opacity-75 uppercase not-italic">Rayer les mentions inutiles</span></h2>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm uppercase border-collapse" data-purpose="inventory-table">
+<thead class="bg-surface-container-high text-primary">
+<tr>
+<th class="w-1/2 font-extrabold text-center py-4">DESIGNATION</th>
+<th class="w-24 font-extrabold text-center py-4">QTE</th>
+<th class="font-extrabold text-center py-4">PRIX UNITAIRE</th>
+<th class="font-extrabold text-center py-4">MONTANT</th>
+</tr>
+</thead>
+<tbody>
+<!-- Table Rows -->
+<tr class="border-b border-outline-variant hover:bg-surface-bright transition-colors"><td class="pl-4">Eau non glucose 5L ou 10L</td><td class="text-center font-bold"><input class="w-full text-center font-bold focus:bg-primary-fixed/20 transition-colors bg-transparent m-0 border-none border-outline-variant rounded-lg" placeholder="1" type="number" value="1"/></td><td class=""><input aria-label="Prix Unitaire" class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td><td class=""><input aria-label="Montant" class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td></tr>
+<tr class="border-b border-outline-variant hover:bg-surface-bright transition-colors"><td class="pl-4">Bétadine jaune 125ml</td><td class="text-center font-bold"><input class="w-full text-center font-bold focus:bg-primary-fixed/20 transition-colors bg-transparent m-0 border-none border-outline-variant rounded-lg" type="number" value="1"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td></tr>
+<tr class="border-b border-outline-variant hover:bg-surface-bright transition-colors"><td class="pl-4">Bétadine rouge 125ml</td><td class="text-center font-bold"><input class="w-full text-center font-bold focus:bg-primary-fixed/20 transition-colors bg-transparent m-0 border-none border-outline-variant rounded-lg" type="number" value="1"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td></tr>
+<tr class="border-b border-outline-variant hover:bg-surface-bright transition-colors"><td class="pl-4">Lovenox - 6.000 USI</td><td class="text-center font-bold"><input class="w-full text-center font-bold focus:bg-primary-fixed/20 transition-colors bg-transparent m-0 border-none border-outline-variant rounded-lg" type="number" value="1"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td></tr>
+<tr class="border-b border-outline-variant hover:bg-surface-bright transition-colors"><td class="pl-4">Lidocaine 2% inj</td><td class="text-center font-bold"><input class="w-full text-center font-bold focus:bg-primary-fixed/20 transition-colors bg-transparent m-0 border-none border-outline-variant rounded-lg" type="number" value="1"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td></tr>
+<tr class="border-b border-outline-variant hover:bg-surface-bright transition-colors"><td class="pl-4">Compresse stérile 40X40</td><td class="text-center font-bold"><input class="w-full text-center font-bold focus:bg-primary-fixed/20 transition-colors bg-transparent m-0 border-none border-outline-variant rounded-lg" type="number" value="1"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td></tr>
+<tr class="border-b border-outline-variant hover:bg-surface-bright transition-colors"><td class="pl-4">Fil à peau 3,0</td><td class="text-center font-bold"><input class="w-full text-center font-bold focus:bg-primary-fixed/20 transition-colors bg-transparent m-0 border-none border-outline-variant rounded-lg" type="number" value="1"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td></tr>
+<tr class="border-b border-outline-variant hover:bg-surface-bright transition-colors"><td class="pl-4">Gant d'examen non stérile</td><td class="text-center font-bold"><input class="w-full text-center font-bold focus:bg-primary-fixed/20 transition-colors bg-transparent m-0 border-none border-outline-variant rounded-lg" type="number" value="1"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td></tr>
+<tr class="border-b border-outline-variant hover:bg-surface-bright transition-colors"><td class="pl-4 font-bold">Gant stérile 7</td><td class="text-center font-bold"><input class="w-full text-center font-bold focus:bg-primary-fixed/20 transition-colors bg-transparent m-0 border-none border-outline-variant rounded-lg" type="number" value="1"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td></tr>
+<tr class="border-b border-outline-variant hover:bg-surface-bright transition-colors"><td class="pl-4">Ligne artério-veineuse</td><td class="text-center font-bold"><input class="w-full text-center font-bold focus:bg-primary-fixed/20 transition-colors bg-transparent m-0 border-none border-outline-variant rounded-lg" type="number" value="1"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td></tr>
+<tr class="border-b border-outline-variant hover:bg-surface-bright transition-colors"><td class="pl-4">Masque chirurgical</td><td class="text-center font-bold"><input class="w-full text-center font-bold focus:bg-primary-fixed/20 transition-colors bg-transparent m-0 border-none border-outline-variant rounded-lg" type="number" value="1"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td></tr>
+<tr class="border-b border-outline-variant hover:bg-surface-bright transition-colors"><td class="pl-4">Rein artificiel (Dialyseur) F6/F7/F8/F10</td><td class="text-center font-bold"><input class="w-full text-center font-bold focus:bg-primary-fixed/20 transition-colors bg-transparent m-0 border-none border-outline-variant rounded-lg" type="number" value="1"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td></tr>
+<tr class="border-b border-outline-variant hover:bg-surface-bright transition-colors"><td class="pl-4">Seringue 10cc</td><td class="text-center font-bold"><input class="w-full text-center font-bold focus:bg-primary-fixed/20 transition-colors bg-transparent m-0 border-none border-outline-variant rounded-lg" type="number" value="1"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td></tr>
+<tr class="border-b border-outline-variant hover:bg-surface-bright transition-colors"><td class="pl-4">Seringue 20cc</td><td class="text-center font-bold"><input class="w-full text-center font-bold focus:bg-primary-fixed/20 transition-colors bg-transparent m-0 border-none border-outline-variant rounded-lg" type="number" value="1"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td></tr>
+<tr class="border-b border-outline-variant hover:bg-surface-bright transition-colors"><td class="pl-4">Seringue 5cc</td><td class="text-center font-bold"><input class="w-full text-center font-bold focus:bg-primary-fixed/20 transition-colors bg-transparent m-0 border-none border-outline-variant rounded-lg" type="number" value="1"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td><td class=""><input class="w-full text-right focus:bg-primary-fixed/20 transition-colors border-outline-variant rounded-lg" type="text"/></td></tr>
+<!-- Total Row -->
+<tr class="bg-primary-container text-on-primary-container font-extrabold border-b border-outline-variant hover:bg-surface-bright transition-colors">
+<td class="text-left px-4 py-4">TOTAL</td>
+<td class="text-center py-4">3</td>
+<td class=""><input class="w-full text-right font-extrabold focus:bg-primary-fixed/20 transition-colors bg-transparent border-outline-variant rounded-lg" type="text"/></td>
+<td class=""><input class="w-full text-right font-extrabold focus:bg-primary-fixed/20 transition-colors bg-transparent border-outline-variant rounded-lg" type="text"/></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- END: PharmacyTableSection -->
+<!-- BEGIN: FooterSignatures -->
+<footer class="mt-auto pt-16" data-purpose="footer-signatures">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center text-xs font-bold uppercase tracking-widest">
+<div class="flex flex-col items-center">
+<div class="w-full border-t-2 border-on-surface mb-4"></div>
+<span class="px-2">LE DIRECTEUR D'ETABLISSEMENT</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="w-full border-t-2 border-on-surface mb-4"></div>
+<span class="px-2">LE PRESCRIPTEUR</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="w-full border-t-2 border-on-surface mb-4"></div>
+<span class="px-2">LE DISPENSATEUR</span>
+</div>
+</div>
+</footer>
+<!-- END: FooterSignatures -->
+<!-- BEGIN: Actions (Non-printing) -->
+<div class="no-print mt-16 flex justify-end gap-4 border-t border-outline-variant pt-8"><button class="bg-primary text-on-primary px-8 py-3 rounded-full font-bold hover:bg-on-primary-fixed-variant hover:shadow-xl active:scale-95 transition-all duration-300 flex items-center gap-3 group shadow-md" onclick="console.log('Enregistrer le formulaire')">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">save</span>
+        Enregistrer le formulaire
+      </button>
+<button class="bg-primary text-on-primary px-8 py-3 rounded-full font-bold hover:bg-on-primary-fixed-variant hover:shadow-xl active:scale-95 transition-all duration-300 flex items-center gap-3 group shadow-md" onclick="window.print()">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">print</span>
+        Imprimer le formulaire
+      </button>
+</div>
+<!-- END: Actions -->
+</main>
+<!-- END: MainContainer -->
+
+<script>
+  // Auto-populate patient information from localStorage
+  document.addEventListener('DOMContentLoaded', function() {
+    try {
+      const patientData = localStorage.getItem('currentPatient');
+      if (patientData) {
+        const patient = JSON.parse(patientData);
+        
+        // Find the patient details section
+        const patientSection = document.querySelector('[data-purpose="patient-details"]');
+        if (patientSection) {
+          const inputs = patientSection.querySelectorAll('input[type="text"]');
+          
+          if (inputs.length >= 1) {
+            // First input: Nom et Prénom du patient
+            inputs[0].value = patient.name || '';
+          }
+          
+          // You can add more field mappings here if needed
+          // inputs[1].value = patient.age || '';
+          // inputs[2].value = patient.sexe || '';
+          // inputs[3].value = patient.poids || '';
+          // etc.
+        }
+        
+        console.log('Patient info loaded:', patient);
+      }
+    } catch (error) {
+      console.error('Error loading patient data:', error);
+    }
+  });
+</script>
+</body></html>

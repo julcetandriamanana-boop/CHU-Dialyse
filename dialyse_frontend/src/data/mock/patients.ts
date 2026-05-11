@@ -1,0 +1,67 @@
+import type { AutofillState } from "@/stores/autofill.store";
+
+/** Données brutes pour la sélection patient (sans age : calculé au chargement). */
+export type MockPatientRecord = Omit<
+  NonNullable<AutofillState["currentPatient"]>,
+  "nomComplet" | "age"
+>;
+
+export const mockPatients: MockPatientRecord[] = [
+  {
+    id: "DX-0001",
+    nom: "Rakoto",
+    prenom: "Jean",
+    dateNaissance: "1970-06-14",
+    sexe: "M",
+    telephone: "+261 20 71 223 451",
+    adresse: "Lot II A Bis, Fianarantsoa",
+    groupeSanguin: "A+",
+    poidsRef: 72,
+    nefropathieCause: "Néphropathie diabétique",
+    comorbidites: ["Hypertension", "Anémie"],
+    typeDialyse: "HDF",
+    groupeSeance: "LMV",
+    machine: "M01",
+    medecinReferent: "Dr. Sarah Méline",
+    numeroSeance: 48,
+    dateAdmission: "2019-03-12",
+  },
+  {
+    id: "DX-0002",
+    nom: "Rasoa",
+    prenom: "Marie",
+    dateNaissance: "1988-02-03",
+    sexe: "F",
+    telephone: "+261 20 71 884 902",
+    adresse: "Ambalavao — Fianarantsoa",
+    groupeSanguin: "O+",
+    poidsRef: 58,
+    nefropathieCause: " GN focale segmentaire ",
+    comorbidites: ["Hypothyroïdie"],
+    typeDialyse: "HD",
+    groupeSeance: "MJS",
+    machine: "M02",
+    medecinReferent: "Dr. Marc Laurent",
+    numeroSeance: 32,
+    dateAdmission: "2021-11-08",
+  },
+  {
+    id: "DX-0003",
+    nom: "Randria",
+    prenom: "Paul",
+    dateNaissance: "1965-11-29",
+    sexe: "M",
+    telephone: "+261 34 12 887 661",
+    adresse: "Talatamaty — Fianarantsoa",
+    groupeSanguin: "B+",
+    poidsRef: 78,
+    nefropathieCause: "Pyélonéphrite chronique",
+    comorbidites: [],
+    typeDialyse: "HDF",
+    groupeSeance: "LMV",
+    machine: "M03",
+    medecinReferent: "Dr. Julie Becker",
+    numeroSeance: 21,
+    dateAdmission: "2022-01-21",
+  },
+];

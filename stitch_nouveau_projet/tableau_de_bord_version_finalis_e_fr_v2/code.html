@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tableau de Bord - Version Finalisée FR</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary": "#51606e",
+                    "outline-variant": "#c2c6d4",
+                    "secondary-fixed-dim": "#b9c8d8",
+                    "secondary-fixed": "#d5e4f5",
+                    "background": "#f8f9fa",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#e7e8e9",
+                    "on-secondary-fixed-variant": "#3a4856",
+                    "on-primary-fixed": "#001b3d",
+                    "tertiary-container": "#bb1b21",
+                    "error-container": "#ffdad6",
+                    "inverse-on-surface": "#f0f1f2",
+                    "primary-fixed": "#d6e3ff",
+                    "primary": "#005EB8",
+                    "inverse-surface": "#2e3132",
+                    "tertiary-fixed": "#ffdad6",
+                    "on-primary": "#ffffff",
+                    "surface": "#f8f9fa",
+                    "surface-variant": "#e1e3e4",
+                    "on-tertiary-container": "#ffceca",
+                    "tertiary": "#940010",
+                    "surface-bright": "#f8f9fa",
+                    "surface-container": "#edeeef",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed": "#0e1d29",
+                    "inverse-primary": "#a9c7ff",
+                    "on-background": "#191c1d",
+                    "surface-tint": "#005db6",
+                    "primary-fixed-dim": "#a9c7ff",
+                    "on-primary-fixed-variant": "#00468c",
+                    "surface-dim": "#d9dadb",
+                    "error": "#ba1a1a",
+                    "secondary-container": "#d2e1f2",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface-variant": "#424752",
+                    "outline": "#727783",
+                    "on-secondary-container": "#556472",
+                    "tertiary-fixed-dim": "#ffb3ac",
+                    "surface-container-low": "#f3f4f5",
+                    "on-error-container": "#93000a",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-tertiary-fixed": "#410003",
+                    "on-tertiary-fixed-variant": "#930010",
+                    "on-primary-container": "#c8daff",
+                    "primary-container": "#005eb8",
+                    "on-surface": "#191c1d"
+            },
+            "borderRadius": {
+                    "DEFAULT": "4px",
+                    "lg": "8px",
+                    "xl": "12px",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-manrope { font-family: 'Manrope', sans-serif; }
+        .glass-panel {
+            backdrop-filter: blur(24px);
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        .signature-gradient {
+            background: linear-gradient(135deg, #005EB8 0%, #00468c 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen">
+<!-- SideNavBar -->
+<aside class="hidden md:flex h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-950 flex-col py-6 z-50 border-r border-slate-200">
+<div class="px-6 mb-8">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-lg bg-white overflow-hidden shadow-sm flex items-center justify-center p-0.5">
+<img alt="CHU Andrainjato Logo" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0uiGy8ScMjL6ZLQy7_SbLYlroJWfo78U1O4eeUMeLWpk2HKguGLGHHLChg1RlUhL5-GvJCkZZWJlDOGm1m0pJ-0gDFnkYrfag2UyCyUZclqEkh1ioIClAiyD5we9kq9xabonQTSOjhWFFTLF14LONOkKdpIjyyRMSMn5HDfVRrU4TD8nV9Gf9r_hXLUjFBYdKhV4HZwBuWMJuGmxbqw6ceHnNcWyCNRuN-PilD2vmd6ZIvO5-zBnWKhp-bAtrIxsE3YijfC_SbrT5A" style=""/>
+</div>
+<div>
+<h1 class="text-lg font-black text-slate-900 dark:text-white leading-tight" style="">CHU</h1>
+<p class="text-[10px] uppercase tracking-widest text-secondary font-bold" style="">ANDRAINJATO</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-400 font-bold border-r-4 border-primary bg-blue-50/50 dark:bg-blue-900/20 transition-all duration-200" href="#" style="">
+<span class="material-symbols-outlined" data-icon="dashboard" style='font-variation-settings: "FILL" 1;'>dashboard</span>
+<span class="font-manrope text-sm" style="">Tableau de bord</span>
+</a><a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all duration-200 rounded-md" href="../demandes_d_avis_re_ues_neurologie_date_heure_corrig/code.html">
+<span class="material-symbols-outlined" data-icon="message">message</span>
+<span class="font-manrope text-sm">Demandes d'avis</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all duration-200 rounded-md" href="../liste_des_prescriptions_optimis_e_workflow/code.html" style="">
+<span class="material-symbols-outlined" data-icon="groups" style="">groups</span>
+<span class="font-manrope text-sm" style="">Dialyses à effectuer</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all duration-200 rounded-md" href="../gestion_des_rendez_vous_isan_andro_calendrier/code.html" style="">
+<span class="material-symbols-outlined" data-icon="event" style="">event</span>
+<span class="font-manrope text-sm" style="">Rendez-vous</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all duration-200 rounded-md" href="../rapports_g_n_r_s_par_l_unit/code.html" style="">
+<span class="material-symbols-outlined" data-icon="assessment" style="">assessment</span>
+<span class="font-manrope text-sm" style="">Rapports</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all duration-200 rounded-md" href="../archives_prototype_final/code.html" style="">
+<span class="material-symbols-outlined" data-icon="archive" style="">archive</span>
+<span class="font-manrope text-sm" style="">Archive</span>
+</a>
+</nav>
+<div class="px-4 mt-auto space-y-1 pt-6 border-t border-slate-200 dark:border-slate-800">
+<a class="flex items-center gap-3 px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200 transition-all rounded-md" href="#" style="">
+<span class="material-symbols-outlined" data-icon="help_outline" style="">help_outline</span>
+<span class="font-manrope text-sm" style="">Aide</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200 transition-all rounded-md" href="#" style="">
+<span class="material-symbols-outlined" data-icon="logout" style="">logout</span>
+<span class="font-manrope text-sm" style="">Déconnexion</span>
+</a>
+</div>
+</aside>
+<main class="md:ml-64 min-h-screen">
+<!-- TopNavBar -->
+<header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl w-full flex justify-between items-center px-6 py-3 shadow-sm border-b border-slate-200/50">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" style="">search</span>
+<input class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary" placeholder="Rechercher patients ou séances..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-full transition-colors relative" style="">
+<span class="material-symbols-outlined" data-icon="notifications" style='font-variation-settings: "FILL" 1;'>notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-tertiary rounded-full"></span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-full transition-colors" style="">
+<span class="material-symbols-outlined" data-icon="settings" style="">settings</span>
+</button>
+<div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden sm:block">
+<p class="text-xs font-bold text-on-background leading-none" style="">Dr Julian Vance</p>
+<p class="text-[10px] text-secondary" style="">Néphrologue en chef</p>
+</div>
+<img alt="Profil Néphrologue en chef" class="w-10 h-10 rounded-full object-cover border-2 border-primary-container" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCC4au1QRyhFgf-T1u7BHySWdo5uSRf7vAgqfw3agTvuIjJ92GNOfEcwCrQ2dzW56bLyGmz-MoTDyjLzdThRg6chmKYST7lidPcHytjnF4Y-09NzhY0u99kurIlF020I387BWwAbUi0WfhU9K59erlPfUs2CMjipmehqrnZQ6TLjjC6fsMMq4DT19cfj2T7Mmm740M3X-A-PBoGRlkbRwNtCtZfj-d4gaUWdcp9L5XFgcoH1hFdaETHAXLUpeQUfmLv_EGrbuKzpYtP" style=""/>
+</div>
+</div>
+</header>
+<div class="p-6 space-y-6">
+<h2 class="text-2xl font-black font-manrope text-on-surface" style="">Tableau de Bord - Version Finalisée FR</h2>
+<!-- Quick Stats Section -->
+<section class="grid grid-cols-1 gap-4 md:grid-cols-3">
+<div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/15 flex flex-col gap-1 shadow-sm">
+<span class="text-secondary text-xs font-semibold" style="">Total séances aujourd'hui</span>
+<div class="flex flex-col">
+<span class="text-3xl font-black text-primary" style="">23/24</span>
+<p class="text-[11px] text-secondary font-medium mt-1" style="">1 séance terminée</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/15 flex flex-col gap-1 shadow-sm">
+<span class="text-secondary text-xs font-semibold" style="">Unités disponibles</span>
+<div class="flex items-end justify-between">
+<span class="text-3xl font-black text-on-surface" style="">3</span>
+<span class="material-symbols-outlined text-primary/60 text-3xl" data-icon="precision_manufacturing" style="">precision_manufacturing</span>
+</div>
+</div>
+<div class="bg-tertiary-container p-5 rounded-xl flex flex-col gap-1 shadow-md shadow-tertiary-container/20">
+<span class="text-on-tertiary-container text-xs font-semibold" style="">Alertes critiques</span>
+<div class="flex items-end justify-between">
+<span class="text-3xl font-black text-white" style="">02</span>
+<span class="material-symbols-outlined text-white text-3xl" data-icon="warning" style='font-variation-settings: "FILL" 1;'>warning</span>
+</div>
+</div>
+</section>
+<!-- Main Dashboard Grid -->
+<div class="grid grid-cols-1 gap-6">
+<!-- Sessions Monitoring -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant/10">
+<div class="flex items-center justify-between mb-8">
+<h2 class="text-xl font-bold font-manrope" style="">Liste des dialyses effectuées</h2>
+<div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/15 flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary-container/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="build" style="">build</span>
+</div>
+<div class="hidden sm:block">
+<p class="text-xs font-bold" style="">Contrôle maintenance</p>
+<p class="text-[10px] text-secondary" style="">3 unités à désinfecter dans 2h</p>
+</div>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="text-secondary text-[11px] font-bold uppercase tracking-widest border-b border-slate-100 pb-3">
+<th class="pb-3 pl-2" style="">Patient</th>
+<th class="pb-3" style="">Poste</th>
+<th class="pb-3" style="">Progression</th>
+<th class="pb-3 text-center" style="">Action</th>
+<th class="pb-3 text-center" style="">Statut</th>
+<th class="pb-3 text-right" style="">Prochaine séance</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-50">
+<tr class="group hover:bg-slate-50/50 transition-colors">
+<td class="py-6 pl-2" style="">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center font-bold text-primary text-base" style="">EL</div>
+<div>
+<p class="font-bold text-base" style="">Elena L. Ross</p>
+<p class="text-xs text-secondary" style="">ID: #DX-9021</p>
+</div>
+</div>
+</td>
+<td class="py-6" style="">
+<span class="text-base font-bold text-on-surface" style="">Poste B-04</span>
+</td>
+<td class="py-6" style="">
+<div class="max-w-[180px]">
+<div class="flex justify-between text-[11px] mb-1.5">
+<span class="text-secondary font-medium" style="">Début 08:30</span>
+<span class="font-bold text-primary" style="">75%</span>
+</div>
+<div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 75%"></div>
+</div>
+</div>
+</td>
+<td class="py-6 text-center" style="">
+<div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-primary rounded-lg border border-primary/20">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+<span class="text-[11px] font-bold uppercase tracking-wider" style="">En cours</span>
+</div>
+</td>
+<td class="py-6 text-center" style="">
+<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-green-100 text-green-700 border border-green-200" style=""><div class="flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="check" style="">check</span>
+<span class="" style="">FAIT</span>
+</div></span>
+</td>
+<td class="py-6 text-right" style="">
+<button class="px-4 py-2 text-primary hover:bg-primary/10 rounded-lg transition-colors inline-flex items-center gap-2 border border-primary/20 bg-white" onclick="window.location.href='../gestion_des_rendez_vous_isan_andro_calendrier/code.html'" style="">
+<span class="material-symbols-outlined text-[18px]" data-icon="calendar_today" style="">calendar_today</span>
+<span class="text-[11px] font-bold uppercase" style="">PROGRAMMER RDV 2ème  séance</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-slate-50/50 transition-colors">
+<td class="py-6 pl-2" style="">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-lg bg-orange-50 flex items-center justify-center font-bold text-orange-600 text-base" style="">MJ</div>
+<div>
+<p class="font-bold text-base" style="">Marcus Jensen</p>
+<p class="text-xs text-secondary" style="">ID: #DX-4452</p>
+</div>
+</div>
+</td>
+<td class="py-6" style="">
+<span class="text-base font-bold text-on-surface" style="">Poste A-12</span>
+</td>
+<td class="py-6" style="">
+<div class="max-w-[180px]">
+<div class="flex justify-between text-[11px] mb-1.5">
+<span class="text-secondary font-medium" style="">Début 10:15</span>
+<span class="font-bold text-primary" style="">20%</span>
+</div>
+<div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 20%"></div>
+</div>
+</div>
+</td>
+<td class="py-6 text-center" style="">
+<button class="px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-lg hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95" onclick="window.location.href='../d_marrer_une_nouvelle_s_ance_formulaire/code.html'" style="">Démarrer la séance</button>
+</td>
+<td class="py-6 text-center" style="">
+<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-700 border border-red-200" style="">
+                                        NON FAIT
+                                    </span>
+</td>
+<td class="py-6 text-right" style="">
+<button class="px-4 py-2 text-primary hover:bg-primary/10 rounded-lg transition-colors inline-flex items-center gap-2 border border-primary/20 bg-white" onclick="window.location.href='../gestion_des_rendez_vous_isan_andro_calendrier/code.html'" style="">
+<span class="material-symbols-outlined text-[18px]" data-icon="calendar_today" style="">calendar_today</span>
+<span class="text-[11px] font-bold uppercase" style="">PROGRAMMER RDV 2ème  séance</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Weekly Schedule Expanded -->
+<div class="bg-surface-container-lowest rounded-xl p-8 shadow-sm border border-outline-variant/10">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h2 class="text-xl font-bold font-manrope" style="">Liste des dialyses effectuées</h2>
+<p class="text-sm text-secondary mt-1" style="">Aperçu de la charge de l'unité rénale</p>
+</div>
+<div class="flex bg-slate-100 p-1.5 rounded-lg text-[11px] font-bold">
+<button class="px-6 py-2 bg-white rounded-md shadow-sm text-primary" style="">Lundi / Mercredi / Vendredi</button>
+<button class="px-6 py-2 text-slate-500 hover:text-slate-700 transition-colors" style="">Mardi / Jeudi / Samedi</button>
+</div>
+</div>
+<div class="grid grid-cols-7 gap-4">
+<div class="flex flex-col items-center p-6 rounded-xl bg-blue-50/50 border border-blue-100/50">
+<span class="text-[10px] font-bold text-blue-400 mb-2 tracking-widest" style="">LUNDI</span>
+<span class="text-3xl font-black text-blue-800" style="">12</span>
+<div class="mt-4 w-full space-y-2">
+<div class="h-1.5 w-full bg-blue-300 rounded-full opacity-60"></div>
+<div class="h-1.5 w-full bg-blue-300 rounded-full opacity-60"></div>
+<div class="h-1.5 w-2/3 bg-blue-300 rounded-full opacity-60"></div>
+</div>
+</div>
+<div class="flex flex-col items-center p-6 rounded-xl bg-slate-50 border border-slate-100/50">
+<span class="text-[10px] font-bold text-slate-400 mb-2 tracking-widest" style="">MARDI</span>
+<span class="text-3xl font-black text-slate-800" style="">13</span>
+</div>
+<div class="flex flex-col items-center p-6 rounded-xl bg-blue-50/50 border border-blue-100/50">
+<span class="text-[10px] font-bold text-blue-400 mb-2 tracking-widest" style="">MERCREDI</span>
+<span class="text-3xl font-black text-blue-800" style="">14</span>
+<div class="mt-4 w-full space-y-2">
+<div class="h-1.5 w-full bg-blue-300 rounded-full opacity-60"></div>
+<div class="h-1.5 w-full bg-blue-300 rounded-full opacity-60"></div>
+<div class="h-1.5 w-full bg-blue-300 rounded-full opacity-60"></div>
+</div>
+</div>
+<div class="flex flex-col items-center p-6 rounded-xl bg-slate-50 border border-slate-100/50">
+<span class="text-[10px] font-bold text-slate-400 mb-2 tracking-widest" style="">JEUDI</span>
+<span class="text-3xl font-black text-slate-800" style="">15</span>
+</div>
+<div class="flex flex-col items-center p-6 rounded-xl bg-blue-50/50 border border-blue-100/50">
+<span class="text-[10px] font-bold text-blue-400 mb-2 tracking-widest" style="">VENDREDI</span>
+<span class="text-3xl font-black text-blue-800" style="">16</span>
+<div class="mt-4 w-full space-y-2">
+<div class="h-1.5 w-full bg-blue-300 rounded-full opacity-60"></div>
+<div class="h-1.5 w-3/4 bg-blue-300 rounded-full opacity-60"></div>
+</div>
+</div>
+<div class="flex flex-col items-center p-6 rounded-xl bg-slate-50 border border-slate-100/50 opacity-40">
+<span class="text-[10px] font-bold text-slate-400 mb-2 tracking-widest" style="">SAMEDI</span>
+<span class="text-3xl font-black text-slate-800" style="">17</span>
+</div>
+<div class="flex flex-col items-center p-6 rounded-xl bg-slate-50 border border-slate-100/50 opacity-40">
+<span class="text-[10px] font-bold text-slate-400 mb-2 tracking-widest" style="">DIMANCHE</span>
+<span class="text-3xl font-black text-slate-800" style="">18</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation for Mobile -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-slate-200/50 flex justify-around items-center py-3 px-6 z-50">
+<a class="text-primary flex flex-col items-center gap-1" href="#" style="">
+<span class="material-symbols-outlined" data-icon="dashboard" style='font-variation-settings: "FILL" 1;'>dashboard</span>
+<span class="text-[10px] font-bold" style="">
+  ueil</span>
+</a>
+<a class="text-slate-400 flex flex-col items-center gap-1" href="{{DATA:SCREEN:SCREEN_11}}" style="">
+<span class="material-symbols-outlined" data-icon="groups" style="">groups</span>
+<span class="text-[10px] font-bold" style="">Patients</span>
+</a>
+<button class="bg-primary text-white p-3 rounded-full -translate-y-6 shadow-xl" onclick="window.location.href='{{DATA:SCREEN:SCREEN_11}}'" style="">
+<span class="material-symbols-outlined" data-icon="add" style="">add</span>
+</button>
+<a class="text-slate-400 flex flex-col items-center gap-1" href="{{DATA:SCREEN:SCREEN_23}}" style="">
+<span class="material-symbols-outlined" data-icon="bloodtype" style="">bloodtype</span>
+<span class="text-[10px] font-bold" style="">Séances</span>
+</a>
+<a class="text-slate-400 flex flex-col items-center gap-1" href="#" style="">
+<span class="material-symbols-outlined" data-icon="person" style="">person</span>
+<span class="text-[10px] font-bold" style="">Profil</span>
+</a>
+</nav>
+</body></html>

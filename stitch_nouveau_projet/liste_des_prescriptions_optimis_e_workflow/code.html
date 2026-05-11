@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vitalis Core - Liste des prescriptions</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#d2e1f2",
+                    "inverse-surface": "#2e3132",
+                    "inverse-on-surface": "#f0f1f2",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-tint": "#005db6",
+                    "secondary": "#51606e",
+                    "outline": "#727783",
+                    "on-primary-fixed": "#001b3d",
+                    "error": "#ba1a1a",
+                    "surface-variant": "#e1e3e4",
+                    "on-tertiary-container": "#ffceca",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed-variant": "#00468c",
+                    "on-secondary-container": "#556472",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb3ac",
+                    "surface-bright": "#f8f9fa",
+                    "surface": "#f8f9fa",
+                    "on-surface": "#191c1d",
+                    "on-secondary-fixed": "#0e1d29",
+                    "on-background": "#191c1d",
+                    "tertiary": "#940010",
+                    "on-secondary": "#ffffff",
+                    "on-surface-variant": "#424752",
+                    "surface-container-high": "#e7e8e9",
+                    "primary-container": "#005eb8",
+                    "primary": "#00478d",
+                    "outline-variant": "#c2c6d4",
+                    "on-secondary-fixed-variant": "#3a4856",
+                    "secondary-fixed-dim": "#b9c8d8",
+                    "on-primary": "#ffffff",
+                    "surface-container-low": "#f3f4f5",
+                    "primary-fixed-dim": "#a9c7ff",
+                    "on-primary-container": "#c8daff",
+                    "on-tertiary-fixed": "#410003",
+                    "background": "#f8f9fa",
+                    "tertiary-fixed": "#ffdad6",
+                    "primary-fixed": "#d6e3ff",
+                    "on-error-container": "#93000a",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#a9c7ff",
+                    "on-tertiary-fixed-variant": "#930010",
+                    "tertiary-container": "#bb1b21",
+                    "surface-dim": "#d9dadb",
+                    "secondary-fixed": "#d5e4f5",
+                    "surface-container": "#edeeef",
+                    "surface-container-highest": "#e1e3e4"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "display": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .headline { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+
+        /* Custom Scrollbar Styling */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #cbd5e1;
+        }
+        
+        /* Sticky Header Fix */
+        thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex min-h-screen overflow-hidden">
+<!-- SideNavBar (Authority Source: JSON/Design System) -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r-0 bg-slate-50 dark:bg-slate-950 flex flex-col py-4 gap-2 z-50">
+<div class="px-6 mb-8 flex flex-col items-start gap-1">
+<div class="flex items-center gap-3">
+<img alt="CHU Andrainjato Fianarantsoa Logo" class="w-12 h-12 object-contain rounded-lg" src="https://lh3.googleusercontent.com/aida/ADBb0uiGy8ScMjL6ZLQy7_SbLYlroJWfo78U1O4eeUMeLWpk2HKguGLGHHLChg1RlUhL5-GvJCkZZWJlDOGm1m0pJ-0gDFnkYrfag2UyCyUZclqEkh1ioIClAiyD5we9kq9xabonQTSOjhWFFTLF14LONOkKdpIjyyRMSMn5HDfVRrU4TD8nV9Gf9r_hXLUjFBYdKhV4HZwBuWMJuGmxbqw6ceHnNcWyCNRuN-PilD2vmd6ZIvO5-zBnWKhp-bAtrIxsE3YijfC_SbrT5A" style=""/>
+<div class="flex flex-col">
+<span class="text-xl font-extrabold text-blue-800 dark:text-blue-300 leading-none" style="">CHU</span>
+<span class="text-[10px] font-medium tracking-wider text-slate-500 uppercase" style="">ANDRAINJATO</span>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-2 space-y-1">
+<a class="flex items-center px-4 py-3 text-slate-600 dark:text-slate-400 mx-2 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-all group" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">dashboard</span>
+<span class="font-['Manrope'] text-sm font-medium" style="">Tableau de bord</span>
+</a><a class="flex items-center px-4 py-3 text-slate-600 dark:text-slate-400 mx-2 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-all group" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">message</span>
+<span class="font-['Manrope'] text-sm font-medium" style="">Demandes d'avis</span>
+</a>
+<a class="flex items-center px-4 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg mx-2 transition-all group" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">pill</span>
+<span class="font-['Manrope'] text-sm font-semibold" style="">Dialyses effectuées</span>
+</a>
+<a class="flex items-center px-4 py-3 text-slate-600 dark:text-slate-400 mx-2 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-all group" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">calendar_today</span>
+<span class="font-['Manrope'] text-sm font-medium" style="">Rendez-vous</span>
+</a>
+<a class="flex items-center px-4 py-3 text-slate-600 dark:text-slate-400 mx-2 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-all group" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">archive</span>
+<span class="font-['Manrope'] text-sm font-medium" style="">Archives</span>
+</a>
+<a class="flex items-center px-4 py-3 text-slate-600 dark:text-slate-400 mx-2 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-all group" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">monitoring</span>
+<span class="font-['Manrope'] text-sm font-medium" style="">Rapport</span>
+</a>
+</nav>
+<div class="px-6 py-4 mt-auto">
+<div class="p-4 bg-surface-container-low rounded-xl border-0">
+<p class="text-xs text-secondary font-medium mb-2" style="">Utilisateur Actuel</p>
+<div class="flex items-center gap-3">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="professional male clinician portrait in clinical environment soft hospital lighting neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEhnHjzHPIJxO40WUWL2mZSipeDkC_WOe_Rdl0yaRyb7Wst2sAk-1JxU21iMsFHmT2f1PAUj3c7FUSMMeYey0BFjGmmRhFNMuWlWcGXaOg7W_4liNE18voG3JCkrd_Xon8RmfNGbOt3VMycv5MI7jhwwwJOmYbJ3eO_LXPIsUon47n7TzFjte20CeVbAje6QXdiJGelZoLiYdQGDa2FOcWNdaJtPhynCyywASOPf9OKeKZoF02yYgP1jKKIG1sOZIxHu6C4ohPVXlS" style=""/>
+<div class="flex flex-col">
+<span class="text-xs font-bold text-on-surface" style="">Dr. Lefebvre</span>
+<span class="text-[10px] text-secondary" style="">Néphrologue</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 flex-1 flex flex-col h-screen overflow-y-auto">
+<!-- TopNavBar (Authority Source: JSON) -->
+<header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl flex justify-between items-center w-full px-8 h-16 fixed top-0 z-40 transition-colors shadow-sm shadow-blue-900/5 ml-0">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" style="">search</span>
+<input class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-full pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary-container transition-all" placeholder="Rechercher un patient ou une prescription..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-full transition-colors active:scale-95" style="">
+<span class="material-symbols-outlined" style="">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-full transition-colors active:scale-95" style="">
+<span class="material-symbols-outlined" style="">help</span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-full transition-colors active:scale-95" style="">
+<span class="material-symbols-outlined" style="">settings</span>
+</button>
+</div>
+</header>
+<!-- Content Area -->
+<div class="pt-24 px-8 pb-12">
+<!-- Bento Dashboard Header -->
+<div class="grid grid-cols-12 gap-6 mb-10 items-start">
+<!-- Left: Title Column -->
+<div class="col-span-12 lg:col-span-5">
+<nav class="flex items-center gap-2 text-xs text-secondary font-medium mb-2">
+<span class="" style="">Vitalis Core</span>
+<span class="material-symbols-outlined text-[14px]" style="">chevron_right</span>
+<span class="text-primary font-bold" style="">Registre des Prescriptions</span>
+</nav>
+<h1 class="text-4xl font-extrabold tracking-tight text-on-surface mb-2" style="">Prescriptions</h1>
+<p class="text-secondary body-md max-w-md" style="">Gérez et validez les protocoles cliniques en temps réel pour l'unité de dialyse.</p>
+</div>
+<!-- Right: Summary Card -->
+<div class="col-span-12 lg:col-span-7">
+<div class="bg-surface-container-low rounded-xl p-6 flex items-center justify-between relative overflow-hidden">
+<div class="relative z-10 flex flex-col">
+<span class="text-sm font-semibold text-primary mb-1" style="">Activité Totale</span>
+<div class="flex items-baseline gap-3">
+<h2 class="text-5xl font-extrabold text-on-surface tracking-tighter" style="">142</h2>
+<span class="text-sm font-medium text-secondary" style="">Prescriptions enregistrées</span>
+</div>
+</div>
+<!-- Nested Badges Area -->
+<div class="flex flex-wrap gap-2 justify-end max-w-xs">
+<div class="flex flex-col items-end px-3 py-2 bg-surface-container-highest rounded-lg border-l-4 border-error/40">
+<span class="text-[10px] uppercase font-bold text-tertiary" style="">Urgences</span>
+<span class="text-lg font-bold" style="">12</span>
+</div>
+<div class="flex flex-col items-end px-3 py-2 bg-surface-container-highest rounded-lg border-l-4 border-blue-500/40">
+<span class="text-[10px] uppercase font-bold text-blue-700" style="">En attente</span>
+<span class="text-lg font-bold" style="">48</span>
+</div>
+<div class="flex flex-col items-end px-3 py-2 bg-surface-container-highest rounded-lg border-l-4 border-emerald-500/40">
+<span class="text-[10px] uppercase font-bold text-emerald-700" style="">Validées</span>
+<span class="text-lg font-bold" style="">82</span>
+</div>
+</div>
+<!-- Abstract background element -->
+<div class="absolute -right-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl"></div>
+</div>
+</div>
+</div>
+<!-- Main Data Table Container -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="p-6 flex items-center justify-between">
+<div>
+<h3 class="text-xl font-bold text-on-surface" style="">Registre des Patients</h3>
+<p class="text-xs text-secondary" style="">Priorité : Actions Requises (Non-Validé)</p>
+</div>
+<div class="flex gap-3">
+<a href="../prescriptions_valid_es_clinical_precision/code.html" class="flex items-center gap-2 px-5 py-2.5 bg-secondary-container text-on-secondary-container rounded-md text-sm font-bold hover:bg-blue-100 transition-all border border-blue-200/50">
+<span class="material-symbols-outlined text-[20px]">verified</span>
+                        ACCÉDER AUX VALIDATIONS
+                    </a>
+</div>
+</div>
+<!-- Scrollable Table Body Container -->
+<div class="max-h-[500px] overflow-y-auto overflow-x-auto custom-scrollbar border-t border-surface-container-low">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low">
+<tr>
+<th class="px-6 py-4 text-[10px] font-bold text-secondary uppercase tracking-widest bg-surface-container-low" style="">Patient</th>
+<th class="px-6 py-4 text-[10px] font-bold text-secondary uppercase tracking-widest bg-surface-container-low" style="">Protocole</th>
+<th class="px-6 py-4 text-[10px] font-bold text-secondary uppercase tracking-widest bg-surface-container-low" style="">Statut</th>
+<th class="px-6 py-4 text-[10px] font-bold text-secondary uppercase tracking-widest bg-surface-container-low" style="">Date de Prescription</th>
+<th class="px-6 py-4 text-[10px] font-bold text-secondary uppercase tracking-widest text-right bg-surface-container-low" style="">Actions Cliniques</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low">
+<!-- Row 1 -->
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-5" style="">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-error-container flex items-center justify-center text-on-error-container text-xs font-bold ring-4 ring-white" style="">
+                                        JD
+                                    </div>
+<div>
+<p class="text-sm font-bold text-on-surface" style="">Jean Dupont</p>
+<p class="text-[11px] text-secondary" style="">ID: #DX-9021</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5" style="">
+<p class="text-sm font-medium text-on-surface" style="">Hémodialyse Haute Flux</p>
+<p class="text-[11px] text-tertiary font-medium" style="">Ajustement dose d'EPO requis</p>
+</td>
+<td class="px-6 py-5" style="">
+<span class="px-3 py-1 bg-error-container text-on-error-container rounded-full text-[10px] font-bold uppercase tracking-tight" style="">Critique</span>
+</td>
+<td class="px-6 py-5" style="">
+<p class="text-sm font-medium text-on-surface" style="">Il y a 2 heures</p>
+</td>
+<td class="px-6 py-5 text-right" style="">
+<div class="flex justify-end gap-2">
+<button class="px-3 py-1.5 bg-surface-container-highest text-primary rounded-md text-[11px] font-bold hover:bg-primary-container hover:text-on-primary-container transition-all" onclick="window.location.href='../gestion_des_rendez_vous_isan_andro_calendrier/code.html'" style="">Rendez-vous</button>
+<button class="px-3 py-1.5 bg-surface-container-highest text-secondary rounded-md text-[11px] font-bold hover:bg-slate-200 transition-all" style="">Archive</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-5" style="">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold ring-4 ring-white" style="">
+                                        MB
+                                    </div>
+<div>
+<p class="text-sm font-bold text-on-surface" style="">Marie Bernard</p>
+<p class="text-[11px] text-secondary" style="">ID: #DX-8842</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5" style="">
+<p class="text-sm font-medium text-on-surface" style="">Anticoagulation Citrate</p>
+<p class="text-[11px] text-secondary" style="">Révision trimestrielle</p>
+</td>
+<td class="px-6 py-5" style="">
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold uppercase tracking-tight" style="">En attente</span>
+</td>
+<td class="px-6 py-5" style="">
+<p class="text-sm font-medium text-on-surface" style="">12 Oct 2023, 09:15</p>
+</td>
+<td class="px-6 py-5 text-right" style="">
+<div class="flex justify-end gap-2">
+<button class="px-3 py-1.5 bg-surface-container-highest text-primary rounded-md text-[11px] font-bold hover:bg-primary-container hover:text-on-primary-container transition-all" onclick="window.location.href='../gestion_des_rendez_vous_isan_andro_calendrier/code.html'" style="">Rendez-vous</button>
+<button class="px-3 py-1.5 bg-surface-container-highest text-secondary rounded-md text-[11px] font-bold hover:bg-slate-200 transition-all" style="">Archive</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 (Filler) -->
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-5" style="">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-surface-container-highest flex items-center justify-center text-secondary text-xs font-bold ring-4 ring-white" style="">
+                                        PL
+                                    </div>
+<div>
+<p class="text-sm font-bold text-on-surface" style="">Pierre Lefevre</p>
+<p class="text-[11px] text-secondary" style="">ID: #DX-7721</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5" style="">
+<p class="text-sm font-medium text-on-surface" style="">Hémodiafiltration</p>
+<p class="text-[11px] text-secondary" style="">Contrôle hebdomadaire</p>
+</td>
+<td class="px-6 py-5" style="">
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold uppercase tracking-tight" style="">En attente</span>
+</td>
+<td class="px-6 py-5" style="">
+<p class="text-sm font-medium text-on-surface" style="">11 Oct 2023, 14:30</p>
+</td>
+<td class="px-6 py-5 text-right" style="">
+<div class="flex justify-end gap-2">
+<button class="px-3 py-1.5 bg-surface-container-highest text-primary rounded-md text-[11px] font-bold hover:bg-primary-container hover:text-on-primary-container transition-all" onclick="window.location.href='../gestion_des_rendez_vous_isan_andro_calendrier/code.html'" style="">Rendez-vous</button>
+<button class="px-3 py-1.5 bg-surface-container-highest text-secondary rounded-md text-[11px] font-bold hover:bg-slate-200 transition-all" style="">Archive</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 (Filler) -->
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-5" style="">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-surface-container-highest flex items-center justify-center text-secondary text-xs font-bold ring-4 ring-white" style="">
+                                        SD
+                                    </div>
+<div>
+<p class="text-sm font-bold text-on-surface" style="">Sophie Durand</p>
+<p class="text-[11px] text-secondary" style="">ID: #DX-6612</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5" style="">
+<p class="text-sm font-medium text-on-surface" style="">Dialyse Péritonéale</p>
+<p class="text-[11px] text-secondary" style="">Suivi à domicile</p>
+</td>
+<td class="px-6 py-5" style="">
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold uppercase tracking-tight" style="">En attente</span>
+</td>
+<td class="px-6 py-5" style="">
+<p class="text-sm font-medium text-on-surface" style="">10 Oct 2023, 11:20</p>
+</td>
+<td class="px-6 py-5 text-right" style="">
+<div class="flex justify-end gap-2">
+<button class="px-3 py-1.5 bg-surface-container-highest text-primary rounded-md text-[11px] font-bold hover:bg-primary-container hover:text-on-primary-container transition-all" onclick="window.location.href='../gestion_des_rendez_vous_isan_andro_calendrier/code.html'" style="">Rendez-vous</button>
+<button class="px-3 py-1.5 bg-surface-container-highest text-secondary rounded-md text-[11px] font-bold hover:bg-slate-200 transition-all" style="">Archive</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination / Footer -->
+<div class="p-6 bg-surface-container-low border-t border-surface-container-low flex items-center justify-between">
+<span class="text-xs text-secondary font-medium italic" style="">Défilement activé pour voir l'ensemble des patients prioritaires</span>
+<div class="flex gap-2">
+<p class="text-xs text-secondary font-medium" style="">Total: 4 en attente</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Contextual FAB -->
+</body></html>

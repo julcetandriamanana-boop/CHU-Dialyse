@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DialysisFlow - Gestion des Rendez-vous</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#940010",
+                        "surface-container": "#edeeef",
+                        "surface-bright": "#f8f9fa",
+                        "on-tertiary-container": "#ffceca",
+                        "surface-variant": "#e1e3e4",
+                        "inverse-primary": "#a9c7ff",
+                        "on-secondary-fixed": "#0e1d29",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#2e3132",
+                        "surface": "#f8f9fa",
+                        "surface-container-high": "#e7e8e9",
+                        "on-secondary-fixed-variant": "#3a4856",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed": "#001b3d",
+                        "on-tertiary": "#ffffff",
+                        "background": "#f8f9fa",
+                        "secondary-fixed": "#d5e4f5",
+                        "primary-fixed": "#d6e3ff",
+                        "primary": "#00478d",
+                        "inverse-on-surface": "#f0f1f2",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#bb1b21",
+                        "secondary-fixed-dim": "#b9c8d8",
+                        "outline-variant": "#c2c6d4",
+                        "secondary": "#51606e",
+                        "on-surface": "#191c1d",
+                        "primary-container": "#005eb8",
+                        "on-primary-container": "#c8daff",
+                        "surface-container-low": "#f3f4f5",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-tertiary-fixed-variant": "#930010",
+                        "on-tertiary-fixed": "#410003",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#d2e1f2",
+                        "on-surface-variant": "#424752",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#ffb3ac",
+                        "on-secondary-container": "#556472",
+                        "outline": "#727783",
+                        "on-primary-fixed-variant": "#00468c",
+                        "primary-fixed-dim": "#a9c7ff",
+                        "surface-tint": "#005db6",
+                        "on-background": "#191c1d",
+                        "surface-dim": "#d9dadb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .headline { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-surface overflow-hidden">
+<div class="flex h-screen w-full">
+<!-- SideNavBar -->
+<aside class="flex-none h-screen w-64 bg-slate-50 dark:bg-slate-950 flex flex-col p-4 space-y-2 bg-gradient-to-r from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 border-r border-outline-variant/15">
+<div class="mb-8 px-2 flex items-center gap-3"><div class="flex items-center gap-3">
+<img alt="CHU Andrainjato Logo" class="w-12 h-12 object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0uiGy8ScMjL6ZLQy7_SbLYlroJWfo78U1O4eeUMeLWpk2HKguGLGHHLChg1RlUhL5-GvJCkZZWJlDOGm1m0pJ-0gDFnkYrfag2UyCyUZclqEkh1ioIClAiyD5we9kq9xabonQTSOjhWFFTLF14LONOkKdpIjyyRMSMn5HDfVRrU4TD8nV9Gf9r_hXLUjFBYdKhV4HZwBuWMJuGmxbqw6ceHnNcWyCNRuN-PilD2vmd6ZIvO5-zBnWKhp-bAtrIxsE3YijfC_SbrT5A"/>
+<div>
+<h2 class="font-headline font-black text-blue-900 dark:text-blue-100 leading-tight">CHU Andrainjato</h2>
+<p class="text-xs text-slate-500 font-medium">Nephrology Dept.</p>
+</div>
+</div></div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-100/50 transition-all duration-300 font-headline text-sm font-medium" href="#">
+<span class="material-symbols-outlined mr-3">grid_view</span>
+                Tableau de bord
+            </a><a class="flex items-center px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-100/50 transition-all duration-300 font-headline text-sm font-medium" href="#">
+<span class="material-symbols-outlined mr-3">assignment_late</span>
+                Demandes d'avis
+            </a>
+<a class="flex items-center px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-100/50 transition-all duration-300 font-headline text-sm font-medium" href="#">
+<span class="material-symbols-outlined mr-3">group</span>
+                Liste des prescriptions
+            </a>
+<a class="flex items-center px-3 py-2.5 bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300 shadow-sm rounded-lg transition-all duration-300 font-headline text-sm font-medium" href="#">
+<span class="material-symbols-outlined mr-3">calendar_today</span>
+                Rendez-vous
+            </a>
+<a class="flex items-center px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-100/50 transition-all duration-300 font-headline text-sm font-medium" href="#">
+<span class="material-symbols-outlined mr-3">archive</span>
+                Archives
+            </a>
+<a class="flex items-center px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-100/50 transition-all duration-300 font-headline text-sm font-medium" href="#">
+<span class="material-symbols-outlined mr-3">analytics</span>
+                Rapport
+            </a>
+</nav>
+<div class="pt-4 border-t border-outline-variant/15 space-y-1">
+<a class="flex items-center px-3 py-2 text-slate-600 hover:text-blue-600 transition-all font-headline text-sm" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+                Paramètres
+            </a>
+<a class="flex items-center px-3 py-2 text-slate-600 hover:text-tertiary transition-all font-headline text-sm" href="#">
+<span class="material-symbols-outlined mr-3">logout</span>
+                Déconnexion
+            </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col relative overflow-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 left-64 z-50 flex justify-between items-center px-6 h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm shadow-blue-900/5 border-b-0">
+<div class="flex items-center gap-4">
+<h1 class="font-manrope tracking-tight headline-md text-2xl font-bold tracking-tighter text-blue-800 dark:text-blue-300">DialysisFlow</h1>
+<div class="h-6 w-px bg-outline-variant/20 mx-2"></div>
+<span class="text-slate-500 font-medium font-headline">Gestion des Rendez-vous</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-slate-400">search</span>
+<input class="pl-10 pr-4 py-1.5 bg-surface-container-low border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-64" placeholder="Rechercher un dossier..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-slate-500 hover:bg-blue-50/50 p-2 rounded-full cursor-pointer transition-colors">notifications</span>
+<span class="material-symbols-outlined text-slate-500 hover:bg-blue-50/50 p-2 rounded-full cursor-pointer transition-colors">help_outline</span>
+<div class="flex items-center gap-3 ml-2 pl-4 border-l border-outline-variant/20">
+<img alt="Dr. Claire V." class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFTSa_IJpR5YMItEDyAOI19MhG8DmI0b2EYae678Ad04s4cPUmXlLk-zBLfgKuh7aVf54YkdMMt1xO1sutxo_06b2PLR-JD6uv73C9R38gzVMwMZmT6F0TgLBap7ipUngtRdnucJ2bKox2JfqxzE78cJK3KW0JPh3eNra_vQqq2_6XnRsaasaAbUspQvQsgxGzc-z_Y7xLkSF02fbDrST7TDxR6d8qt6nF6o46hpEJKxRpDaSXm-L4Cnr_h973ZDK975ElBZSSlhi5"/>
+<span class="text-sm font-semibold text-on-surface">Dr. Claire V.</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Underlying Calendar Page Content (Blurred/Dimmed) -->
+<div class="mt-16 p-8 flex-1 overflow-auto opacity-40 blur-[2px] select-none pointer-events-none">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h2 class="text-3xl font-headline font-extrabold text-on-surface">Calendrier Hebdomadaire</h2>
+<p class="text-slate-500">Unité de Dialyse - Étage 2</p>
+</div>
+<div class="flex bg-surface-container-high rounded-md p-1">
+<button class="px-4 py-1.5 text-sm font-medium rounded">Jour</button>
+<button class="px-4 py-1.5 text-sm font-medium bg-white shadow-sm rounded">Semaine</button>
+<button class="px-4 py-1.5 text-sm font-medium rounded">Mois</button>
+</div>
+</div>
+<div class="grid grid-cols-6 gap-0 bg-white rounded-xl shadow-sm border border-outline-variant/10 overflow-hidden">
+<div class="col-span-1 bg-surface-container-low border-r border-outline-variant/10">
+<div class="h-16 flex items-center justify-center font-bold text-slate-400">HEURE</div>
+<div class="h-24 border-t border-outline-variant/5"></div>
+</div>
+<div class="col-span-5 border-t border-outline-variant/5"></div>
+</div>
+</div>
+<!-- MODAL OVERLAY -->
+<div class="absolute inset-0 bg-on-surface/20 backdrop-blur-[4px] z-[60] flex items-center justify-center p-6 overflow-y-auto">
+<!-- Simplified Appointment Selection Modal -->
+<div class="bg-surface-container-lowest w-full max-w-5xl max-h-[calc(100vh-3rem)] rounded-xl shadow-2xl overflow-hidden border border-white/40 flex flex-col animate-in fade-in zoom-in duration-300">
+<!-- Modal Header -->
+<div class="px-8 py-6 border-b border-outline-variant/10 bg-surface-bright flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">add_circle</span>
+</div>
+<div>
+<h3 class="text-xl font-headline font-bold text-on-surface">Nouveau Rendez-vous</h3>
+<p class="text-sm text-on-surface-variant">Planifier une séance de dialyse</p>
+</div>
+</div>
+<button id="closeAppointmentButton" class="p-2 hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined text-slate-400">close</span>
+</button>
+</div>
+<div class="flex flex-1 min-h-0 overflow-hidden">
+<!-- Left Panel: Patient & Date Picker (Same as original) -->
+<div class="w-80 p-8 border-r border-outline-variant/10 space-y-8 overflow-y-auto">
+<!-- Patient Search -->
+<div class="space-y-3">
+<label class="text-sm font-bold text-slate-700 headline tracking-tight">Patient concerné</label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">person_search</span>
+<input id="appointmentPatientInput" class="w-full pl-10 pr-4 py-2.5 bg-surface-container border-none rounded-md text-sm focus:ring-2 focus:ring-primary transition-all" placeholder="Nom ou dossier" type="text"/>
+</div>
+</div>
+<!-- Mini Interactive Calendar -->
+<div class="space-y-4">
+<div class="flex justify-between items-center px-1">
+<label class="text-sm font-bold text-slate-700 headline tracking-tight">Date du soin</label>
+<div class="flex gap-1">
+<button class="p-1 hover:bg-surface-container rounded transition-colors"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
+<button class="p-1 hover:bg-surface-container rounded transition-colors"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+</div>
+</div>
+<div class="text-center mb-2">
+<span id="appointmentMonthLabel" class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Octobre 2024</span>
+</div>
+<div class="grid grid-cols-7 gap-1 text-center">
+<div class="text-[9px] font-bold text-slate-400 mb-1">L</div>
+<div class="text-[9px] font-bold text-slate-400 mb-1">M</div>
+<div class="text-[9px] font-bold text-slate-400 mb-1">M</div>
+<div class="text-[9px] font-bold text-slate-400 mb-1">J</div>
+<div class="text-[9px] font-bold text-slate-400 mb-1">V</div>
+<div class="text-[9px] font-bold text-slate-400 mb-1">S</div>
+<div class="text-[9px] font-bold text-slate-400 mb-1">D</div>
+<!-- Calendar days... -->
+<div class="h-7 flex items-center justify-center text-[11px] text-slate-300">25</div>
+<div class="h-7 flex items-center justify-center text-[11px] text-slate-300">26</div>
+<div class="h-7 flex items-center justify-center text-[11px] text-slate-300">27</div>
+<div class="h-7 flex items-center justify-center text-[11px] text-slate-300">28</div>
+<div class="h-7 flex items-center justify-center text-[11px] text-slate-300">29</div>
+<div class="h-7 flex items-center justify-center text-[11px] text-slate-300">30</div>
+<button type="button" data-day="1" class="appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors">1</button>
+<button type="button" data-day="2" class="appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors">2</button>
+<button type="button" data-day="3" class="appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors">3</button>
+<button type="button" data-day="4" class="appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors">4</button>
+<button type="button" data-day="5" class="appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors">5</button>
+<button type="button" data-day="6" class="appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors">6</button>
+<button type="button" data-day="7" class="appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors">7</button>
+<button type="button" data-day="8" class="appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors">8</button>
+<button type="button" data-day="9" class="appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors">9</button>
+<button type="button" data-day="10" class="appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors">10</button>
+<button type="button" data-day="11" class="appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors">11</button>
+<button type="button" data-day="12" class="appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors">12</button>
+<button type="button" data-day="13" class="appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors">13</button>
+<button type="button" data-day="14" class="appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors">14</button>
+<button type="button" data-day="15" class="appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors">15</button>
+</div>
+</div>
+</div>
+<!-- Right Panel: Suggested Slots (NEW Simplified Interface) -->
+<div class="flex-1 p-8 bg-surface-container-low/50 flex flex-col gap-8 overflow-y-auto">
+<section class="space-y-4">
+<label id="appointmentSlotsLabel" class="text-sm font-bold text-slate-700 headline tracking-tight">Créneaux Disponibles (12 Oct)</label>
+<div id="slotsContainer" class="grid grid-cols-2 gap-4">
+<!-- Slots will be generated dynamically by JavaScript -->
+</div>
+</section>
+<!-- Device Selection Grid (Contextual to Selected Slot) -->
+<section class="space-y-4">
+<div class="flex justify-between items-end">
+<label class="text-sm font-bold text-slate-700 headline tracking-tight">Assignation de l'appareil de dialyse</label>
+<div class="flex gap-4 mb-1"><div class="flex items-center gap-1.5">
+<div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+<span class="text-[10px] font-bold text-slate-500 uppercase" id="availableMachinesCount">3 / 3 APPAREILS</span>
+</div>
+<div class="flex items-center gap-1.5">
+<div class="w-2.5 h-2.5 rounded-full bg-primary"></div>
+<span class="text-[10px] font-bold text-slate-500 uppercase">Sélectionné</span>
+</div>
+<div class="flex items-center gap-1.5">
+<div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+<span class="text-[10px] font-bold text-slate-500 uppercase">Occupé</span>
+</div></div>
+</div>
+<div class="grid gap-3 grid-cols-3"><!-- Machine 01 -->
+<button type="button" class="appointment-device p-3 bg-white border border-outline-variant/15 rounded-lg flex flex-col items-center gap-1 hover:border-primary/50 hover:bg-slate-50 transition-all" data-device="Machine 01" data-machine="Machine #01">
+<span class="material-symbols-outlined text-slate-500">precision_manufacturing</span>
+<span class="text-[11px] font-bold text-slate-500">Machine 01</span>
+</button>
+<!-- Machine 02 (Sélectionné) -->
+<button type="button" class="appointment-device p-3 bg-primary/10 border-2 border-primary rounded-lg flex flex-col items-center gap-1 shadow-sm" data-device="Machine 02" data-machine="Machine #02">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">precision_manufacturing</span>
+<span class="text-[11px] font-bold text-primary">Machine 02</span>
+</button>
+<!-- Machine 03 -->
+<button type="button" class="appointment-device p-3 bg-white border border-outline-variant/15 rounded-lg flex flex-col items-center gap-1 hover:border-primary/50 hover:bg-slate-50 transition-all" data-device="Machine 03" data-machine="Machine #03">
+<span class="material-symbols-outlined text-slate-500">precision_manufacturing</span>
+<span class="text-[11px] font-bold text-slate-500">Machine 03</span>
+</button></div>
+<div id="occupiedMachinesWarning" class="hidden bg-rose-50 border border-rose-200 rounded-lg p-3 mt-2"></div>
+</section>
+<div class="mt-auto bg-blue-50/50 p-4 rounded-lg border border-blue-100 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-blue-600">info</span>
+<div id="appointmentSummary" class="text-xs text-blue-800">
+                                    Résumé : Séance <strong>Matin</strong> sur <strong>Machine 02</strong> (07:00 - 11:00).
+                                </div>
+</div>
+<button id="appointmentDetailsButton" type="button" class="px-3 py-1 bg-white text-[11px] font-bold text-blue-800 border border-blue-200 rounded hover:bg-blue-50 transition-colors">Détails</button>
+</div>
+<div id="appointmentDetailsPanel" class="hidden bg-white border border-blue-100 rounded-lg p-3 text-[11px] text-blue-900 leading-relaxed">
+    Patient, date, créneau et appareil seront enregistrés dans les rendez-vous puis affichés dans les prescriptions validées.
+</div>
+</div>
+</div>
+<!-- Modal Footer -->
+<div class="px-8 py-6 bg-white border-t border-outline-variant/10 flex justify-end items-center gap-4">
+<button id="cancelAppointmentButton" class="px-6 py-2.5 text-sm font-headline font-bold text-slate-500 hover:bg-slate-50 rounded-md transition-colors">
+                        Annuler
+                    </button>
+<button id="validateAppointmentButton" class="px-8 py-2.5 bg-primary text-white text-sm font-headline font-bold rounded-md shadow-lg shadow-primary/30 flex items-center gap-2 hover:bg-primary-container transition-all">
+<span class="material-symbols-outlined text-lg">check_circle</span>
+                        Valider le Rendez-vous
+                    </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+  const APPOINTMENTS_STORAGE_KEY = 'dialysisAppointments';
+  const VALIDATED_PRESCRIPTIONS_STORAGE_KEY = 'dialyse_validated_prescriptions';
+  const PENDING_APPOINTMENT_PATIENT_KEY = 'pendingAppointmentPatient';
+  const patientInput = document.getElementById('appointmentPatientInput');
+  const validateAppointmentButton = document.getElementById('validateAppointmentButton');
+  const closeAppointmentButton = document.getElementById('closeAppointmentButton');
+  const cancelAppointmentButton = document.getElementById('cancelAppointmentButton');
+  const dayButtons = document.querySelectorAll('.appointment-day');
+  const slotsContainer = document.getElementById('slotsContainer');
+  const deviceButtons = document.querySelectorAll('.appointment-device');
+  const slotsLabel = document.getElementById('appointmentSlotsLabel');
+  const summary = document.getElementById('appointmentSummary');
+  const detailsButton = document.getElementById('appointmentDetailsButton');
+  const detailsPanel = document.getElementById('appointmentDetailsPanel');
+  const urlParams = new URLSearchParams(window.location.search);
+
+  const TIME_SLOTS = {
+    'Matin': ['07:00 - 08:00', '08:00 - 09:00', '09:00 - 10:00', '10:00 - 11:00'],
+    'Midi': ['11:30 - 12:30', '12:30 - 13:30', '13:30 - 14:30', '14:30 - 15:30'],
+    'Après-midi': ['14:00 - 15:00', '15:00 - 16:00', '16:00 - 17:00', '17:00 - 18:00'],
+    'Soir': ['18:00 - 19:00', '19:00 - 20:00', '20:00 - 21:00', '21:00 - 22:00']
+  };
+
+  const SLOT_CAPACITY = {
+    'Matin': 3,
+    'Midi': 3,
+    'Après-midi': 3,
+    'Soir': 3
+  };
+
+  let selectedAppointmentDay = urlParams.get('day') || '12';
+  let selectedSlot = {
+    label: 'Matin',
+    time: '07:00 - 08:00',
+    available: '3'
+  };
+  let selectedDevice = {
+    device: 'Machine 02',
+    machine: 'Machine #02'
+  };
+  let selectedPatient = readSelectedPatient();
+  let availableSlots = [];
+
+  function generateAvailableSlots(day) {
+    const appointments = readAppointments().filter(apt => String(apt.day) === String(day));
+    const slotsByPeriod = {};
+    
+    Object.keys(TIME_SLOTS).forEach(period => {
+      slotsByPeriod[period] = [];
+      
+      TIME_SLOTS[period].forEach(timeSlot => {
+        const occupiedCount = appointments.filter(apt => {
+          const aptStart = parseTimeToMinutes(apt.timeRange.split('-')[0].trim());
+          const aptEnd = parseTimeToMinutes(apt.timeRange.split('-')[1].trim());
+          const slotStart = parseTimeToMinutes(timeSlot.split('-')[0].trim());
+          const slotEnd = parseTimeToMinutes(timeSlot.split('-')[1].trim());
+          return aptStart < slotEnd && slotStart < aptEnd;
+        }).length;
+        
+        if (occupiedCount < SLOT_CAPACITY[period]) {
+          slotsByPeriod[period].push({
+            time: timeSlot,
+            occupied: occupiedCount,
+            available: SLOT_CAPACITY[period] - occupiedCount,
+            isFull: occupiedCount >= SLOT_CAPACITY[period]
+          });
+        }
+      });
+    });
+    
+    return slotsByPeriod;
+  }
+
+  function getFirstOrLastHourOfPeriod(slotArray, isFirst = true) {
+    if (!slotArray || slotArray.length === 0) return null;
+    
+    const slot = isFirst ? slotArray[0] : slotArray[slotArray.length - 1];
+    const timeRange = slot.time;
+    const [start, end] = timeRange.split('-').map(t => t.trim());
+    
+    return isFirst 
+      ? `${start} - ${slotArray[slotArray.length - 1].time.split('-')[1].trim()}`
+      : `${slotArray[0].time.split('-')[0].trim()} - ${end}`;
+  }
+
+  function readAppointments() {
+    try {
+      return JSON.parse(localStorage.getItem(APPOINTMENTS_STORAGE_KEY)) || [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function parseTimeToMinutes(value) {
+    const [hours, minutes] = String(value).trim().split(':').map(Number);
+    return (hours * 60) + (minutes || 0);
+  }
+
+  function parseTimeRange(range) {
+    const [start, end] = String(range || '').split('-').map((part) => part.trim());
+    if (!start || !end) return null;
+
+    return {
+      start: parseTimeToMinutes(start),
+      end: parseTimeToMinutes(end)
+    };
+  }
+
+  function timeRangesOverlap(firstRange, secondRange) {
+    const first = parseTimeRange(firstRange);
+    const second = parseTimeRange(secondRange);
+    if (!first || !second) return false;
+
+    return first.start < second.end && second.start < first.end;
+  }
+
+  function getAppointmentsFor(day, slotLabel) {
+    return readAppointments().filter((appointment) =>
+      String(appointment.day) === String(day) && appointment.slotLabel === slotLabel
+    );
+  }
+
+  function getAppointmentsForTime(day, timeRange) {
+    return readAppointments().filter((appointment) =>
+      String(appointment.day) === String(day) && timeRangesOverlap(appointment.timeRange, timeRange)
+    );
+  }
+
+  function getFreeSlotCount(timeRange) {
+    const capacity = 3; // 3 machines per time slot
+    const usedMachines = new Set(
+      getAppointmentsForTime(selectedAppointmentDay, timeRange)
+        .map((appointment) => appointment.machine || appointment.device || appointment.bed)
+        .filter(Boolean)
+    );
+    const used = usedMachines.size;
+    return Math.max(capacity - used, 0);
+  }
+
+  function getOccupiedMachinesForSelectedSlot() {
+    return getAppointmentsForTime(selectedAppointmentDay, selectedSlot.time)
+      .map((appointment) => appointment.machine || appointment.device || appointment.bed)
+      .filter(Boolean);
+  }
+
+  function generateSlots() {
+    slotsContainer.innerHTML = '';
+    let hasAvailableSlots = false;
+    
+    // Generate available slots based on existing appointments
+    availableSlots = generateAvailableSlots(selectedAppointmentDay);
+
+    Object.keys(availableSlots).forEach(period => {
+      const periodSlots = availableSlots[period];
+      
+      if (periodSlots.length === 0) {
+        // Show "No availability" for this period
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'appointment-slot group flex flex-col p-4 bg-white/50 border border-outline-variant/10 rounded-xl text-left opacity-60 cursor-not-allowed';
+        button.disabled = true;
+        button.innerHTML = `
+          <div class="flex justify-between items-start mb-2">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">${period}</span>
+          </div>
+          <div class="text-lg font-headline font-extrabold text-slate-400">Aucun créneau</div>
+          <div class="mt-3 flex items-center gap-1.5">
+            <div class="w-2 h-2 rounded-full bg-rose-500"></div>
+            <span class="text-xs font-bold text-slate-400">Complet</span>
+          </div>
+        `;
+        slotsContainer.appendChild(button);
+        return;
+      }
+      
+      // Get combined time range for the period
+      const firstSlot = periodSlots[0];
+      const lastSlot = periodSlots[periodSlots.length - 1];
+      const startTime = firstSlot.time.split(' - ')[0];
+      const endTime = lastSlot.time.split(' - ')[1];
+      const combinedTimeRange = `${startTime} - ${endTime}`;
+      
+      // Check if any slot in this period is available
+      const totalAvailable = periodSlots.reduce((sum, slot) => sum + slot.available, 0);
+      const isAvailable = totalAvailable > 0;
+      
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = !isAvailable
+        ? 'appointment-slot group flex flex-col p-4 bg-white/50 border border-outline-variant/10 rounded-xl text-left opacity-60 cursor-not-allowed'
+        : 'appointment-slot group flex flex-col p-4 bg-white border border-outline-variant/15 rounded-xl text-left hover:border-primary/50 hover:bg-slate-50 transition-all';
+      button.dataset.slot = period;
+      button.dataset.time = combinedTimeRange;
+      button.dataset.available = String(totalAvailable);
+      button.disabled = !isAvailable;
+
+      button.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+          <span class="text-xs font-bold ${!isAvailable ? 'text-slate-400' : 'text-slate-400'} uppercase tracking-wider">${period}</span>
+        </div>
+        <div class="text-lg font-headline font-extrabold ${!isAvailable ? 'text-slate-400' : 'text-slate-600'}">${combinedTimeRange}</div>
+        <div class="mt-3 flex items-center gap-1.5">
+          <div class="w-2 h-2 rounded-full ${!isAvailable ? 'bg-rose-500' : totalAvailable <= 2 ? 'bg-amber-500' : 'bg-emerald-500'}"></div>
+          <span class="text-xs font-bold ${!isAvailable ? 'text-slate-400' : 'text-slate-500'}">${!isAvailable ? 'Complet' : `${totalAvailable} poste${totalAvailable > 1 ? 's' : ''} disponible${totalAvailable > 1 ? 's' : ''}`}</span>
+        </div>
+      `;
+
+      if (isAvailable) {
+        hasAvailableSlots = true;
+        button.addEventListener('click', () => updateSelectedSlot(button));
+      }
+
+      slotsContainer.appendChild(button);
+    });
+
+    if (!hasAvailableSlots) {
+      slotsContainer.innerHTML = '<p class="text-center text-slate-500 col-span-2 py-8">Aucun créneau disponible pour cette journée.</p>';
+    }
+  }
+
+  function readStoredJson(key) {
+    try {
+      return JSON.parse(localStorage.getItem(key)) || null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function readSelectedPatient() {
+    return readStoredJson(PENDING_APPOINTMENT_PATIENT_KEY) || readStoredJson('currentPatient') || {};
+  }
+
+  function fillPatientFromPrescription() {
+    if (!selectedPatient || !selectedPatient.name) return;
+    patientInput.value = selectedPatient.name;
+    patientInput.dataset.patientId = selectedPatient.id || '';
+    patientInput.dataset.protocol = selectedPatient.protocol || '';
+  }
+
+  function updateSelectedDay(day) {
+    selectedAppointmentDay = String(day);
+
+    dayButtons.forEach((button) => {
+      const isSelected = button.dataset.day === selectedAppointmentDay;
+      button.className = isSelected
+        ? 'appointment-day h-7 flex items-center justify-center text-[11px] font-bold bg-primary text-white rounded-md shadow-lg shadow-primary/20'
+        : 'appointment-day h-7 flex items-center justify-center text-[11px] font-medium hover:bg-primary-fixed cursor-pointer rounded-md transition-colors';
+    });
+
+    if (slotsLabel) {
+      slotsLabel.textContent = `Créneaux Disponibles (${selectedAppointmentDay} Oct)`;
+    }
+
+    generateSlots();
+    const slotButtons = document.querySelectorAll('#slots .appointment-slot');
+    slotButtons.forEach((button) => {
+      button.addEventListener('click', () => updateSelectedSlot(button));
+    });
+    const firstAvailable = document.querySelector('.appointment-slot:not([disabled])');
+    if (firstAvailable) {
+      updateSelectedSlot(firstAvailable);
+    } else {
+      // No available slots
+      selectedSlot = { label: '', time: '', available: '0' };
+      refreshDeviceAvailability();
+      updateSummary();
+    }
+  }
+
+  function updateSelectedSlot(button) {
+    if (button.disabled) return;
+
+    selectedSlot = {
+      label: button.dataset.slot,
+      time: button.dataset.time,
+      available: button.dataset.available
+    };
+
+    // Update all buttons
+    document.querySelectorAll('.appointment-slot').forEach(item => {
+      const isSelected = item === button;
+      const isOccupied = item.disabled;
+
+      item.className = isOccupied
+        ? 'appointment-slot group flex flex-col p-4 bg-white/50 border border-outline-variant/10 rounded-xl text-left opacity-60 cursor-not-allowed'
+        : isSelected
+        ? 'appointment-slot group relative flex flex-col p-4 bg-white border-2 border-primary rounded-xl text-left shadow-sm ring-4 ring-primary/5 transition-all'
+        : 'appointment-slot group flex flex-col p-4 bg-white border border-outline-variant/15 rounded-xl text-left hover:border-primary/50 hover:bg-slate-50 transition-all';
+
+      const title = item.querySelector('span');
+      if (title) {
+        title.className = isSelected
+          ? 'text-xs font-black text-primary uppercase tracking-wider'
+          : 'text-xs font-bold text-slate-400 uppercase tracking-wider';
+      }
+
+      const checkIcon = item.querySelector('.slot-check-icon');
+      if (isSelected && !checkIcon) {
+        const icon = document.createElement('span');
+        icon.className = 'slot-check-icon material-symbols-outlined text-primary text-xl';
+        icon.style.fontVariationSettings = "'FILL' 1";
+        icon.textContent = 'check_circle';
+        item.querySelector('.flex.justify-between.items-start.mb-2').appendChild(icon);
+      } else if (!isSelected && checkIcon) {
+        checkIcon.remove();
+      }
+    });
+
+    refreshDeviceAvailability();
+    updateSummary();
+  }
+
+  function updateSelectedDevice(button) {
+    if (button.disabled) return;
+
+    selectedDevice = {
+      device: button.dataset.device,
+      machine: button.dataset.machine
+    };
+
+    deviceButtons.forEach((item) => {
+      const isSelected = item === button;
+      const isOccupied = item.disabled && !isSelected;
+      const icon = item.querySelector('.material-symbols-outlined');
+      const label = item.querySelector('span:last-child');
+
+      item.className = isOccupied
+        ? 'appointment-device p-3 bg-white border border-outline-variant/10 rounded-lg flex flex-col items-center gap-1 opacity-50 grayscale cursor-not-allowed'
+        : isSelected
+        ? 'appointment-device p-3 bg-primary/10 border-2 border-primary rounded-lg flex flex-col items-center gap-1 shadow-sm'
+        : 'appointment-device p-3 bg-white border border-outline-variant/15 rounded-lg flex flex-col items-center gap-1 hover:border-primary/50 hover:bg-slate-50 transition-all';
+
+      if (icon) {
+        icon.className = isOccupied
+          ? 'material-symbols-outlined text-rose-600'
+          : isSelected
+            ? 'material-symbols-outlined text-primary'
+            : 'material-symbols-outlined text-slate-500';
+        icon.style.fontVariationSettings = isSelected ? "'FILL' 1" : "'FILL' 0";
+      }
+      if (label) {
+        label.className = isOccupied
+          ? 'text-[11px] font-bold text-slate-400'
+          : isSelected
+            ? 'text-[11px] font-bold text-primary'
+            : 'text-[11px] font-bold text-slate-500';
+      }
+    });
+
+    updateSummary();
+  }
+
+
+
+  function refreshDeviceAvailability() {
+    const occupiedMachines = getOccupiedMachinesForSelectedSlot();
+    const availableCount = SLOT_CAPACITY[selectedSlot.label] - occupiedMachines.length;
+    const machineCountElement = document.getElementById('availableMachinesCount');
+    const warningElement = document.getElementById('occupiedMachinesWarning');
+    
+    if (machineCountElement) {
+      machineCountElement.textContent = `${availableCount} / 3 APPAREILS LIBRES`;
+    }
+    
+    // Show warning if machines are occupied
+    if (occupiedMachines.length > 0 && warningElement) {
+      const occupiedNames = occupiedMachines.map(m => m.replace('Machine #', '')).join(', ');
+      warningElement.innerHTML = `<span class="text-xs font-bold text-rose-700">⚠️ Machine(s) occupée(s) : <strong>${occupiedNames}</strong></span>`;
+      warningElement.classList.remove('hidden');
+    } else if (warningElement) {
+      warningElement.classList.add('hidden');
+    }
+    
+    let selectedDeviceIsFree = true;
+
+    deviceButtons.forEach((button) => {
+      const isOccupied = occupiedMachines.includes(button.dataset.machine);
+      const isSelected = button.dataset.machine === selectedDevice.machine;
+      button.disabled = isOccupied;
+
+      if (isOccupied && isSelected) {
+        selectedDeviceIsFree = false;
+      }
+
+      // Update button styling
+      let classStr = '';
+      let iconClass = '';
+      let labelClass = '';
+      
+      if (isOccupied) {
+        classStr = 'appointment-device p-3 bg-rose-50 border-2 border-rose-300 rounded-lg flex flex-col items-center gap-1 cursor-not-allowed shadow-sm';
+        iconClass = 'material-symbols-outlined text-rose-600';
+        labelClass = 'text-[11px] font-bold text-rose-600';
+      } else if (isSelected) {
+        classStr = 'appointment-device p-3 bg-primary/10 border-2 border-primary rounded-lg flex flex-col items-center gap-1 shadow-sm';
+        iconClass = 'material-symbols-outlined text-primary';
+        labelClass = 'text-[11px] font-bold text-primary';
+      } else {
+        classStr = 'appointment-device p-3 bg-white border border-outline-variant/15 rounded-lg flex flex-col items-center gap-1 hover:border-primary/50 hover:bg-slate-50 transition-all';
+        iconClass = 'material-symbols-outlined text-slate-500';
+        labelClass = 'text-[11px] font-bold text-slate-500';
+      }
+      
+      button.className = classStr;
+      
+      const icon = button.querySelector('.material-symbols-outlined');
+      const label = button.querySelector('span:last-child');
+      
+      if (icon) {
+        icon.className = iconClass;
+        icon.style.fontVariationSettings = isSelected ? "'FILL' 1" : "'FILL' 0";
+      }
+      if (label) {
+        label.className = labelClass;
+      }
+    });
+
+    if (!selectedDeviceIsFree) {
+      const nextFreeDevice = Array.from(deviceButtons).find((button) => !button.disabled);
+      if (nextFreeDevice) {
+        selectedDevice = {
+          device: nextFreeDevice.dataset.device,
+          machine: nextFreeDevice.dataset.machine
+        };
+      }
+    }
+    
+    updateSummary();
+  }
+
+  function updateSummary() {
+    const patientName = patientInput.value.trim() || 'Patient a completer';
+    const patientId = selectedPatient.id ? ` (${selectedPatient.id})` : '';
+    const slotIsFree = selectedSlot.time && getFreeSlotCount(selectedSlot.time) > 0;
+    const deviceIsFree = !getOccupiedMachinesForSelectedSlot().includes(selectedDevice.machine);
+
+    if (summary) {
+      summary.innerHTML = slotIsFree && deviceIsFree
+        ? `Résumé : Séance <strong>${selectedSlot.time}</strong> sur <strong>${selectedDevice.device}</strong> le <strong>${selectedAppointmentDay} Oct</strong>.`
+        : `Aucun appareil libre pour <strong>${selectedSlot.time || 'ce créneau'}</strong> le <strong>${selectedAppointmentDay} Oct</strong>. Choisissez un autre créneau.`;
+    }
+
+    if (detailsPanel && !detailsPanel.classList.contains('hidden')) {
+      detailsPanel.innerHTML = `Patient : <strong>${patientName}${patientId}</strong><br>Protocole : <strong>${selectedPatient.protocol || 'Non precise'}</strong><br>Date : <strong>${selectedAppointmentDay} Octobre 2024</strong><br>Créneau : <strong>${selectedSlot.time}</strong><br>Appareil : <strong>${selectedDevice.machine}</strong> - <strong>${selectedDevice.device}</strong>`;
+    }
+
+    validateAppointmentButton.disabled = !slotIsFree || !deviceIsFree;
+    validateAppointmentButton.className = validateAppointmentButton.disabled
+      ? 'px-8 py-2.5 bg-slate-300 text-white text-sm font-headline font-bold rounded-md flex items-center gap-2 cursor-not-allowed'
+      : 'px-8 py-2.5 bg-primary text-white text-sm font-headline font-bold rounded-md shadow-lg shadow-primary/30 flex items-center gap-2 hover:bg-primary-container transition-all';
+  }
+
+  function saveAppointment() {
+    if (validateAppointmentButton.disabled) return;
+
+    const patientName = patientInput.value.trim() || 'Patient a completer';
+    const generatedPatientId = `RDV-${Date.now().toString().slice(-6)}`;
+    const validatedAt = new Date();
+    const appointment = {
+      id: `rdv-${Date.now()}`,
+      patientName,
+      patientId: selectedPatient.id || generatedPatientId,
+      protocol: selectedPatient.protocol || '',
+      protocolNote: selectedPatient.protocolNote || '',
+      prescriptionDate: selectedPatient.prescriptionDate || '',
+      sourceStatus: selectedPatient.status || '',
+      day: selectedAppointmentDay,
+      dateLabel: `Octobre 2024 - jour ${selectedAppointmentDay}`,
+      displayDate: `${selectedAppointmentDay} Octobre 2024`,
+      slotLabel: selectedSlot.label,
+      timeRange: selectedSlot.time,
+      bed: selectedDevice.device,
+      device: selectedDevice.device,
+      machine: selectedDevice.machine,
+      status: 'Valide',
+      validationStatus: 'Rendez-vous valide',
+      createdAt: validatedAt.toLocaleString('fr-FR'),
+      validatedAt: validatedAt.toISOString(),
+      details: {
+        patient: patientName,
+        patientId: selectedPatient.id || generatedPatientId,
+        protocole: selectedPatient.protocol || 'Non precise',
+        date: `${selectedAppointmentDay} Octobre 2024`,
+        creneau: selectedSlot.time,
+        periode: selectedSlot.label,
+        appareil: selectedDevice.device,
+        machine: selectedDevice.machine,
+        statut: 'RDV OK'
+      }
+    };
+
+    const appointments = readAppointments();
+    appointments.unshift(appointment);
+    localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(appointments));
+    localStorage.setItem('latestDialysisAppointment', JSON.stringify(appointment));
+    localStorage.setItem(VALIDATED_PRESCRIPTIONS_STORAGE_KEY, JSON.stringify([
+      {
+        id: appointment.id,
+        type: 'rendez-vous',
+        patientName: appointment.patientName,
+        patientId: appointment.patientId,
+        validatedAt: appointment.validatedAt,
+        details: appointment.details
+      },
+      ...(JSON.parse(localStorage.getItem(VALIDATED_PRESCRIPTIONS_STORAGE_KEY) || '[]'))
+    ]));
+    localStorage.setItem('currentPatient', JSON.stringify({
+      name: appointment.patientName,
+      id: appointment.patientId,
+      protocol: appointment.protocol,
+      prescriptionDate: appointment.prescriptionDate,
+      rdvDate: appointment.displayDate,
+      rdvTime: appointment.timeRange,
+      rdvMachine: appointment.machine,
+      rdvDevice: appointment.device,
+      rdvStatus: appointment.validationStatus,
+      latestAppointmentId: appointment.id
+    }));
+    localStorage.removeItem(PENDING_APPOINTMENT_PATIENT_KEY);
+    window.location.href = '../prescriptions_valid_es_clinical_precision/code.html';
+  }
+
+  function returnToCalendar() {
+    window.location.href = '../gestion_des_rendez_vous_isan_andro_calendrier/code.html';
+  }
+
+  dayButtons.forEach((button) => {
+    button.addEventListener('click', () => updateSelectedDay(button.dataset.day));
+  });
+
+  deviceButtons.forEach((button) => {
+    button.addEventListener('click', () => updateSelectedDevice(button));
+  });
+
+  patientInput.addEventListener('input', updateSummary);
+
+  detailsButton.addEventListener('click', () => {
+    detailsPanel.classList.toggle('hidden');
+    updateSummary();
+  });
+
+  fillPatientFromPrescription();
+  updateSelectedDay(selectedAppointmentDay);
+  updateSelectedDevice(Array.from(deviceButtons).find((button) => button.dataset.machine === selectedDevice.machine && !button.disabled) || Array.from(deviceButtons).find((button) => !button.disabled) || deviceButtons[0]);
+  validateAppointmentButton.addEventListener('click', saveAppointment);
+  closeAppointmentButton.addEventListener('click', returnToCalendar);
+  cancelAppointmentButton.addEventListener('click', returnToCalendar);
+</script>
+</body></html>

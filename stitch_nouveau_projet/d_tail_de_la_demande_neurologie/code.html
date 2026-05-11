@@ -1,0 +1,284 @@
+<!DOCTYPE html><html class="light" lang="fr"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>NeuroPortal - Consultation Détail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container": "#edeeef",
+                    "surface-variant": "#e1e3e4",
+                    "on-background": "#191c1d",
+                    "background": "#f8f9fa",
+                    "primary": "#00478d",
+                    "on-tertiary-fixed": "#410003",
+                    "outline-variant": "#c2c6d4",
+                    "on-error-container": "#93000a",
+                    "surface-container-low": "#f3f4f5",
+                    "secondary-container": "#d2e1f2",
+                    "on-error": "#ffffff",
+                    "on-primary-fixed": "#001b3d",
+                    "surface-container-lowest": "#ffffff",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed": "#ffdad6",
+                    "on-surface-variant": "#424752",
+                    "primary-fixed-dim": "#a9c7ff",
+                    "outline": "#727783",
+                    "inverse-on-surface": "#f0f1f2",
+                    "secondary-fixed-dim": "#b9c8d8",
+                    "inverse-surface": "#2e3132",
+                    "surface-tint": "#005db6",
+                    "tertiary": "#940010",
+                    "on-secondary": "#ffffff",
+                    "surface": "#f8f9fa",
+                    "secondary": "#51606e",
+                    "primary-fixed": "#d6e3ff",
+                    "tertiary-container": "#bb1b21",
+                    "surface-dim": "#d9dadb",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-tertiary-fixed-variant": "#930010",
+                    "on-secondary-container": "#556472",
+                    "surface-bright": "#f8f9fa",
+                    "on-secondary-fixed": "#0e1d29",
+                    "surface-container-high": "#e7e8e9",
+                    "error-container": "#ffdad6",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb3ac",
+                    "on-primary-fixed-variant": "#00468c",
+                    "on-surface": "#191c1d",
+                    "secondary-fixed": "#d5e4f5",
+                    "on-secondary-fixed-variant": "#3a4856",
+                    "on-primary-container": "#c8daff",
+                    "primary-container": "#005eb8",
+                    "on-tertiary-container": "#ffceca",
+                    "on-tertiary": "#ffffff",
+                    "inverse-primary": "#a9c7ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(24px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body antialiased">
+<!-- SideNavBar Shell -->
+<aside class="h-screen w-72 fixed left-0 top-0 bg-slate-50 flex flex-col p-6 gap-y-4 z-50">
+<div class="flex items-center justify-center mb-8">
+<img alt="CHU Andrainjato Logo" class="w-32 h-auto" src="https://lh3.googleusercontent.com/aida/ADBb0uiGy8ScMjL6ZLQy7_SbLYlroJWfo78U1O4eeUMeLWpk2HKguGLGHHLChg1RlUhL5-GvJCkZZWJlDOGm1m0pJ-0gDFnkYrfag2UyCyUZclqEkh1ioIClAiyD5we9kq9xabonQTSOjhWFFTLF14LONOkKdpIjyyRMSMn5HDfVRrU4TD8nV9Gf9r_hXLUjFBYdKhV4HZwBuWMJuGmxbqw6ceHnNcWyCNRuN-PilD2vmd6ZIvO5-zBnWKhp-bAtrIxsE3YijfC_SbrT5A" style="">
+</div>
+<nav class="flex flex-col gap-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 transition-colors rounded-lg font-manrope font-semibold text-sm" href="#" style=""></a><a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 transition-colors rounded-lg font-manrope font-semibold text-sm" href="#" style=""></a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 transition-colors rounded-lg font-manrope font-semibold text-sm" href="#" style=""></a>
+<a class="flex items-center gap-3 px-4 py-3 bg-white text-blue-700 rounded-lg shadow-sm font-bold font-manrope text-sm" href="#" style=""></a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 transition-colors rounded-lg font-manrope font-semibold text-sm" href="#" style=""></a>
+</nav>
+</aside>
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 right-0 left-72 h-20 z-40 bg-white/80 backdrop-blur-xl flex justify-between items-center px-10 w-full shadow-sm shadow-blue-900/5">
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 text-secondary hover:text-primary transition-colors group" style="">
+<span class="material-symbols-outlined text-xl transition-transform group-hover:-translate-x-1" style="">arrow_back</span>
+<span class="font-semibold text-sm" style="">Retour</span>
+</button>
+<div class="h-6 w-px bg-outline-variant/30 mx-2"></div>
+<h2 class="text-on-surface font-headline font-bold text-lg" style="">Détails de la demande #DR-8821</h2>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 hover:bg-blue-50 rounded-full p-2 cursor-pointer transition-colors" style="">notifications</span>
+<span class="material-symbols-outlined text-slate-400 hover:bg-blue-50 rounded-full p-2 cursor-pointer transition-colors" style="">chat_bubble</span>
+<span class="material-symbols-outlined text-slate-400 hover:bg-blue-50 rounded-full p-2 cursor-pointer transition-colors" style="">settings</span>
+</div>
+<div class="flex items-center gap-3 pl-6 border-l border-outline-variant/30">
+<div class="text-right">
+<p class="text-sm font-bold text-on-surface" style="">Dr. Julian Vance</p>
+<p class="text-xs text-secondary" style="">Neurologue Senior</p>
+</div>
+<img class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" data-alt="professional portrait of a male doctor in a white clinical coat with a friendly and confident expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfn4DEf-DB7xPGQXQCeEeUutFK75Vv3iNperTVvHVLK9jDJISrkjZkvg41qGY1VQm0ecS902bDiqKr49BzJJoJskkjd0f_yb_2GKGiK0L3JE64n4hMmxNLDpX6uZ2d40boJ9f5eGjcaE1GRaAI5m43JkHwTDU-4jDL2G-RK00LMesp79QT5XVFkbcpTENPi_ckDKjx6IJnq6x08fkB73zS5gIQichRf4dN49D_QSyWaFohBVbVaw6YDNPyJHXOrlBdB_XqwFieK7qm" style="">
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-72 pt-20 min-h-screen p-10 bg-background">
+<div class="max-w-6xl mx-auto">
+<div class="grid grid-cols-12 gap-8">
+<!-- Left Column: Patient & Clinical Info -->
+<div class="col-span-8 flex flex-col gap-8">
+<!-- Patient Info Card -->
+<section class="bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/10">
+<div class="flex justify-between items-start mb-8">
+<div class="flex gap-6 items-center">
+<div class="w-20 h-20 rounded-2xl bg-secondary-container flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="portrait of an elderly woman with silver hair and gentle features, looking towards the camera in soft daylight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRW44-CZxq6kkLJpi9yq4dvd2VsT_ANKnTXExe15JqfTpqYvYlAEdRO1wEOrB90CdwPVQGvGiCcJHPP82cxHL1sJ8RIK3bXJM01nWmEUAC655aMrGz2-vscdA9KUGXl07P9JqH5aN7DBleWg1jUQIsSjOXANXcaKKGubrCLHKLJZEzyRXsNed8jIGw950v7c359bYC9YiUC2y13QkEOq_O1IehAWlqwXr9_cC_HReXD0jzdR7xXyWAme_IDjxLekWuUxH-kHlx9WCS" style="">
+</div>
+<div>
+<h3 class="text-2xl font-headline font-extrabold text-on-surface" style="">Mme. Hélène Bernard</h3>
+<div class="flex items-center gap-3 mt-1">
+<span class="text-sm font-medium text-secondary" style="">ID: 992-001-44</span>
+<span class="w-1 h-1 bg-outline-variant rounded-full"></span>
+<span class="text-sm font-medium text-secondary" style="">72 ans</span>
+<span class="w-1 h-1 bg-outline-variant rounded-full"></span>
+<span class="text-sm font-medium text-secondary" style="">Féminin</span>
+</div>
+</div>
+</div>
+<div class="bg-error-container text-on-error-container px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" style="">
+                                Urgent
+                            </div>
+</div>
+<div class="bg-surface-container-low rounded-lg p-6">
+<h4 class="text-xs font-bold text-secondary uppercase tracking-widest mb-3" style="">Résumé des antécédents</h4>
+<p class="text-on-surface leading-relaxed text-sm" style="">
+                                Hypertension artérielle chronique depuis 15 ans. Diabète de type 2 équilibré. Insuffisance rénale chronique stade 4 (DFG 22 ml/min). Pas d'antécédents neurologiques majeurs rapportés. Début récent de confusion fluctuante post-séance de dialyse.
+                            </p>
+</div>
+</section>
+<!-- Request Details Card -->
+<section class="bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/10">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary" style="">clinical_notes</span>
+<h3 class="text-lg font-headline font-bold" style="">Détails de la demande de consultation</h3>
+</div>
+<div class="grid grid-cols-1 gap-8">
+<div>
+<h4 class="text-xs font-bold text-secondary uppercase tracking-widest mb-2" style="">Motif de la demande</h4>
+<p class="text-on-surface text-base font-medium" style="">Suspicion de syndrome de déséquilibre de dialyse (SDD) avec épisodes de confusion aiguë et céphalées intenses.</p>
+</div>
+<div class="grid grid-cols-2 gap-8">
+<div class="space-y-4">
+<div>
+<h4 class="text-xs font-bold text-secondary uppercase tracking-widest mb-1" style="">Diagnostic suspecté</h4>
+<span class="inline-block bg-primary-fixed text-on-primary-fixed px-3 py-1 rounded-md text-sm font-semibold" style="">Oedème Cérébral Osmotique</span>
+</div>
+<div>
+<h4 class="text-xs font-bold text-secondary uppercase tracking-widest mb-1" style="">Observations cliniques</h4>
+<ul class="text-sm text-on-surface-variant space-y-2">
+<li class="flex items-start gap-2" style="">
+<span class="material-symbols-outlined text-[10px] mt-1 text-primary" style="">circle</span>
+                                                Désorientation spatio-temporelle post-traitement.
+                                            </li>
+<li class="flex items-start gap-2" style="">
+<span class="material-symbols-outlined text-[10px] mt-1 text-primary" style="">circle</span>
+                                                Nausées et vomissements cycliques.
+                                            </li>
+<li class="flex items-start gap-2" style="">
+<span class="material-symbols-outlined text-[10px] mt-1 text-primary" style="">circle</span>
+                                                TA: 165/95 mmHg à la sortie de séance.
+                                            </li>
+</ul>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-lg p-5">
+<h4 class="text-xs font-bold text-secondary uppercase tracking-widest mb-4" style="">Résultats Biologiques Clés</h4>
+<div class="space-y-3">
+<div class="flex justify-between items-center border-b border-outline-variant/20 pb-2">
+<span class="text-sm text-on-surface-variant" style="">Urée Sérique</span>
+<span class="text-sm font-bold text-tertiary" style="">32.4 mmol/L</span>
+</div>
+<div class="flex justify-between items-center border-b border-outline-variant/20 pb-2">
+<span class="text-sm text-on-surface-variant" style="">Sodium (Na+)</span>
+<span class="text-sm font-bold" style="">142 mEq/L</span>
+</div>
+<div class="flex justify-between items-center border-b border-outline-variant/20 pb-2">
+<span class="text-sm text-on-surface-variant" style="">Créatinine</span>
+<span class="text-sm font-bold text-tertiary" style="">580 µmol/L</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm text-on-surface-variant" style="">Kaliémie (K+)</span>
+<span class="text-sm font-bold" style="">4.2 mEq/L</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Decision & Summary -->
+<div class="col-span-4 flex flex-col gap-8">
+<!-- Decision Section -->
+<section class="glass-panel sticky top-28 rounded-xl p-8 border border-outline-variant/20 shadow-xl shadow-blue-900/5">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: &quot;FILL&quot; 1;">rate_review</span>
+<h3 class="text-lg font-headline font-bold" style="">Décision Spécialiste</h3>
+</div>
+<form class="space-y-6">
+<div class="space-y-2">
+<label class="text-xs font-bold text-secondary uppercase tracking-widest" for="comment" style="">Commentaire du Spécialiste *</label>
+<textarea class="w-full bg-surface-container-highest border-none rounded-md focus:ring-2 focus:ring-primary-container text-sm placeholder:text-outline p-4" id="comment" placeholder="Indiquez vos recommandations ou motifs d'acceptation/refus..." required="" rows="6"></textarea>
+</div>
+<div class="flex flex-col gap-3">
+<button class="w-full py-4 bg-gradient-to-br from-[#006e33] to-[#004b23] text-white rounded-md font-bold text-sm shadow-lg shadow-green-900/20 hover:opacity-90 transition-all flex items-center justify-center gap-2" type="button" style="">
+<span class="material-symbols-outlined" style="">check_circle</span> Accept Request
+                                </button>
+<button class="w-full py-4 border-2 border-tertiary text-tertiary rounded-md font-bold text-sm hover:bg-tertiary/5 transition-all flex items-center justify-center gap-2" type="button" style="">
+<span class="material-symbols-outlined" style="">cancel</span> Refuse Request
+                                </button>
+</div>
+<p class="text-[11px] text-center text-slate-400 italic" style="">
+                                Une notification sera envoyée immédiatement au service de néphrologie émetteur.
+                            </p>
+</form>
+</section>
+<!-- Summary Widget -->
+<div class="bg-surface-container-low rounded-xl p-6">
+<h4 class="text-xs font-bold text-secondary uppercase tracking-widest mb-4" style="">Informations supplémentaires</h4>
+<div class="space-y-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-lg" style="">calendar_today</span>
+</div>
+<div>
+<p class="text-[10px] text-secondary leading-none uppercase" style="">Date de demande</p>
+<p class="text-sm font-bold" style="">Aujourd'hui, 09:42</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-lg" style="">local_hospital</span>
+</div>
+<div>
+<p class="text-[10px] text-secondary leading-none uppercase" style="">Service Émetteur</p>
+<p class="text-sm font-bold" style="">Unité de Dialyse A</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-lg" style="">person</span>
+</div>
+<div>
+<p class="text-[10px] text-secondary leading-none uppercase" style="">Médecin Référent</p>
+<p class="text-sm font-bold" style="">Dr. Sarah Méline</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
