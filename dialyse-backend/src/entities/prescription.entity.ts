@@ -27,10 +27,12 @@ export class Prescription {
   @Column({ type: 'varchar', length: 80 })
   frequence: string;
 
-  @Column({
-    type: 'enum',
-    enum: ['brouillon', 'actif', 'suspendu', 'terminé', 'annulé'],
-    default: 'brouillon',
-  })
+  @Column({ type: 'varchar', length: 20, default: 'brouillon' })
   workflow_statut: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  validated_at: Date;
+
+  @Column({ type: 'int', nullable: true })
+  validated_by: number;
 }

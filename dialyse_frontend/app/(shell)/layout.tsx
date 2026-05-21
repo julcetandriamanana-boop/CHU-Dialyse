@@ -1,4 +1,5 @@
 import Sidebar from "@/src/components/sidebar/Sidebar";
+import NotificationBell from "@/src/components/notifications/NotificationBell";
 
 export default function ShellLayout({
   children,
@@ -6,9 +7,13 @@ export default function ShellLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <Sidebar />
-      <main className="flex-1 min-h-0 min-w-0 overflow-auto lg:ml-0">
+      {/* Cloche de notification fixe en haut à droite */}
+      <div className="fixed top-3 right-4 z-50">
+        <NotificationBell />
+      </div>
+      <main className="lg:ml-64 min-h-screen overflow-auto p-6">
         {children}
       </main>
     </div>

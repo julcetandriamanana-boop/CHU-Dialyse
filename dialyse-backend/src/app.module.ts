@@ -1,16 +1,19 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm'; // Import du module TypeORM pour la gestion de la base de données
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { databaseConfig } from './config/database.config'; // Import de la configuration de la base de données
-import { PatientModule } from './patient/patient.module'; // Import du module Patient
+import { databaseConfig } from './config/database.config';
+import { PatientModule } from './patient/patient.module';
+import { PrescriptionModule } from './prescription/prescription.module';
+import { RendezVousModule } from './rendezvous/rendezvous.module';
+import { DemandeAvisModule } from './demande-avis/demande-avis.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(databaseConfig), // Configuration de TypeORM avec les options définies dans database.config.ts
-    PatientModule, // Module pour gérer les patients
+    TypeOrmModule.forRoot(databaseConfig),
+    PatientModule, PrescriptionModule, RendezVousModule, DemandeAvisModule, NotificationsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController], providers: [AppService],
 })
 export class AppModule {}

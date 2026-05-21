@@ -6,29 +6,43 @@ import { Patient } from '../entities/patient.entity';
 @Injectable()
 export class PatientService {
   constructor(
-    @InjectRepository(Patient) // Injection du repository pour l'entité Patient
+    @InjectRepository(Patient)
     private patientRepository: Repository<Patient>,
   ) {}
 
-  // Méthode pour obtenir tous les patients
   async findAll(): Promise<Patient[]> {
     return this.patientRepository.find();
   }
 
-  // Méthode pour créer un nouveau patient
   async create(patient: Partial<Patient>): Promise<Patient> {
-    const newPatient = this.patientRepository.create(patient);
-    return this.patientRepository.save(newPatient);
+    return this.patientRepository.save(this.patientRepository.create(patient));
   }
 
-  // Méthode pour tester la connexion à la base de données
   async testConnection(): Promise<string> {
     try {
-      // Essayer de compter les patients pour vérifier la connexion
       const count = await this.patientRepository.count();
-      return `Connexion réussie à la base de données. Nombre de patients : ${count}`;
+      return `Connexion réussie. ${count} patients`;
     } catch (error) {
-      return `Erreur de connexion : ${error.message}`;
+      return `Erreur : ${error.message}`;
     }
+  }
+
+  async seed(): Promise<any> {
+    const count = await this.patientRepository.count();
+    if (count > 0) {
+      return { message: `${count} patients existent déjà`, count };
+    }
+
+    const patients = [
+      { nom: 'Ross', prenom: 'Elena', dateNaissance: new Date('1968-03-15'), telephone: '0341234567' },
+      { nom: 'Jensen', prenom: 'Marcus', dateNaissance: new Date('1981-07-22'), telephone: '0349876543' },
+      { nom: 'Bernard', prenom: 'Hélène', dateNaissance: new Date('1984-11-03'), telephone: '0334567890' },
+    ];
+
+    for (const p of patients) {
+      await this.patientRepository.save(this.patientRepository.create(p));
+    }
+
+    return { message: '3 patients créés', count: 3 };
   }
 }

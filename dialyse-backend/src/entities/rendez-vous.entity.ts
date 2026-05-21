@@ -15,19 +15,15 @@ export class RendezVous {
   @JoinColumn({ name: 'medecin_id' })
   medecin: Medecin;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   date_heure: Date;
 
   @Column({ type: 'varchar', length: 255 })
   motif: string;
 
-  @Column({
-    type: 'enum',
-    enum: ['planifié', 'confirmé', 'annulé', 'terminé', 'en_attente'],
-    default: 'planifié',
-  })
+  @Column({ type: 'varchar', length: 20, default: 'planifié' })
   statut: string;
 
-  @Column({ type: 'text', nullable: true, comment: 'Commentaires/Conseils' })
+  @Column({ type: 'text', nullable: true })
   soso_kevitra_malalaka: string;
 }

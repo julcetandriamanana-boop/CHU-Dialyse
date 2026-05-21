@@ -1,226 +1,144 @@
 'use client';
 
-import { useState } from "react";
+import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { getCurrentPatient, PatientData, setCurrentPatient } from '@/src/stores/patient.store';
+import PatientSearchInput from '@/src/components/patient/PatientSearchInput';
 
-const VALIDATED_PRESCRIPTIONS_STORAGE_KEY = "dialyse_validated_prescriptions";
+const VALIDATED_KEY = 'dialyse_validated_prescriptions';
 
 export default function StitchDemandeDetail() {
-  const [specialistComment, setSpecialistComment] = useState("");
+  const router = useRouter();
+  const [patient, setPatient] = useState<PatientData | null>(null);
+  const [specialistComment, setSpecialistComment] = useState('');
+  const [diagnostic, setDiagnostic] = useState('Oedème Cérébral Osmotique');
+  const [priorite, setPriorite] = useState('critique');
+  const [motif, setMotif] = useState('Suspicion de syndrome de déséquilibre de dialyse');
+  const [submitted, setSubmitted] = useState(false);
+  const [rejected, setRejected] = useState(false);
+  const [demandeId] = useState(`DA-${Date.now().toString().slice(-4)}`);
 
-  const acceptRequest = () => {
-    const savedPrescriptions = JSON.parse(
-      window.localStorage.getItem(VALIDATED_PRESCRIPTIONS_STORAGE_KEY) || "[]"
-    );
+  useEffect(() => {
+    const current = getCurrentPatient();
+    if (current.id) setPatient(current);
+  }, []);
 
-    window.localStorage.setItem(
-      VALIDATED_PRESCRIPTIONS_STORAGE_KEY,
-      JSON.stringify([
-        {
-          id: `AVIS-${Date.now()}`,
-          type: "demande d'avis",
-          patientName: "Mme. Hélène Bernard",
-          patientId: "#DR-8821",
-          validatedAt: new Date().toISOString(),
-          details: {
-            motif: "Suspicion de syndrome de déséquilibre de dialyse",
-            diagnostic: "Oedème Cérébral Osmotique",
-            priorite: "Urgent",
-            commentaire: specialistComment.trim() || "Validation spécialiste sans commentaire ajouté.",
-          },
-        },
-        ...savedPrescriptions,
-      ])
-    );
-    window.location.href = "/dialyses/prescriptions-validees";
+  const handlePatientSelected = (p: PatientData) => {
+    setPatient(p);
+    setCurrentPatient(p);
   };
 
+  const marquerTraitee = () => {
+    const traitees = JSON.parse(localStorage.getItem('demandes_traitees') || '[]');
+    traitees.push(demandeId);
+    localStorage.setItem('demandes_traitees', JSON.stringify(traitees));
+  };
+
+  const accepterDemande = () => {
+    if (!patient?.id) return;
+    marquerTraitee();
+    const saved = JSON.parse(localStorage.getItem(VALIDATED_KEY) || '[]');
+    saved.unshift({
+      id: `AVIS-${Date.now()}`,
+      type: "demande d'avis",
+      patientName: `${patient.prenoms} ${patient.nom}`,
+      patientId: patient.id,
+      validatedAt: new Date().toISOString(),
+      details: { motif, diagnostic, priorite, commentaire: specialistComment || 'Avis validé' },
+    });
+    localStorage.setItem(VALIDATED_KEY, JSON.stringify(saved));
+    setSubmitted(true);
+    setTimeout(() => router.push('/demandes-avis'), 1500);
+  };
+
+  const refuserDemande = () => {
+    if (!specialistComment.trim()) {
+      alert('Avis obligatoire pour refuser !');
+      return;
+    }
+    marquerTraitee();
+    const saved = JSON.parse(localStorage.getItem(VALIDATED_KEY) || '[]');
+    saved.unshift({
+      id: `REFUS-${Date.now()}`,
+      type: "demande d'avis refusée",
+      patientName: patient ? `${patient.prenoms} ${patient.nom}` : 'Inconnu',
+      patientId: patient?.id || '',
+      validatedAt: new Date().toISOString(),
+      details: { motif, raison: specialistComment, priorite },
+    });
+    localStorage.setItem(VALIDATED_KEY, JSON.stringify(saved));
+    setRejected(true);
+    setTimeout(() => router.push('/demandes-avis'), 1500);
+  };
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 flex items-center justify-center">
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-center bg-white rounded-2xl p-8 shadow-xl border border-emerald-200">
+          <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 0.5 }} className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4"><span className="material-symbols-outlined text-emerald-600 text-4xl">check_circle</span></motion.div>
+          <h2 className="text-xl font-black text-slate-800 mb-2">Demande acceptée !</h2><p className="text-slate-500 text-sm">Redirection...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (rejected) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 flex items-center justify-center">
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-center bg-white rounded-2xl p-8 shadow-xl border border-red-200">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"><span className="material-symbols-outlined text-red-600 text-4xl">cancel</span></div>
+          <h2 className="text-xl font-black text-slate-800 mb-2">Demande refusée</h2><p className="text-slate-500 text-sm">Redirection...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-background text-on-surface font-body antialiased">
-      {/* SideNavBar Shell */}
-      {/* TopAppBar Shell */}
-      <header className="fixed top-0 right-0 left-72 h-20 z-40 bg-white/80 backdrop-blur-xl flex justify-between items-center px-10 w-full shadow-sm shadow-blue-900/5">
-        <div className="flex items-center gap-4">
-          <button className="flex items-center gap-2 text-secondary hover:text-primary transition-colors group" style={{}}>
-            <span className="material-symbols-outlined text-xl transition-transform group-hover:-translate-x-1" style={{}}>arrow_back</span>
-            <span className="font-semibold text-sm" style={{}}>Retour</span>
-          </button>
-          <div className="h-6 w-px bg-outline-variant/30 mx-2" />
-          <h2 className="text-on-surface font-headline font-bold text-lg" style={{}}>Détails de la demande #DR-8821</h2>
-        </div>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-slate-400 hover:bg-blue-50 rounded-full p-2 cursor-pointer transition-colors" style={{}}>notifications</span>
-            <span className="material-symbols-outlined text-slate-400 hover:bg-blue-50 rounded-full p-2 cursor-pointer transition-colors" style={{}}>chat_bubble</span>
-            <span className="material-symbols-outlined text-slate-400 hover:bg-blue-50 rounded-full p-2 cursor-pointer transition-colors" style={{}}>settings</span>
-          </div>
-          <div className="flex items-center gap-3 pl-6 border-l border-outline-variant/30">
-            <div className="text-right">
-              <p className="text-sm font-bold text-on-surface" style={{}}>Dr. Julian Vance</p>
-              <p className="text-xs text-secondary" style={{}}>Neurologue Senior</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+      <div className="pt-6 pb-20 md:pb-8 px-4 md:px-6 lg:px-8 max-w-5xl mx-auto">
+        <motion.button initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} onClick={() => router.push('/demandes-avis')} className="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors mb-6 group"><span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span><span className="text-sm font-semibold">Retour aux demandes</span></motion.button>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
+              <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center shadow-md"><span className="material-symbols-outlined text-red-600 text-2xl">emergency</span></div><div><h1 className="text-xl font-black text-slate-800">Demande d&apos;avis #{demandeId}</h1><p className="text-xs text-slate-400">Reçue le {new Date().toLocaleDateString('fr-FR')}</p></div></div><motion.span animate={{ opacity: [1, 0.7, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="px-4 py-2 bg-red-50 text-red-600 rounded-full text-xs font-bold uppercase border border-red-200">⚡ {priorite === 'critique' ? 'URGENT · STAT' : priorite.toUpperCase()}</motion.span></div>
             </div>
-            <img className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" data-alt="professional portrait of a male doctor in a white clinical coat with a friendly and confident expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfn4DEf-DB7xPGQXQCeEeUutFK75Vv3iNperTVvHVLK9jDJISrkjZkvg41qGY1VQm0ecS902bDiqKr49BzJJoJskkjd0f_yb_2GKGiK0L3JE64n4hMmxNLDpX6uZ2d40boJ9f5eGjcaE1GRaAI5m43JkHwTDU-4jDL2G-RK00LMesp79QT5XVFkbcpTENPi_ckDKjx6IJnq6x08fkB73zS5gIQichRf4dN49D_QSyWaFohBVbVaw6YDNPyJHXOrlBdB_XqwFieK7qm" style={{}} />
-          </div>
-        </div>
-      </header>
-      {/* Main Content Canvas */}
-      <main className="pt-20 min-h-screen p-10 bg-background">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-12 gap-8">
-            {/* Left Column: Patient & Clinical Info */}
-            <div className="col-span-8 flex flex-col gap-8">
-              {/* Patient Info Card */}
-              <section className="bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/10">
-                <div className="flex justify-between items-start mb-8">
-                  <div className="flex gap-6 items-center">
-                    <div className="w-20 h-20 rounded-2xl bg-secondary-container flex items-center justify-center overflow-hidden">
-                      <img className="w-full h-full object-cover" data-alt="portrait of an elderly woman with silver hair and gentle features, looking towards the camera in soft daylight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRW44-CZxq6kkLJpi9yq4dvd2VsT_ANKnTXExe15JqfTpqYvYlAEdRO1wEOrB90CdwPVQGvGiCcJHPP82cxHL1sJ8RIK3bXJM01nWmEUAC655aMrGz2-vscdA9KUGXl07P9JqH5aN7DBleWg1jUQIsSjOXANXcaKKGubrCLHKLJZEzyRXsNed8jIGw950v7c359bYC9YiUC2y13QkEOq_O1IehAWlqwXr9_cC_HReXD0jzdR7xXyWAme_IDjxLekWuUxH-kHlx9WCS" style={{}} />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-headline font-extrabold text-on-surface" style={{}}>Mme. Hélène Bernard</h3>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className="text-sm font-medium text-secondary" style={{}}>ID: 992-001-44</span>
-                        <span className="w-1 h-1 bg-outline-variant rounded-full" />
-                        <span className="text-sm font-medium text-secondary" style={{}}>72 ans</span>
-                        <span className="w-1 h-1 bg-outline-variant rounded-full" />
-                        <span className="text-sm font-medium text-secondary" style={{}}>Féminin</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-error-container text-on-error-container px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" style={{}}>
-                    Urgent
-                  </div>
-                </div>
-                <div className="bg-surface-container-low rounded-lg p-6">
-                  <h4 className="text-xs font-bold text-secondary uppercase tracking-widest mb-3" style={{}}>Résumé des antécédents</h4>
-                  <p className="text-on-surface leading-relaxed text-sm" style={{}}>
-                    Hypertension artérielle chronique depuis 15 ans. Diabète de type 2 équilibré. Insuffisance rénale chronique stade 4 (DFG 22 ml/min). Pas d'antécédents neurologiques majeurs rapportés. Début récent de confusion fluctuante post-séance de dialyse.
-                  </p>
-                </div>
-              </section>
-              {/* Request Details Card */}
-              <section className="bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/10">
-                <div className="flex items-center gap-2 mb-6">
-                  <span className="material-symbols-outlined text-primary" style={{}}>clinical_notes</span>
-                  <h3 className="text-lg font-headline font-bold" style={{}}>Détails de la demande de consultation</h3>
-                </div>
-                <div className="grid grid-cols-1 gap-8">
-                  <div>
-                    <h4 className="text-xs font-bold text-secondary uppercase tracking-widest mb-2" style={{}}>Motif de la demande</h4>
-                    <p className="text-on-surface text-base font-medium" style={{}}>Suspicion de syndrome de déséquilibre de dialyse (SDD) avec épisodes de confusion aiguë et céphalées intenses.</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="text-xs font-bold text-secondary uppercase tracking-widest mb-1" style={{}}>Diagnostic suspecté</h4>
-                        <span className="inline-block bg-primary-fixed text-on-primary-fixed px-3 py-1 rounded-md text-sm font-semibold" style={{}}>Oedème Cérébral Osmotique</span>
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-secondary uppercase tracking-widest mb-1" style={{}}>Observations cliniques</h4>
-                        <ul className="text-sm text-on-surface-variant space-y-2">
-                          <li className="flex items-start gap-2" style={{}}>
-                            <span className="material-symbols-outlined text-[10px] mt-1 text-primary" style={{}}>circle</span>
-                            Désorientation spatio-temporelle post-traitement.
-                          </li>
-                          <li className="flex items-start gap-2" style={{}}>
-                            <span className="material-symbols-outlined text-[10px] mt-1 text-primary" style={{}}>circle</span>
-                            Nausées et vomissements cycliques.
-                          </li>
-                          <li className="flex items-start gap-2" style={{}}>
-                            <span className="material-symbols-outlined text-[10px] mt-1 text-primary" style={{}}>circle</span>
-                            TA: 165/95 mmHg à la sortie de séance.
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                    <div className="bg-surface-container-low rounded-lg p-5">
-                      <h4 className="text-xs font-bold text-secondary uppercase tracking-widest mb-4" style={{}}>Résultats Biologiques Clés</h4>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center border-b border-outline-variant/20 pb-2">
-                          <span className="text-sm text-on-surface-variant" style={{}}>Urée Sérique</span>
-                          <span className="text-sm font-bold text-tertiary" style={{}}>32.4 mmol/L</span>
-                        </div>
-                        <div className="flex justify-between items-center border-b border-outline-variant/20 pb-2">
-                          <span className="text-sm text-on-surface-variant" style={{}}>Sodium (Na+)</span>
-                          <span className="text-sm font-bold" style={{}}>142 mEq/L</span>
-                        </div>
-                        <div className="flex justify-between items-center border-b border-outline-variant/20 pb-2">
-                          <span className="text-sm text-on-surface-variant" style={{}}>Créatinine</span>
-                          <span className="text-sm font-bold text-tertiary" style={{}}>580 µmol/L</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-on-surface-variant" style={{}}>Kaliémie (K+)</span>
-                          <span className="text-sm font-bold" style={{}}>4.2 mEq/L</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </section>
+
+            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
+              <h2 className="text-lg font-bold text-slate-800 mb-4"><span className="w-1.5 h-6 bg-blue-600 rounded-full"></span> Patient concerné</h2>
+              <PatientSearchInput onPatientSelected={handlePatientSelected} placeholder="Cliquer pour sélectionner un patient..." />
+              {patient && (
+                <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[{ label: 'Nom', value: `${patient.prenoms} ${patient.nom}` },{ label: 'Âge', value: `${patient.age || '-'} ans` },{ label: 'Sexe', value: patient.sexe || '-' },{ label: 'Poids', value: patient.poids ? `${patient.poids} kg` : '-' },{ label: 'Gr. Sanguin', value: patient.groupeSanguin || '-' },{ label: 'Téléphone', value: patient.telephone || '-' },{ label: 'Néphrologue', value: patient.nephrologue || '-' },{ label: 'Allergie', value: patient.allergie || 'Aucune', alert: patient.allergie && patient.allergie !== 'Aucune' },].map(info => (<div key={info.label} className={`rounded-xl p-3 ${info.alert ? 'bg-red-50 border border-red-200' : 'bg-slate-50'}`}><p className={`text-[10px] ${info.alert ? 'text-red-500' : 'text-slate-400'}`}>{info.label}</p><p className={`text-xs font-bold ${info.alert ? 'text-red-700' : 'text-slate-700'}`}>{info.value}</p></div>))}
+                </motion.div>
+              )}
             </div>
-            {/* Right Column: Decision & Summary */}
-            <div className="col-span-4 flex flex-col gap-8">
-              {/* Decision Section */}
-              <section className="glass-panel sticky top-28 rounded-xl p-8 border border-outline-variant/20 shadow-xl shadow-blue-900/5">
-                <div className="flex items-center gap-2 mb-6">
-                  <span className="material-symbols-outlined text-primary" style={{fontVariationSettings: '"FILL" 1'}}>rate_review</span>
-                  <h3 className="text-lg font-headline font-bold" style={{}}>Décision Spécialiste</h3>
-                </div>
-                <form className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-secondary uppercase tracking-widest" htmlFor="comment" style={{}}>Commentaire du Spécialiste *</label>
-                    <textarea className="w-full bg-surface-container-highest border-none rounded-md focus:ring-2 focus:ring-primary-container text-sm placeholder:text-outline p-4" id="comment" placeholder="Indiquez vos recommandations ou motifs d'acceptation/refus..." required rows={6} value={specialistComment} onChange={(event) => setSpecialistComment(event.target.value)} />
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <button className="w-full py-4 bg-gradient-to-br from-[#006e33] to-[#004b23] text-white rounded-md font-bold text-sm shadow-lg shadow-green-900/20 hover:opacity-90 transition-all flex items-center justify-center gap-2" type="button" onClick={acceptRequest} style={{}}>
-                      <span className="material-symbols-outlined" style={{}}>check_circle</span> Accept Request
-                    </button>
-                    <button className="w-full py-4 border-2 border-tertiary text-tertiary rounded-md font-bold text-sm hover:bg-tertiary/5 transition-all flex items-center justify-center gap-2" type="button" style={{}}>
-                      <span className="material-symbols-outlined" style={{}}>cancel</span> Refuse Request
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-center text-slate-400 italic" style={{}}>
-                    Une notification sera envoyée immédiatement au service de néphrologie émetteur.
-                  </p>
-                </form>
-              </section>
-              {/* Summary Widget */}
-              <div className="bg-surface-container-low rounded-xl p-6">
-                <h4 className="text-xs font-bold text-secondary uppercase tracking-widest mb-4" style={{}}>Informations supplémentaires</h4>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                      <span className="material-symbols-outlined text-primary text-lg" style={{}}>calendar_today</span>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-secondary leading-none uppercase" style={{}}>Date de demande</p>
-                      <p className="text-sm font-bold" style={{}}>Aujourd'hui, 09:42</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                      <span className="material-symbols-outlined text-primary text-lg" style={{}}>local_hospital</span>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-secondary leading-none uppercase" style={{}}>Service Émetteur</p>
-                      <p className="text-sm font-bold" style={{}}>Unité de Dialyse A</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                      <span className="material-symbols-outlined text-primary text-lg" style={{}}>person</span>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-secondary leading-none uppercase" style={{}}>Médecin Référent</p>
-                      <p className="text-sm font-bold" style={{}}>Dr. Sarah Méline</p>
-                    </div>
-                  </div>
-                </div>
+
+            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
+              <h2 className="text-lg font-bold text-slate-800 mb-4"><span className="w-1.5 h-6 bg-purple-600 rounded-full"></span> Détails cliniques</h2>
+              <div className="space-y-4"><div><label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Motif</label><textarea value={motif} onChange={(e) => setMotif(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all outline-none resize-none" rows={2} /></div><div><label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Diagnostic</label><select value={diagnostic} onChange={(e) => setDiagnostic(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none cursor-pointer"><option>Oedème Cérébral Osmotique</option><option>Hyperkaliémie aiguë</option><option>Péricardite urémique</option><option>Hypotension intradialytique</option></select></div><div><label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase">Priorité</label><div className="flex gap-2">{['critique','haute','moyenne','basse'].map(p => (<motion.button key={p} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setPriorite(p)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${priorite === p ? (p==='critique'?'bg-red-600 text-white shadow-lg':p==='haute'?'bg-orange-600 text-white shadow-lg':'bg-blue-600 text-white shadow-lg') : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'}`}>{p.charAt(0).toUpperCase()+p.slice(1)}</motion.button>))}</div></div></div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
+              <h2 className="text-lg font-bold text-slate-800 mb-4"><span className="w-1.5 h-6 bg-emerald-600 rounded-full"></span> Avis du spécialiste</h2>
+              <textarea value={specialistComment} onChange={(e) => setSpecialistComment(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all outline-none resize-none mb-4" rows={4} placeholder="Votre avis médical..." />
+              <div className="flex gap-3">
+                <motion.button whileHover={patient?.id ? { scale: 1.02 } : {}} whileTap={patient?.id ? { scale: 0.98 } : {}} onClick={accepterDemande} disabled={!patient?.id} className={`flex-1 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 ${patient?.id ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}><span className="material-symbols-outlined text-lg">check_circle</span>Accepter</motion.button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={refuserDemande} className="flex-1 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 bg-white border-2 border-red-200 text-red-600 hover:bg-red-50 cursor-pointer"><span className="material-symbols-outlined text-lg">cancel</span>Refuser</motion.button>
               </div>
             </div>
-          </div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 sticky top-24">
+              <h3 className="text-sm font-bold text-slate-800 mb-4">Actions</h3>
+              <div className="space-y-2"><motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-slate-50 text-slate-600 hover:bg-slate-100 border cursor-pointer"><span className="material-symbols-outlined text-lg">chat</span>Demander précisions</motion.button><motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-slate-50 text-slate-600 hover:bg-slate-100 border cursor-pointer"><span className="material-symbols-outlined text-lg">schedule</span>Reporter</motion.button></div>
+              {patient && (<div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100"><p className="text-[10px] font-bold text-blue-600 uppercase mb-2">Patient lié</p><p className="text-sm font-bold text-blue-800">{patient.prenoms} {patient.nom}</p><p className="text-xs text-blue-500">{patient.id} · {patient.age} ans</p></div>)}
+            </div>
+          </motion.div>
         </div>
-      </main>
+      </div>
     </div>
-    
   );
 }

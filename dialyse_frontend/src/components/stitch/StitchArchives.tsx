@@ -1,233 +1,408 @@
 'use client';
 
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo } from 'react';
+
+const ARCHIVES = [
+  { id: 'ARC-001', mois: 'Mai 2026', annee: '2026', moisNum: 5, dossiers: 142, seances: 380, patients: 78, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Andrianjato', dateDebut: '2026-05-01', dateFin: '2026-05-31',
+    patientsList: ['Elena Ross', 'Marcus Jensen', 'Hélène Bernard', 'Sophie Martin', 'Pierre Durant', 'Anne Laurent', 'Luc Bernard', 'Claire Dubois'] },
+  { id: 'ARC-002', mois: 'Avril 2026', annee: '2026', moisNum: 4, dossiers: 156, seances: 420, patients: 85, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Rakoto', dateDebut: '2026-04-01', dateFin: '2026-04-30',
+    patientsList: ['Elena Ross', 'Marcus Jensen', 'Hélène Bernard', 'Robert N.', 'Marie T.', 'Jean F.', 'Julie K.', 'Paul M.', 'Sandra W.'] },
+  { id: 'ARC-003', mois: 'Mars 2026', annee: '2026', moisNum: 3, dossiers: 128, seances: 350, patients: 72, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Andrianjato', dateDebut: '2026-03-01', dateFin: '2026-03-31',
+    patientsList: ['Elena Ross', 'Hélène Bernard', 'Sophie Martin', 'Pierre Durant'] },
+  { id: 'ARC-004', mois: 'Février 2026', annee: '2026', moisNum: 2, dossiers: 165, seances: 445, patients: 90, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Rabary', dateDebut: '2026-02-01', dateFin: '2026-02-28',
+    patientsList: ['Marcus Jensen', 'Luc Bernard', 'Claire Dubois', 'Anne Laurent'] },
+  { id: 'ARC-005', mois: 'Janvier 2026', annee: '2026', moisNum: 1, dossiers: 138, seances: 370, patients: 75, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Andrianjato', dateDebut: '2026-01-01', dateFin: '2026-01-31',
+    patientsList: ['Elena Ross', 'Hélène Bernard', 'Robert N.', 'Marie T.'] },
+  { id: 'ARC-006', mois: 'Décembre 2025', annee: '2025', moisNum: 12, dossiers: 145, seances: 390, patients: 80, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Rakoto', dateDebut: '2025-12-01', dateFin: '2025-12-31',
+    patientsList: ['Jean F.', 'Julie K.', 'Paul M.', 'Sandra W.'] },
+  { id: 'ARC-007', mois: 'Novembre 2025', annee: '2025', moisNum: 11, dossiers: 152, seances: 410, patients: 83, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Andrianjato', dateDebut: '2025-11-01', dateFin: '2025-11-30',
+    patientsList: ['Elena Ross', 'Marcus Jensen', 'Sophie Martin'] },
+  { id: 'ARC-008', mois: 'Octobre 2025', annee: '2025', moisNum: 10, dossiers: 133, seances: 360, patients: 70, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Rabary', dateDebut: '2025-10-01', dateFin: '2025-10-31',
+    patientsList: ['Pierre Durant', 'Anne Laurent', 'Luc Bernard'] },
+  { id: 'ARC-009', mois: 'Septembre 2025', annee: '2025', moisNum: 9, dossiers: 148, seances: 400, patients: 82, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Andrianjato', dateDebut: '2025-09-01', dateFin: '2025-09-30',
+    patientsList: ['Elena Ross', 'Hélène Bernard', 'Claire Dubois', 'Robert N.'] },
+  { id: 'ARC-010', mois: 'Août 2025', annee: '2025', moisNum: 8, dossiers: 140, seances: 385, patients: 77, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Rakoto', dateDebut: '2025-08-01', dateFin: '2025-08-31',
+    patientsList: ['Marcus Jensen', 'Marie T.', 'Jean F.'] },
+  { id: 'ARC-011', mois: 'Juillet 2025', annee: '2025', moisNum: 7, dossiers: 135, seances: 375, patients: 73, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Andrianjato', dateDebut: '2025-07-01', dateFin: '2025-07-31',
+    patientsList: ['Julie K.', 'Paul M.', 'Sandra W.'] },
+  { id: 'ARC-012', mois: 'Juin 2025', annee: '2025', moisNum: 6, dossiers: 155, seances: 430, patients: 88, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Rabary', dateDebut: '2025-06-01', dateFin: '2025-06-30',
+    patientsList: ['Elena Ross', 'Sophie Martin', 'Pierre Durant', 'Anne Laurent'] },
+];
+
 export default function StitchArchives() {
+  const [search, setSearch] = useState('');
+  const [selectedArchive, setSelectedArchive] = useState<string | null>(null);
+  const [filterYear, setFilterYear] = useState('all');
+  const [dateStart, setDateStart] = useState('');
+  const [dateEnd, setDateEnd] = useState('');
+  const [notification, setNotification] = useState<string | null>(null);
+
+  const showNotification = (message: string) => {
+    setNotification(message);
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  const filteredArchives = useMemo(() => {
+    let result = ARCHIVES;
+
+    if (filterYear !== 'all') {
+      result = result.filter(a => a.annee === filterYear);
+    }
+
+    if (dateStart) {
+      result = result.filter(a => a.dateFin >= dateStart);
+    }
+    if (dateEnd) {
+      result = result.filter(a => a.dateDebut <= dateEnd);
+    }
+
+    // Recherche dans TOUS les champs + patients
+    if (search.trim()) {
+      const q = search.toLowerCase().trim();
+      result = result.filter(a => {
+        const matchMain = (
+          a.mois.toLowerCase().includes(q) ||
+          a.annee.includes(q) ||
+          String(a.dossiers).includes(q) ||
+          String(a.seances).includes(q) ||
+          String(a.patients).includes(q) ||
+          a.type.toLowerCase().includes(q) ||
+          a.statut.toLowerCase().includes(q) ||
+          a.service.toLowerCase().includes(q) ||
+          a.responsable.toLowerCase().includes(q) ||
+          a.id.toLowerCase().includes(q) ||
+          (q.startsWith('>') && !isNaN(parseInt(q.slice(1))) && a.seances > parseInt(q.slice(1))) ||
+          (q.startsWith('<') && !isNaN(parseInt(q.slice(1))) && a.seances < parseInt(q.slice(1)))
+        );
+        // Recherche dans la liste des patients
+        const matchPatients = a.patientsList.some(p => p.toLowerCase().includes(q));
+        return matchMain || matchPatients;
+      });
+    }
+
+    return result;
+  }, [search, filterYear, dateStart, dateEnd]);
+
+  const years = ['all', ...new Set(ARCHIVES.map(a => a.annee))];
+
+  const statsFiltered = {
+    dossiers: filteredArchives.reduce((s, a) => s + a.dossiers, 0),
+    seances: filteredArchives.reduce((s, a) => s + a.seances, 0),
+    patients: filteredArchives.reduce((s, a) => s + a.patients, 0),
+  };
+
+  const statsGlobal = {
+    totalDossiers: ARCHIVES.reduce((s, a) => s + a.dossiers, 0),
+    totalSeances: ARCHIVES.reduce((s, a) => s + a.seances, 0),
+    totalPatients: ARCHIVES.reduce((s, a) => s + a.patients, 0),
+    nbMois: ARCHIVES.length,
+  };
+
+  const handleDownload = (archive: typeof ARCHIVES[0]) => {
+    const dataStr = JSON.stringify(archive, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `archive_${archive.mois.replace(/\s+/g, '_')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showNotification(`📥 Archive ${archive.mois} téléchargée !`);
+  };
+
+  const handleExportAll = () => {
+    const dataStr = JSON.stringify(filteredArchives, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `archives_${filterYear !== 'all' ? filterYear : 'tout'}_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showNotification(`📥 ${filteredArchives.length} archives exportées !`);
+  };
+
+  // Patients mis en évidence dans la recherche
+  const highlightedPatients = useMemo(() => {
+    if (!search.trim()) return [];
+    const q = search.toLowerCase().trim();
+    const allPatients = new Set<string>();
+    filteredArchives.forEach(a => a.patientsList.forEach(p => {
+      if (p.toLowerCase().includes(q)) allPatients.add(p);
+    }));
+    return Array.from(allPatients);
+  }, [search, filteredArchives]);
+
   return (
-    <div className="bg-background text-on-surface">
-      {/* SideNavBar Shell */}
-      {/* TopNavBar Shell */}
-      <header className="fixed top-0 right-0 left-64 h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl flex items-center justify-between px-8 w-full border-b border-slate-200/15 z-40">
-        <div className="flex items-center gap-4 flex-1">
-          <div className="relative w-full max-w-md">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" style={{}}>search</span>
-            <input className="w-full bg-surface-container-low border-none rounded-md py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Rechercher une archive..." type="text" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+      <div className="pt-6 pb-20 md:pb-8 px-4 md:px-6 lg:px-8 max-w-[1600px] mx-auto">
+        
+        <AnimatePresence>
+          {notification && (
+            <motion.div initial={{ opacity: 0, y: -50, x: '-50%' }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} className="fixed top-4 left-1/2 z-50 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-6 py-3 rounded-2xl shadow-xl font-bold text-sm flex items-center gap-2">
+              <span className="material-symbols-outlined">check_circle</span>
+              {notification}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <motion.nav initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2 text-xs text-slate-400 font-medium mb-4">
+          <span>Espace Clinique</span>
+          <span className="material-symbols-outlined text-sm">chevron_right</span>
+          <span className="text-slate-600 font-bold">Archives</span>
+        </motion.nav>
+
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col lg:flex-row gap-6 mb-6">
+          <div className="flex-1">
+            <h1 className="text-2xl md:text-3xl font-black text-slate-800 font-manrope">Archives</h1>
+            <p className="text-slate-500 text-sm mt-1">
+              {filteredArchives.length} résultat{filteredArchives.length !== 1 ? 's' : ''} 
+              {(dateStart || dateEnd) && <span className="text-blue-600 font-semibold"> du {dateStart || '...'} au {dateEnd || '...'}</span>}
+              {search && <span className="text-blue-600 font-semibold"> pour &quot;{search}&quot;</span>}
+              {highlightedPatients.length > 0 && (
+                <span className="text-emerald-600 font-semibold"> · {highlightedPatients.length} patient{highlightedPatients.length > 1 ? 's' : ''} trouvé{highlightedPatients.length > 1 ? 's' : ''}</span>
+              )}
+            </p>
           </div>
-        </div>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-4 text-slate-600">
-            <button className="hover:text-blue-600 transition-all focus:ring-2 focus:ring-blue-500/20 rounded-md p-1" style={{}}>
-              <span className="material-symbols-outlined" style={{}}>notifications</span>
-            </button>
-            <button className="hover:text-blue-600 transition-all focus:ring-2 focus:ring-blue-500/20 rounded-md p-1" style={{}}>
-              <span className="material-symbols-outlined" style={{}}>settings</span>
-            </button>
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleExportAll} className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 shadow-sm cursor-pointer flex items-center gap-2">
+            <span className="material-symbols-outlined text-lg">download</span>
+            Exporter ({filteredArchives.length})
+          </motion.button>
+        </motion.div>
+
+        {/* Stats globales */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          {[
+            { label: 'Total Dossiers', value: statsGlobal.totalDossiers.toLocaleString(), icon: 'folder', color: 'from-blue-500 to-blue-600' },
+            { label: 'Total Séances', value: statsGlobal.totalSeances.toLocaleString(), icon: 'monitor_heart', color: 'from-emerald-500 to-emerald-600' },
+            { label: 'Patients Suivis', value: statsGlobal.totalPatients, icon: 'groups', color: 'from-purple-500 to-purple-600' },
+            { label: 'Mois Archivés', value: statsGlobal.nbMois, icon: 'calendar_month', color: 'from-amber-500 to-amber-600' },
+          ].map((stat, i) => (
+            <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} whileHover={{ y: -4 }} className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5 flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-white shadow-lg`}>
+                <span className="material-symbols-outlined text-xl">{stat.icon}</span>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{stat.label}</p>
+                <p className="text-2xl font-black text-slate-800">{stat.value}</p>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Patients trouvés (si recherche par patient) */}
+        <AnimatePresence>
+          {highlightedPatients.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
+              <p className="text-xs font-bold text-emerald-700 mb-2 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">person_search</span>
+                Patients trouvés dans les archives :
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {highlightedPatients.map(patient => (
+                  <motion.span
+                    key={patient}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="px-3 py-1.5 bg-white border border-emerald-200 rounded-full text-[10px] font-bold text-emerald-700 shadow-sm"
+                  >
+                    {patient}
+                    <span className="ml-1 text-emerald-400">
+                      ({filteredArchives.filter(a => a.patientsList.includes(patient)).length} mois)
+                    </span>
+                  </motion.span>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Filtres */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5 mb-6 space-y-4">
+          
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="relative flex-1 max-w-sm">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Rechercher par mois, année, dossiers, séances, patient, responsable..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+              />
+              {search && (
+                <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }} onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 cursor-pointer">
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </motion.button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase">Année :</span>
+              {years.map(year => (
+                <motion.button key={year} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setFilterYear(year)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${filterYear === year ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-200'}`}>
+                  {year === 'all' ? 'Toutes' : year}
+                </motion.button>
+              ))}
+            </div>
           </div>
-          <div className="h-8 w-px bg-slate-200" />
-          <span className="text-sm font-semibold text-slate-900 font-manrope" style={{}}>Archives Centrales</span>
-        </div>
-      </header>
-      {/* Main Content Area */}
-      <main className="mt-16 p-8 min-h-screen">
-        {/* Header Section */}
-        <section className="mb-8">
-          <h2 className="text-3xl font-extrabold text-on-surface font-manrope tracking-tight" style={{}}>Archives Centrales</h2>
-          <p className="text-secondary mt-1 max-w-2xl font-body" style={{}}>Consultez l'historique complet des dossiers, prescriptions et comptes-rendus de l'unité de dialyse.</p>
-        </section>
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Main Content: Search, Filters & List */}
-          <div className="flex-1 space-y-6">
-            {/* Filters Bar */}
-            <div className="glass-panel p-4 rounded-xl border border-outline-variant/15 flex flex-wrap items-center gap-4">
-              <div className="flex-1 min-w-[200px]">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block" style={{}}>Recherche par Patient</label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" style={{}}>person</span>
-                  <input className="w-full bg-surface-container-low border-none rounded-md py-2 pl-9 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Nom ou ID..." type="text" />
-                </div>
-              </div>
-              <div className="w-48">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block" style={{}}>Type de document</label>
-                <select className="w-full bg-surface-container-low border-none rounded-md py-2 px-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer">
-                  <option>Tous les types</option>
-                  <option>Prescription</option>
-                  <option>Compte-rendu</option>
-                  <option>Labo</option>
-                </select>
-              </div>
-              <div className="w-40">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block" style={{}}>Date</label>
-                <input className="w-full bg-surface-container-low border-none rounded-md py-2 px-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer" type="date" />
-              </div>
-              <button className="self-end h-10 px-6 bg-primary text-white rounded-md font-bold text-sm hover:opacity-90 transition-opacity" style={{}}>
-                Filtrer
-              </button>
+
+          {/* Intervalle de dates */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
+              <span className="material-symbols-outlined text-sm">date_range</span>
+              Intervalle :
+            </span>
+            <div className="flex items-center gap-2">
+              <input type="date" value={dateStart} onChange={(e) => setDateStart(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer" />
+              <span className="text-slate-400 text-xs font-bold">→</span>
+              <input type="date" value={dateEnd} onChange={(e) => setDateEnd(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer" />
+              {(dateStart || dateEnd) && (
+                <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }} onClick={() => { setDateStart(''); setDateEnd(''); }} className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 cursor-pointer">
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </motion.button>
+              )}
             </div>
-            {/* Archive List (Bento-style list) */}
-            <div className="space-y-3 overflow-y-auto max-h-[calc(100vh-380px)] pr-2 custom-scrollbar">
-              <div className="grid grid-cols-12 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                <div className="col-span-4" style={{}}>Patient</div>
-                <div className="col-span-3" style={{}}>Document</div>
-                <div className="col-span-3" style={{}}>Date d'archivage</div>
-                <div className="col-span-2 text-right" style={{}}>Actions</div>
-              </div>
-              {/* List Item 1 */}
-              <div className="group relative bg-surface-container-low hover:bg-surface-container-high transition-colors duration-200 rounded-xl p-6 grid grid-cols-12 items-center">
-                <div className="col-span-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs" style={{}}>MA</div>
-                  <div>
-                    <p className="font-bold text-on-surface" style={{}}>Marie Autier</p>
-                    <p className="text-xs text-secondary font-mono" style={{}}>ID: #DX-9021</p>
-                  </div>
-                </div>
-                <div className="col-span-3">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-[11px] font-bold" style={{}}>
-                    <span className="material-symbols-outlined text-[14px]" style={{}}>prescriptions</span>
-                    Prescription
-                  </span>
-                </div>
-                <div className="col-span-3">
-                  <p className="text-sm font-medium text-secondary" style={{}}>12 Octobre 2023</p>
-                  <p className="text-[10px] text-slate-400" style={{}}>Archivé par System Admin</p>
-                </div>
-                <div className="col-span-2 flex justify-end gap-2">
-                  <button className="p-2 hover:bg-white rounded-lg transition-colors text-primary" title="Voir" style={{}}>
-                    <span className="material-symbols-outlined" style={{}}>visibility</span>
-                  </button>
-                  <button className="p-2 hover:bg-white rounded-lg transition-colors text-primary" title="Télécharger" style={{}}>
-                    <span className="material-symbols-outlined" style={{}}>download</span>
-                  </button>
-                </div>
-              </div>
-              {/* List Item 2 */}
-              <div className="group relative bg-surface-container-low hover:bg-surface-container-high transition-colors duration-200 rounded-xl p-6 grid grid-cols-12 items-center">
-                <div className="col-span-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xs" style={{}}>JL</div>
-                  <div>
-                    <p className="font-bold text-on-surface" style={{}}>Jean-Luc Picard</p>
-                    <p className="text-xs text-secondary font-mono" style={{}}>ID: #DX-1701</p>
-                  </div>
-                </div>
-                <div className="col-span-3">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold border border-blue-100" style={{}}>
-                    <span className="material-symbols-outlined text-[14px]" style={{}}>lab_research</span>
-                    Labo
-                  </span>
-                </div>
-                <div className="col-span-3">
-                  <p className="text-sm font-medium text-secondary" style={{}}>08 Octobre 2023</p>
-                  <p className="text-[10px] text-slate-400" style={{}}>Archivé par Lab_Tech_04</p>
-                </div>
-                <div className="col-span-2 flex justify-end gap-2">
-                  <button className="p-2 hover:bg-white rounded-lg transition-colors text-primary" style={{}}>
-                    <span className="material-symbols-outlined" style={{}}>visibility</span>
-                  </button>
-                  <button className="p-2 hover:bg-white rounded-lg transition-colors text-primary" style={{}}>
-                    <span className="material-symbols-outlined" style={{}}>download</span>
-                  </button>
-                </div>
-              </div>
-              {/* List Item 3 */}
-              <div className="group relative bg-surface-container-low hover:bg-surface-container-high transition-colors duration-200 rounded-xl p-6 grid grid-cols-12 items-center">
-                <div className="col-span-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-xs" style={{}}>SK</div>
-                  <div>
-                    <p className="font-bold text-on-surface" style={{}}>Sarah Konor</p>
-                    <p className="text-xs text-secondary font-mono" style={{}}>ID: #DX-800</p>
-                  </div>
-                </div>
-                <div className="col-span-3">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-highest text-on-surface-variant text-[11px] font-bold" style={{}}>
-                    <span className="material-symbols-outlined text-[14px]" style={{}}>description</span>
-                    Compte-rendu
-                  </span>
-                </div>
-                <div className="col-span-3">
-                  <p className="text-sm font-medium text-secondary" style={{}}>05 Octobre 2023</p>
-                  <p className="text-[10px] text-slate-400" style={{}}>Archivé par Dr. Dupont</p>
-                </div>
-                <div className="col-span-2 flex justify-end gap-2">
-                  <button className="p-2 hover:bg-white rounded-lg transition-colors text-primary" style={{}}>
-                    <span className="material-symbols-outlined" style={{}}>visibility</span>
-                  </button>
-                  <button className="p-2 hover:bg-white rounded-lg transition-colors text-primary" style={{}}>
-                    <span className="material-symbols-outlined" style={{}}>download</span>
-                  </button>
-                </div>
-              </div>
-              {/* List Item 4 */}
-              <div className="group relative bg-surface-container-low hover:bg-surface-container-high transition-colors duration-200 rounded-xl p-6 grid grid-cols-12 items-center">
-                <div className="col-span-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-xs" style={{}}>BM</div>
-                  <div>
-                    <p className="font-bold text-on-surface" style={{}}>Benoît Magimel</p>
-                    <p className="text-xs text-secondary font-mono" style={{}}>ID: #DX-4432</p>
-                  </div>
-                </div>
-                <div className="col-span-3">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-[11px] font-bold" style={{}}>
-                    <span className="material-symbols-outlined text-[14px]" style={{}}>prescriptions</span>
-                    Prescription
-                  </span>
-                </div>
-                <div className="col-span-3">
-                  <p className="text-sm font-medium text-secondary" style={{}}>30 Septembre 2023</p>
-                  <p className="text-[10px] text-slate-400" style={{}}>Archivé par System Admin</p>
-                </div>
-                <div className="col-span-2 flex justify-end gap-2">
-                  <button className="p-2 hover:bg-white rounded-lg transition-colors text-primary" style={{}}>
-                    <span className="material-symbols-outlined" style={{}}>visibility</span>
-                  </button>
-                  <button className="p-2 hover:bg-white rounded-lg transition-colors text-primary" style={{}}>
-                    <span className="material-symbols-outlined" style={{}}>download</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-            {/* Pagination */}
+            {(dateStart || dateEnd) && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 bg-blue-50 rounded-xl px-3 py-1.5">
+                <span className="text-[10px] font-bold text-blue-700">{statsFiltered.dossiers} dossiers · {statsFiltered.seances} séances · {statsFiltered.patients} patients</span>
+              </motion.div>
+            )}
           </div>
-          {/* Statistics Sidebar */}
-          <aside className="w-full lg:w-80 space-y-6">
-            {/* Archive Summary Card */}
-            <div className="bg-gradient-to-br from-primary to-primary-container p-6 rounded-2xl text-white shadow-xl">
-              <div className="flex justify-between items-start mb-6">
-                <span className="material-symbols-outlined text-3xl opacity-50" style={{}}>inventory_2</span>
-                <span className="bg-white/20 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider" style={{}}>Mise à jour: 2h</span>
-              </div>
-              <p className="text-blue-100 text-sm font-medium" style={{}}>Total documents archivés</p>
-              <h3 className="text-4xl font-extrabold font-manrope mt-1" style={{}}>12,482</h3>
-              <div className="mt-6 flex items-center gap-2">
-                <span className="flex items-center text-emerald-300 text-xs font-bold" style={{}}>
-                  <span className="material-symbols-outlined text-sm" style={{}}>trending_up</span>
-                  +12%
-                </span>
-                <span className="text-blue-200 text-[10px]" style={{}}>depuis le mois dernier</span>
-              </div>
+
+          {/* Tags rapides */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold text-slate-400">Rapide :</span>
+            {['Elena Ross', 'Marcus Jensen', 'Hélène Bernard', 'Mensuel', 'Dr. Andrianjato', '>400'].map(tag => (
+              <motion.button key={tag} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setSearch(search === tag ? '' : tag)} className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${search === tag ? 'bg-blue-100 text-blue-700 ring-2 ring-blue-400' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                {tag}
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Liste des archives */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[900px]">
+              <thead>
+                <tr className="text-slate-400 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100">
+                  <th className="text-left py-4 pl-6">Période</th>
+                  <th className="text-center py-4">Dossiers</th>
+                  <th className="text-center py-4">Séances</th>
+                  <th className="text-center py-4">Patients</th>
+                  <th className="text-center py-4">Responsable</th>
+                  <th className="text-center py-4">Intervalle</th>
+                  <th className="text-center py-4">Statut</th>
+                  <th className="text-right py-4 pr-6">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {filteredArchives.length === 0 ? (
+                  <tr><td colSpan={8} className="text-center py-12 text-slate-400">
+                    <span className="material-symbols-outlined text-4xl mb-2 block">search_off</span>
+                    Aucun résultat trouvé
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { setSearch(''); setDateStart(''); setDateEnd(''); setFilterYear('all'); }} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold cursor-pointer block mx-auto">
+                      Réinitialiser les filtres
+                    </motion.button>
+                  </td></tr>
+                ) : (
+                  filteredArchives.map((archive, index) => (
+                    <motion.tr key={archive.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.03 }} whileHover={{ backgroundColor: '#f8fafc' }} className="group cursor-pointer transition-colors" onClick={() => setSelectedArchive(selectedArchive === archive.id ? null : archive.id)}>
+                      <td className="py-4 pl-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center group-hover:from-blue-100 group-hover:to-blue-200 transition-all">
+                            <span className="material-symbols-outlined text-slate-500 group-hover:text-blue-600 transition-colors">calendar_month</span>
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm text-slate-800">{archive.mois}</p>
+                            <p className="text-[10px] text-slate-400">{archive.type} · {archive.service}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 text-center"><span className="text-sm font-bold text-blue-600">{archive.dossiers}</span></td>
+                      <td className="py-4 text-center"><span className="text-sm font-bold text-emerald-600">{archive.seances}</span></td>
+                      <td className="py-4 text-center">
+                        <span className="text-sm font-bold text-purple-600">{archive.patients}</span>
+                        <p className="text-[9px] text-slate-400 truncate max-w-[120px]">{archive.patientsList.slice(0, 3).join(', ')}{archive.patientsList.length > 3 ? '...' : ''}</p>
+                      </td>
+                      <td className="py-4 text-center"><span className="text-xs text-slate-600">{archive.responsable}</span></td>
+                      <td className="py-4 text-center"><span className="text-[10px] text-slate-500">{new Date(archive.dateDebut).toLocaleDateString('fr-FR')} → {new Date(archive.dateFin).toLocaleDateString('fr-FR')}</span></td>
+                      <td className="py-4 text-center"><span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">{archive.statut}</span></td>
+                      <td className="py-4 pr-6 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); setSelectedArchive(selectedArchive === archive.id ? null : archive.id); }} className="p-2 hover:bg-blue-50 rounded-lg cursor-pointer">
+                            <span className="material-symbols-outlined text-blue-500 text-lg">{selectedArchive === archive.id ? 'visibility_off' : 'visibility'}</span>
+                          </motion.button>
+                          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); handleDownload(archive); }} className="p-2 hover:bg-emerald-50 rounded-lg cursor-pointer">
+                            <span className="material-symbols-outlined text-emerald-500 text-lg">download</span>
+                          </motion.button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Détails expandable avec liste des patients */}
+          <AnimatePresence>
+            {selectedArchive && (() => {
+              const archive = ARCHIVES.find(a => a.id === selectedArchive);
+              if (!archive) return null;
+              return (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="border-t-2 border-blue-100">
+                  <div className="p-6 bg-gradient-to-r from-blue-50/50 to-white">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-black text-slate-800">{archive.mois} - Détails</h3>
+                      <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setSelectedArchive(null)} className="p-1 text-slate-400 hover:text-red-500 cursor-pointer">
+                        <span className="material-symbols-outlined">close</span>
+                      </motion.button>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                      {Object.entries({ Dossiers: archive.dossiers, Séances: archive.seances, Patients: archive.patients, Responsable: archive.responsable, Type: archive.type, Service: archive.service, Statut: archive.statut, 'Date début': new Date(archive.dateDebut).toLocaleDateString('fr-FR'), 'Date fin': new Date(archive.dateFin).toLocaleDateString('fr-FR') }).map(([key, value]) => (
+                        <div key={key} className="bg-white rounded-xl p-3 border border-slate-100">
+                          <p className="text-[10px] text-slate-400 uppercase">{key}</p>
+                          <p className="text-sm font-bold text-slate-700">{value}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-100 p-4">
+                      <p className="text-xs font-bold text-slate-700 mb-2">👥 Patients suivis ({archive.patientsList.length})</p>
+                      <div className="flex flex-wrap gap-2">
+                        {archive.patientsList.map(patient => (
+                          <span key={patient} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border ${search && patient.toLowerCase().includes(search.toLowerCase()) ? 'bg-emerald-100 text-emerald-700 border-emerald-300 ring-2 ring-emerald-400' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                            {patient}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })()}
+          </AnimatePresence>
+
+          {/* Pagination */}
+          <div className="p-4 flex items-center justify-between border-t border-slate-100">
+            <span className="text-[10px] text-slate-400">{filteredArchives.length} résultat{filteredArchives.length !== 1 ? 's' : ''}</span>
+            <div className="flex items-center gap-2">
+              <motion.button whileHover={{ x: -3 }} className="w-8 h-8 rounded-lg bg-white text-slate-400 hover:bg-slate-50 border border-slate-200 flex items-center justify-center cursor-pointer">
+                <span className="material-symbols-outlined text-sm">chevron_left</span>
+              </motion.button>
+              {[1, 2].map(page => (
+                <motion.button key={page} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${page === 1 ? 'bg-blue-600 text-white' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}>
+                  {page}
+                </motion.button>
+              ))}
+              <motion.button whileHover={{ x: 3 }} className="w-8 h-8 rounded-lg bg-white text-slate-400 hover:bg-slate-50 border border-slate-200 flex items-center justify-center cursor-pointer">
+                <span className="material-symbols-outlined text-sm">chevron_right</span>
+              </motion.button>
             </div>
-            {/* Trend Chart Section */}
-            <div className="bg-white p-6 rounded-2xl border border-outline-variant/15">
-              <h4 className="text-sm font-bold text-on-surface font-manrope mb-4" style={{}}>Volume d'archives</h4>
-              <div className="h-32 flex items-end justify-between gap-1">
-                {/* Simulated Sparkline Chart */}
-                <div className="w-full bg-primary/5 rounded-t-sm h-[30%] hover:bg-primary/20 transition-all cursor-pointer" title="Jan: 450" />
-                <div className="w-full bg-primary/5 rounded-t-sm h-[45%] hover:bg-primary/20 transition-all cursor-pointer" title="Feb: 620" />
-                <div className="w-full bg-primary/5 rounded-t-sm h-[40%] hover:bg-primary/20 transition-all cursor-pointer" title="Mar: 580" />
-                <div className="w-full bg-primary/10 rounded-t-sm h-[60%] hover:bg-primary/20 transition-all cursor-pointer" title="Apr: 890" />
-                <div className="w-full bg-primary/10 rounded-t-sm h-[55%] hover:bg-primary/20 transition-all cursor-pointer" title="May: 750" />
-                <div className="w-full bg-primary/20 rounded-t-sm h-[75%] hover:bg-primary/20 transition-all cursor-pointer" title="Jun: 920" />
-                <div className="w-full bg-primary/40 rounded-t-sm h-[70%] hover:bg-primary/20 transition-all cursor-pointer" title="Jul: 880" />
-                <div className="w-full bg-primary/60 rounded-t-sm h-[85%] hover:bg-primary/20 transition-all cursor-pointer" title="Aug: 1100" />
-                <div className="w-full bg-primary/80 rounded-t-sm h-[95%] hover:bg-primary/20 transition-all cursor-pointer" title="Sep: 1250" />
-                <div className="w-full bg-primary rounded-t-sm h-[100%] hover:bg-primary/20 transition-all cursor-pointer" title="Oct: 1400" />
-              </div>
-              <div className="flex justify-between mt-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                <span style={{}}>Jan</span>
-                <span style={{}}>Oct</span>
-              </div>
-            </div>
-            {/* Storage Info */}
-          </aside>
-        </div>
-      </main>
+          </div>
+        </motion.div>
+      </div>
     </div>
-    
   );
 }

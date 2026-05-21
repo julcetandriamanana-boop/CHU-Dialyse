@@ -1,8 +1,35 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
+  
+  // Configuration CORS
+  app.enableCors({
+    origin: ['http://localhost:3000', 'http://localhost:3002'],
+    methods: 'GET,POST,PUT,DELETE,PATCH',
+    credentials: true,
+  });
+
+  // Configuration Swagger
+  const config = new DocumentBuilder()
+    .setTitle('CHU Andrainjato - API Dialyse')
+    .setDescription('Documentation complète de l\'API du service de dialyse')
+    .setVersion('2.4.1')
+    .addTag('Patients', 'Gestion des patients')
+    .addTag('Prescriptions', 'Gestion des prescriptions médicales')
+    .addTag('Rendez-vous', 'Gestion des rendez-vous')
+    .addTag('Demandes d\'avis', 'Gestion des demandes d\'avis')
+    .addTag('Notifications', 'Système de notifications')
+    .addServer('http://localhost:3001', 'Serveur local')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document);
+
+  await app.listen(3001);
+  console.log('🚀 Backend NestJS sur http://localhost:3001');
+  console.log('📚 Swagger Docs sur http://localhost:3001/api/docs');
 }
 bootstrap();

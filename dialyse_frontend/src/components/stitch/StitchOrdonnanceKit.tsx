@@ -1,215 +1,177 @@
 'use client';
 
+import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { getCurrentPatient, PatientData, setCurrentPatient } from '@/src/stores/patient.store';
+import PatientSearchInput from '@/src/components/patient/PatientSearchInput';
+
+const KIT_ITEMS = [
+  { nom: 'SSI 0.9% 500 ml', qte: '6 flacons', prix: '', montant: '' },
+  { nom: 'Oxigen solution 500 ml', qte: '1 flacon', prix: '', montant: '' },
+  { nom: 'Securifix 10 X 25', qte: '2 unités', prix: '', montant: '' },
+  { nom: 'Compresses stériles 40×40', qte: '10 unités', prix: '', montant: '' },
+  { nom: 'Gants stériles taille 7.5', qte: '2 paires', prix: '', montant: '' },
+  { nom: 'Aiguille de fistule 15G', qte: '2', prix: '', montant: '' },
+  { nom: 'Prolongateur 15 cm', qte: '2', prix: '', montant: '' },
+  { nom: 'Seringue 20 cc', qte: '3', prix: '', montant: '' },
+  { nom: 'Antiseptique cutané', qte: '1 flacon', prix: '', montant: '' },
+  { nom: 'Sparadrap 2.5 cm', qte: '1 rouleau', prix: '', montant: '' },
+];
+
 export default function StitchOrdonnanceKit() {
+  const [patient, setPatient] = useState<PatientData | null>(null);
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [service, setService] = useState('HEMODIALYSE');
+  const [unite, setUnite] = useState('');
+  const [adresse, setAdresse] = useState('');
+  const [directeurNote, setDirecteurNote] = useState('');
+  const [prescripteurNote, setPrescripteurNote] = useState('');
+  const [dispensateurNote, setDispensateurNote] = useState('');
+
+  useEffect(() => {
+    const current = getCurrentPatient();
+    if (current.id) {
+      setPatient(current);
+      setAdresse(current.adresse || '');
+    }
+  }, []);
+
+  const handlePatientSelected = (p: PatientData) => {
+    setPatient(p);
+    setCurrentPatient(p);
+    setAdresse(p.adresse || '');
+  };
+
+  const handlePrint = () => window.print();
+
   return (
-    <div className="bg-clinical-100 antialiased min-h-screen py-8 px-8">
-      {/* Full Screen Container */}
-      <div className="max-w-full mx-auto">
-        {/* Action Bar (UI Only) */}
-        <div className="mb-8 flex justify-between items-center no-print px-4">
-          <div className="flex items-center gap-3">
-            <div>
-              <h2 className="font-display font-bold text-lg text-primary"><br /></h2>
-              <p className="text-xs text-clinical-500 font-medium uppercase tracking-wider"><br /></p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-blue-50/30 py-8 px-4">
+      <div className="max-w-5xl mx-auto">
+        
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-center mb-6 no-print">
+          <div>
+            <h1 className="text-2xl font-black text-slate-800 font-manrope">Ordonnance Kit Hémodialyse</h1>
+            <p className="text-sm text-slate-500">Formulaire médical officiel</p>
+          </div>
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handlePrint} className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 shadow-lg shadow-blue-500/20 flex items-center gap-2 cursor-pointer">
+            <span className="material-symbols-outlined text-lg">print</span>
+            Imprimer
+          </motion.button>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl shadow-2xl border border-slate-200/60 p-8 md:p-12 min-h-[800px]">
+          
+          <div className="flex flex-col md:flex-row justify-between items-start mb-8 pb-6 border-b-4 border-slate-800">
+            <div className="flex items-center gap-4 mb-4 md:mb-0">
+              <div className="w-20 h-20 border-2 border-slate-200 rounded-lg overflow-hidden flex items-center justify-center bg-white shrink-0">
+                <span className="material-symbols-outlined text-4xl text-blue-600">local_hospital</span>
+              </div>
+              <div>
+                <p className="font-extrabold text-sm uppercase tracking-tight text-slate-800">CHU ANDRAINJATO</p>
+                <p className="text-[10px] text-slate-500 font-medium">Service d&apos;Hémodialyse</p>
+                <p className="text-[10px] text-slate-400 font-medium italic">Fianarantsoa, Madagascar</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-bold text-slate-700 uppercase">Document Vitalis v2.4</p>
+              <p className="text-[10px] text-slate-400">Ref: KIT-HEMO-2026</p>
             </div>
           </div>
-          <button className="bg-primary hover:bg-primary-container text-white px-6 py-3 rounded-xl flex items-center gap-3 transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/20 font-bold group" type="button" onClick={() => window.print()}>
-            <span className="material-symbols-outlined text-xl group-hover:rotate-12 transition-transform">print</span>
-            Imprimer l'ordonnance
-          </button>
-        </div>
-        {/* BEGIN: Prescription Card (Paper Layout) */}
-        <div className="prescription-paper shadow-2xl" data-purpose="prescription-form">
-          {/* BEGIN: Professional Header */}
-          <header className="mb-10">
-            <div className="flex justify-between items-start mb-8">
-              <div className="flex gap-4 items-center">
-                <div className="w-20 h-20 border border-clinical-200 rounded overflow-hidden flex items-center justify-center bg-white">
-                  <img alt="Logo CHU ANDRAINJATO" className="max-w-full max-h-full object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0uiBsTG6DINUkcFF5OgmFFwSk4x2zlGYlPL__dUaf8zWdyCsrLt3LzUv9RXpqVMfj6o2vFKiTuWTqjVwrbvGmenHr3rqzq2FByaTk5as531uqPe9sv4Qw_8MyaZq4m2ebFD7e1dFcKbVRLUOO5OG3NCVD8pqXJXnrLX6n11cwDJJljlidtJMwkx0_43sxNIi9ydt8DqBvbL1bLtBdnSGhTReSCuaR2l1uaNR6E2vNxULBH_iCAPVaEgf26H3K7ODrF32gSYqvvFToSM" />
-                </div>
-                <div>
-                  <p className="font-extrabold text-sm uppercase tracking-tight">CHU ANDRAINJATO</p>
-                  <p className="text-[10px] text-clinical-600 font-medium">Service d'Hémodialyse</p>
-                  <p className="text-[10px] text-clinical-600 font-medium italic">Fianarantsoa, Madagascar</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] font-bold text-clinical-800 uppercase">Document Vitalis v2.4</p>
-                <p className="text-[10px] text-clinical-500">Ref: KIT-HEMO-2024</p>
+
+          <h2 className="text-xl md:text-2xl font-extrabold uppercase tracking-widest text-center text-blue-800 mb-6 font-manrope">
+            ORDONNANCE KIT DON HÉMODIALYSE
+          </h2>
+          <div className="border-t-2 border-slate-800 mb-8"></div>
+
+          <div className="mb-6 no-print">
+            <PatientSearchInput onPatientSelected={handlePatientSelected} placeholder="Rechercher patient par ID..." />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-sm">
+            <div className="md:col-span-3">
+              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Nom et Prénom</label>
+              <input className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all outline-none" value={patient ? `${patient.prenoms} ${patient.nom}` : ''} placeholder="Saisir le nom complet..." readOnly />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Âge</label>
+              <input className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 font-semibold text-slate-800" value={patient?.age || ''} readOnly />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Sexe</label>
+              <input className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 font-semibold text-slate-800" value={patient?.sexe || ''} readOnly />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Poids (kg)</label>
+              <input className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 font-semibold text-slate-800" value={patient?.poids || ''} onChange={(e) => { if(patient) setPatient({...patient, poids: e.target.value}); }} />
+            </div>
+            <div className="md:col-span-3">
+              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Adresse</label>
+              <input className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 font-semibold text-slate-800" value={adresse} onChange={(e) => setAdresse(e.target.value)} placeholder="Adresse de résidence..." />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Service</label>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-blue-700 bg-blue-50 px-3 py-2 rounded-lg text-sm">{service}</span>
+                <input className="flex-1 border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 font-semibold text-slate-800" value={unite} onChange={(e) => setUnite(e.target.value)} placeholder="Unité / Salle" />
               </div>
             </div>
-            <h1 className="form-title">ORDONNANCE KIT DON HEMODIALYSE</h1>
-            <div className="section-divider" />
-            {/* Patient Info Grid */}
-            <div className="grid grid-cols-12 gap-y-6 gap-x-8 text-sm font-semibold text-clinical-900">
-              <div className="col-span-12 flex items-center gap-4">
-                <label className="whitespace-nowrap uppercase text-[11px] text-clinical-500 min-w-[100px]">Nom et Prénom :</label>
-                <input className="field-input" placeholder="Saisir le nom complet..." type="text" />
-              </div>
-              <div className="col-span-4 flex items-center gap-4">
-                <label className="whitespace-nowrap uppercase text-[11px] text-clinical-500">Age :</label>
-                <input className="field-input" placeholder="..." type="text" />
-              </div>
-              <div className="col-span-4 flex items-center gap-4">
-                <label className="whitespace-nowrap uppercase text-[11px] text-clinical-500">Sexe :</label>
-                <input className="field-input" placeholder="..." type="text" />
-              </div>
-              <div className="col-span-4 flex items-center gap-4">
-                <label className="whitespace-nowrap uppercase text-[11px] text-clinical-500">P(KG) :</label>
-                <input className="field-input" placeholder="..." type="text" />
-              </div>
-              <div className="col-span-12 flex items-center gap-4">
-                <label className="whitespace-nowrap uppercase text-[11px] text-clinical-500 min-w-[100px]">Adresse :</label>
-                <input className="field-input" placeholder="Adresse de résidence..." type="text" />
-              </div>
-              <div className="col-span-8 flex items-center gap-4">
-                <label className="whitespace-nowrap uppercase text-[11px] text-clinical-500 min-w-[100px]">Service :</label>
-                <div className="flex items-center gap-2 flex-1">
-                  <span className="font-bold text-primary bg-primary/5 px-2 py-1 rounded">HEMODIALYSE</span>
-                  <input className="field-input flex-1" placeholder="Unité / Salle" type="text" />
-                </div>
-              </div>
-              <div className="col-span-4 flex items-center gap-4">
-                <label className="whitespace-nowrap uppercase text-[11px] text-clinical-500">Date :</label>
-                <input className="field-input" type="date" />
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Date</label>
+              <input className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 font-semibold text-slate-800" value={date} onChange={(e) => setDate(e.target.value)} type="date" />
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h3 className="font-bold italic text-lg text-slate-600 mb-4">
+              1- PHARMACIE : <span className="font-normal text-sm opacity-75 uppercase not-italic">Rayer les mentions inutiles</span>
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="bg-slate-100 text-blue-800">
+                    <th className="w-1/2 font-extrabold text-center py-3 border-2 border-slate-300 uppercase text-xs">DÉSIGNATION</th>
+                    <th className="w-24 font-extrabold text-center py-3 border-2 border-slate-300 uppercase text-xs">QTÉ</th>
+                    <th className="font-extrabold text-center py-3 border-2 border-slate-300 uppercase text-xs">PRIX UNITAIRE</th>
+                    <th className="font-extrabold text-center py-3 border-2 border-slate-300 uppercase text-xs">MONTANT</th>
+                  </tr>
+                </thead>
+                <tbody className="font-mono text-sm">
+                  {KIT_ITEMS.map((item, i) => (
+                    <tr key={i} className="hover:bg-blue-50/30 transition-colors">
+                      <td className="p-3 border-2 border-slate-200 font-sans font-medium text-slate-700">{item.nom}</td>
+                      <td className="border-2 border-slate-200"><input className="w-full text-center font-bold bg-blue-50/50 border border-blue-100 rounded-lg py-1.5 text-blue-700 outline-none" type="text" defaultValue={item.qte} /></td>
+                      <td className="border-2 border-slate-200"><input className="w-full text-center bg-transparent rounded-lg py-1.5 outline-none" placeholder="0.00" type="text" /></td>
+                      <td className="border-2 border-slate-200"><input className="w-full text-center bg-transparent rounded-lg py-1.5 outline-none" placeholder="0.00" type="text" /></td>
+                    </tr>
+                  ))}
+                  <tr className="font-bold bg-blue-50">
+                    <td colSpan={2} className="p-3 border-2 border-slate-300 text-left uppercase font-sans tracking-widest text-blue-800 text-xs">TOTAL GÉNÉRAL</td>
+                    <td className="border-2 border-slate-300"></td>
+                    <td className="border-2 border-slate-300 pr-4"><div className="flex items-center justify-end"><input className="w-full text-right font-bold bg-transparent rounded-lg py-1.5 outline-none" placeholder="0.00" type="text" /><span className="ml-2 font-sans text-xs text-slate-500">Ar</span></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 text-center">
+            <div><div className="border-t-2 border-slate-800 mb-4 mx-4"></div><p className="text-[11px] font-extrabold uppercase text-slate-700">LE DIRECTEUR<br/>D&apos;ÉTABLISSEMENT</p><textarea className="w-full h-24 border border-dashed border-slate-300 bg-slate-50 rounded-lg resize-none p-3 text-xs mt-2 outline-none" placeholder="Annotations..." value={directeurNote} onChange={(e) => setDirecteurNote(e.target.value)} /></div>
+            <div><div className="border-t-2 border-slate-800 mb-4 mx-4"></div><p className="text-[11px] font-extrabold uppercase text-slate-700">LE PRESCRIPTEUR</p><textarea className="w-full h-24 border border-dashed border-slate-300 bg-slate-50 rounded-lg resize-none p-3 text-xs mt-2 outline-none" placeholder="Signature..." value={prescripteurNote} onChange={(e) => setPrescripteurNote(e.target.value)} /></div>
+            <div><div className="border-t-2 border-slate-800 mb-4 mx-4"></div><p className="text-[11px] font-extrabold uppercase text-slate-700">LE DISPENSATEUR</p><textarea className="w-full h-24 border border-dashed border-slate-300 bg-slate-50 rounded-lg resize-none p-3 text-xs mt-2 outline-none" placeholder="Validation..." value={dispensateurNote} onChange={(e) => setDispensateurNote(e.target.value)} /></div>
+          </div>
+
+          <div className="border-t-2 border-slate-800 pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="text-xs space-y-1.5 text-slate-600">
+                <p className="font-extrabold text-slate-800 mb-2 uppercase tracking-wide text-sm">Remarques :</p>
+                <p className="flex gap-2 items-start"><span className="text-blue-600 font-bold">✓</span> À renouveler à chaque séance d&apos;hémodialyse.</p>
+                <p className="flex gap-2 items-start"><span className="text-blue-600 font-bold">✓</span> Dialyseur (F7 pour enfant / petit poids - F8 pour adulte).</p>
+                <p className="flex gap-2 items-start"><span className="text-blue-600 font-bold">✓</span> Vérifier les dates de péremption avant délivrance.</p>
               </div>
             </div>
-          </header>
-          {/* END: Header Section */}
-          {/* BEGIN: Items Table */}
-          <main className="mb-12">
-            <table data-purpose="medical-items-list" id="kit-table">
-              <thead>
-                <tr>
-                  <th className="w-[45%]">DESIGNATION</th>
-                  <th className="w-[15%] text-center">QUANTITÉ</th>
-                  <th className="w-[20%] text-center">PRIX UNITAIRE</th>
-                  <th className="w-[20%] text-center">MONTANT</th>
-                </tr>
-              </thead>
-              <tbody className="font-mono text-sm">
-                <tr className="item-row">
-                  <td className="cell-padding font-sans font-medium">Lovenox 4000 UI</td>
-                  <td><div className="flex justify-center px-2"><input className="table-input text-center bg-clinical-50 border border-clinical-200 rounded-lg py-1 hover:bg-clinical-100 transition-colors font-bold text-primary" type="text" defaultValue={3} /></div></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                </tr>
-                <tr className="item-row">
-                  <td className="cell-padding font-sans font-medium">Compresse Stérile 40×40</td>
-                  <td><div className="flex justify-center px-2"><input className="table-input text-center bg-clinical-50 border border-clinical-200 rounded-lg py-1 hover:bg-clinical-100 transition-colors font-bold text-primary" type="text" defaultValue="2 boîtes" /></div></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                </tr>
-                <tr className="item-row">
-                  <td className="cell-padding font-sans font-medium">Gant d’examen non stérile</td>
-                  <td><div className="flex justify-center px-2"><input className="table-input text-center bg-clinical-50 border border-clinical-200 rounded-lg py-1 hover:bg-clinical-100 transition-colors font-bold text-primary" type="text" defaultValue={6} /></div></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                </tr>
-                <tr className="item-row">
-                  <td className="cell-padding font-sans font-medium">Gant stérile 7/0</td>
-                  <td><div className="flex justify-center px-2"><input className="table-input text-center bg-clinical-50 border border-clinical-200 rounded-lg py-1 hover:bg-clinical-100 transition-colors font-bold text-primary" type="text" defaultValue={6} /></div></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                </tr>
-                <tr className="item-row">
-                  <td className="cell-padding font-sans font-medium">Masque chirurgical</td>
-                  <td><div className="flex justify-center px-2"><input className="table-input text-center bg-clinical-50 border border-clinical-200 rounded-lg py-1 hover:bg-clinical-100 transition-colors font-bold text-primary" type="text" defaultValue={6} /></div></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                </tr>
-                <tr className="item-row">
-                  <td className="cell-padding font-sans font-medium">Rein artificiel (Dialyseur) F7/F8</td>
-                  <td><div className="flex justify-center px-2"><input className="table-input text-center bg-clinical-50 border border-clinical-200 rounded-lg py-1 hover:bg-clinical-100 transition-colors font-bold text-primary" type="text" defaultValue={1} /></div></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                </tr>
-                <tr className="item-row">
-                  <td className="cell-padding font-sans font-medium">Seringue 10 cc</td>
-                  <td><div className="flex justify-center px-2"><input className="table-input text-center bg-clinical-50 border border-clinical-200 rounded-lg py-1 hover:bg-clinical-100 transition-colors font-bold text-primary" type="text" defaultValue={6} /></div></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                </tr>
-                <tr className="item-row">
-                  <td className="cell-padding font-sans font-medium">Seringue 20 cc</td>
-                  <td><div className="flex justify-center px-2"><input className="table-input text-center bg-clinical-50 border border-clinical-200 rounded-lg py-1 hover:bg-clinical-100 transition-colors font-bold text-primary" type="text" defaultValue={6} /></div></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                </tr>
-                <tr className="item-row">
-                  <td className="cell-padding font-sans font-medium">Seringue 5 cc</td>
-                  <td><div className="flex justify-center px-2"><input className="table-input text-center bg-clinical-50 border border-clinical-200 rounded-lg py-1 hover:bg-clinical-100 transition-colors font-bold text-primary" type="text" defaultValue={6} /></div></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                </tr>
-                <tr className="item-row">
-                  <td className="cell-padding font-sans font-medium">SSI 500 ml</td>
-                  <td><div className="flex justify-center px-2"><input className="table-input text-center bg-clinical-50 border border-clinical-200 rounded-lg py-1 hover:bg-clinical-100 transition-colors font-bold text-primary" type="text" defaultValue={4} /></div></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                  <td><input className="table-input rounded-lg" placeholder="0.00" type="text" /></td>
-                </tr>
-                {/* Total Row */}
-                <tr className="font-bold bg-clinical-50">
-                  <td className="cell-padding text-left uppercase font-sans tracking-widest" colSpan={2}>TOTAL GENERAL</td>
-                  <td className="border-r-0" />
-                  <td className="border-l-0 pr-4">
-                    <div className="flex items-center justify-end">
-                      <input className="table-input text-right font-bold w-full focus:bg-white rounded-lg" placeholder="0.00" type="text" />
-                      <span className="ml-2 font-sans text-xs">Ar</span>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </main>
-          {/* END: Items Table */}
-          {/* BEGIN: Signature Section */}
-          <section className="grid grid-cols-3 gap-8 mb-20 text-[11px] font-extrabold text-center uppercase text-clinical-800">
-            <div className="group">
-              <div className="border-t-2 border-black mb-4 mx-4 group-focus-within:border-primary transition-colors" />
-              LE DIRECTEUR<br />D'ÉTABLISSEMENT
-              <textarea className="signature-textarea" placeholder="Annotations Directeur..." defaultValue={""} />
-            </div>
-            <div className="group">
-              <div className="border-t-2 border-black mb-4 mx-4 group-focus-within:border-primary transition-colors" />
-              LE PRESCRIPTEUR
-              <textarea className="signature-textarea" placeholder="Signature électronique ou cachet..." defaultValue={""} />
-            </div>
-            <div className="group">
-              <div className="border-t-2 border-black mb-4 mx-4 group-focus-within:border-primary transition-colors" />
-              LE DISPENSATEUR
-              <textarea className="signature-textarea" placeholder="Validation Pharmacie..." defaultValue={""} />
-            </div>
-          </section>
-          {/* END: Signature Section */}
-          {/* BEGIN: Footer Remarks */}
-          <footer className="pt-8 border-t-2 border-clinical-900">
-            <div className="grid grid-cols-2 gap-8">
-              <div className="text-xs space-y-1.5 text-clinical-700">
-                <p className="font-extrabold text-clinical-900 mb-2 uppercase tracking-wide">Remarques :</p>
-                <p className="flex gap-2 items-start"><span className="text-primary font-bold">✓</span> <span>À renouveler à chaque séance d’hémodialyse.</span></p>
-                <p className="flex gap-2 items-start"><span className="text-primary font-bold">✓</span> <span>Dialyseur (F7 pour enfant / petit poids - F8 pour adulte).</span></p>
-                <p className="flex gap-2 items-start"><span className="text-primary font-bold">✓</span> <span>Vérifier les dates de péremption avant délivrance.</span></p>
-              </div>
-              <div className="flex flex-col justify-end items-end">
-                <button className="bg-primary hover:bg-primary-container text-white px-6 py-3 rounded-lg flex flex-col items-center gap-1 transition-all shadow-md hover:shadow-lg no-print group">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-xl">save</span>
-                    <span className="font-display font-bold uppercase tracking-wide text-sm">Enregistrer le document</span>
-                  </div>
-                  <span className="text-[8px] opacity-80 font-medium uppercase tracking-tighter">Document à conserver par l'établissement</span>
-                </button>
-              </div>
-            </div>
-          </footer>
-          {/* END: Footer Remarks */}
-        </div>
-        {/* END: Prescription Card */}
-        <div className="mt-6 text-center text-clinical-400 text-xs no-print">
-          Powered by <span className="font-bold">Vitalis Core</span> Health Systems — Standard Medical Protocol Layout
-        </div>
+          </div>
+        </motion.div>
       </div>
     </div>
-    
   );
 }

@@ -1,0 +1,1 @@
+ALTER TABLE prescription ADD COLUMN validated_at DATETIME NULL; ALTER TABLE prescription ADD COLUMN validated_by INT NULL; CREATE INDEX idx_status_date ON prescription(workflow_statut, date_prescription);

@@ -10,10 +10,10 @@ export class SeanceHemodialyse {
   @JoinColumn({ name: 'patient_id' })
   patient: Patient;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   date_debut: Date;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   date_fin: Date;
 
   @Column({ type: 'decimal', precision: 6, scale: 2 })

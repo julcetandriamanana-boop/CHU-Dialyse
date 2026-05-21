@@ -19,16 +19,12 @@ export class DemandeAvis {
   @JoinColumn({ name: 'medecin_destinataire_id' })
   destinataire: Medecin;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   date_envoi: Date;
 
   @Column({ type: 'text' })
   description_cas: string;
 
-  @Column({
-    type: 'enum',
-    enum: ['basse', 'moyenne', 'haute', 'critique'],
-    default: 'moyenne',
-  })
+  @Column({ type: 'varchar', length: 20, default: 'moyenne' })
   priorite: string;
 }

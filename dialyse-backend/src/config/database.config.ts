@@ -1,14 +1,13 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
-// Configuration de la base de données pour TypeORM
+// URL de connexion PostgreSQL (Render)
+const POSTGRES_URL = 'postgresql://dialyse_user:RxipD4kAINXvnDLymGdJramt46oDYbOe@dpg-d87e970g4nts73dqv2i0-a.ohio-postgres.render.com/dialyse';
+
 export const databaseConfig: TypeOrmModuleOptions = {
-  type: 'mysql', // Type de base de données : MySQL
-  host: 'localhost', // Adresse du serveur MySQL
-  port: 3306, // Port par défaut de MySQL
-  username: 'root', // Nom d'utilisateur MySQL
-  password: 'julcet', // Mot de passe (vide dans ce cas)
-  database: 'service_dialyse', // Nom de la base de données
-  entities: [__dirname + '/../**/*.entity{.ts,.js}'], // Chemin vers les entités (fichiers .entity.ts)
-  synchronize: true, // Synchronisation automatique des tables (utile en développement, à désactiver en production)
-  logging: true, // Activer les logs SQL pour le débogage
+  type: 'postgres',
+  url: POSTGRES_URL,
+  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+  synchronize: true,
+  logging: true,
+  ssl: { rejectUnauthorized: false },
 };
