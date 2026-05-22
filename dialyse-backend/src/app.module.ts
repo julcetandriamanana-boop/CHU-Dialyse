@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { MedecinModule } from "./medecin/medecin.module";
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { databaseConfig } from './config/database.config';
@@ -12,7 +13,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot(databaseConfig),
-    PatientModule, PrescriptionModule, RendezVousModule, DemandeAvisModule, NotificationsModule,
+    PatientModule, PrescriptionModule, RendezVousModule, DemandeAvisModule, NotificationsModule, MedecinModule,
   ],
   controllers: [AppController], providers: [AppService],
 })
