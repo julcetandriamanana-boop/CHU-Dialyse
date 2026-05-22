@@ -266,7 +266,7 @@ const persistOptions = {
     etablissement: state.etablissement,
     lastKnownValues: state.lastKnownValues,
   }),
-  merge: (persistedState, currentState) => {
+  merge: (persistedState: any, currentState: AutofillState) => {
     const p = persistedState as Partial<AutofillState> | undefined;
     return {
       ...currentState,
