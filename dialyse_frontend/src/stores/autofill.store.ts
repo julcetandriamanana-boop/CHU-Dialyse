@@ -283,10 +283,8 @@ const isDev =
   typeof process !== "undefined" && process.env.NODE_ENV === "development";
 
 export const useAutofillStore = create<AutofillState>()(
-  isDev
-    ? devtools(persistedSlice, {
-        name: "SIH-autofill-store",
-        enabled: typeof window !== "undefined" ? isDev : false,
-      })
-    : persistedSlice
+  devtools(persistedSlice, {
+    name: "SIH-autofill-store",
+    enabled: typeof window !== "undefined" ? isDev : false,
+  })
 );
