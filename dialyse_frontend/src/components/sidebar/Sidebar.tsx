@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 
 const menus = [
   { label: "Tableau de bord", href: "/dashboard", icon: "dashboard" },
@@ -13,14 +13,14 @@ const menus = [
   { label: "Archive", href: "/archive", icon: "archive" },
 ];
 
-const sidebarVariants = {
+const sidebarVariants: Variants = {
   open: { 
     x: 0, 
-    transition: { type: "spring", stiffness: 300, damping: 30 } 
+    transition: { type: "spring" as const, stiffness: 300, damping: 30 } 
   },
   closed: { 
     x: "-100%", 
-    transition: { type: "spring", stiffness: 300, damping: 30 } 
+    transition: { type: "spring" as const, stiffness: 300, damping: 30 } 
   },
 };
 
