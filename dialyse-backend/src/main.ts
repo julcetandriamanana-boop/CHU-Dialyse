@@ -22,7 +22,7 @@ async function bootstrap() {
     .addTag('Rendez-vous', 'Gestion des rendez-vous')
     .addTag('Demandes d\'avis', 'Gestion des demandes d\'avis')
     .addTag('Notifications', 'Système de notifications')
-    .addServer('http://localhost:3001', 'Serveur local')
+    .addServer('https://chu-dialyse.onrender.com', 'Serveur Render').addServer('http://localhost:3001', 'Serveur local')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
