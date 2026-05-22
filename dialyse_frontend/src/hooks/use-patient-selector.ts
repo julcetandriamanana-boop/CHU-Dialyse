@@ -50,7 +50,7 @@ export function usePatientSelector() {
 
     const { patientId: _pid, ...seanceSlice } = latest;
 
-    api.actions.setCurrentSeance(seanceSlice);
+    api.actions.setCurrentSeance({ ...seanceSlice, poidsASoustraire: 0, ufProgramme: 0 });
     return true;
   }, []);
 
