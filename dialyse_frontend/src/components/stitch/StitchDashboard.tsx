@@ -21,6 +21,167 @@ interface PatientSeance {
 
 type ModalType = 'medecin' | 'paramedical' | 'dossier' | null;
 
+/* ── Couleurs avatar par index ── */
+const AVATAR_COLORS = [
+  { bg: 'bg-blue-100',   text: 'text-blue-700'   },
+  { bg: 'bg-emerald-100',text: 'text-emerald-700' },
+  { bg: 'bg-amber-100',  text: 'text-amber-700'   },
+  { bg: 'bg-purple-100', text: 'text-purple-700'  },
+  { bg: 'bg-rose-100',   text: 'text-rose-700'    },
+  { bg: 'bg-cyan-100',   text: 'text-cyan-700'    },
+];
+
+/* ── Badge statut ── */
+function StatutBadge({ statut }: { statut: PatientSeance['statut'] }) {
+  if (statut === 'termine')   return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Terminé</span>;
+  if (statut === 'en_cours')  return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">En cours</span>;
+  return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">En attente</span>;
+}
+
+/* ── Barre de progression ── */
+function ProgressBar({ value, statut }: { value: number; statut: PatientSeance['statut'] }) {
+  const color = statut === 'termine' ? 'bg-emerald-500' : statut === 'en_cours' ? 'bg-blue-500' : 'bg-slate-300';
+  return (
+    <div className="w-24">
+      <div className="flex justify-between text-[9px] mb-1">
+        <span className="text-slate-400 font-medium">{value}%</span>
+      </div>
+      <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${value}%` }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className={`h-full rounded-full ${color}`}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ── Modal section ── */
+function SectionModal({
+  open, type, patient, onClose,
+}: {
+  open: boolean;
+  type: ModalType;
+  patient: PatientSeance | null;
+  onClose: () => void;
+}) {
+  if (!open || !patient || !type) return null;
+
+  const config = {
+    medecin:     { label: 'Section Médecin',    icon: 'stethoscope',       from: 'from-blue-50',    to: 'to-blue-100',    iconBg: 'bg-blue-600',    accent: 'blue'    },
+    paramedical: { label: 'Section Paramédical', icon: 'medical_services',  from: 'from-emerald-50', to: 'to-emerald-100', iconBg: 'bg-emerald-600', accent: 'emerald' },
+    dossier:     { label: 'Dossier Patient',     icon: 'folder_open',       from: 'from-purple-50',  to: 'to-purple-100',  iconBg: 'bg-purple-600',  accent: 'purple'  },
+  }[type];
+
+  const medecinCards = [
+    { icon: 'vaccines',                 title: 'Vérification Kit',          desc: 'Ordonnance kit hémodialyse — 1ère séance et suivantes', btn: 'Ouvrir',   href: `/dialyses/verification-kit?patientId=${patient.patientId}&seanceNum=${patient.seanceNum}`,   color: 'blue' },
+    { icon: 'settings_input_component', title: 'Conductivité & Paramètres', desc: 'Paramètres dialysat, UF, débits et prescription séance', btn: 'Accéder', href: '/dialyses/conductivite-params', color: 'blue' },
+  ];
+
+  const paraCards = [
+    { icon: 'monitor_heart', title: 'Constantes',   desc: 'Relevé des constantes vitales',   btn: 'Saisir',  href: '/dialyses/fiche-surveillance', color: 'emerald' },
+    { icon: 'visibility',    title: 'Surveillance', desc: 'Fiche de surveillance dialyse',   btn: 'Ouvrir',  href: '/dialyses/fiche-surveillance', color: 'emerald' },
+    { icon: 'healing',       title: 'Soins',        desc: 'Soins infirmiers et pansements',  btn: 'Noter',   href: '#',                            color: 'emerald' },
+  ];
+
+  const dossierMeta = [
+    { l: 'Patient',     v: `${patient.prenom} ${patient.nom}` },
+    { l: 'Poste',       v: patient.poste },
+    { l: 'Début',       v: patient.debut },
+    { l: 'Progression', v: `${patient.progression}%` },
+    { l: 'Statut',      v: patient.statut === 'termine' ? 'Terminé' : patient.statut === 'en_cours' ? 'En cours' : 'En attente' },
+    { l: 'Séance',      v: `N°${patient.seanceNum}` },
+    { l: 'ID',          v: `#${patient.patientId}` },
+    { l: 'Médecin',     v: 'Dr. Andrianjato' },
+  ];
+
+  const dossierCards = [
+    { icon: 'history',     title: 'Historique', desc: 'Historique des séances', btn: 'Voir',      href: '#', color: 'purple' },
+    { icon: 'biotech',     title: 'Examens',    desc: 'Résultats biologiques',  btn: 'Consulter', href: '#', color: 'purple' },
+    { icon: 'description', title: 'Documents',  desc: 'Ordonnances, CR',        btn: 'Accéder',   href: '#', color: 'purple' },
+  ];
+
+  const renderCards = (cards: typeof medecinCards, accentColor: string) => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      {cards.map((c) => (
+        <div key={c.title} className={`p-4 bg-${accentColor}-50 rounded-xl border border-${accentColor}-100 hover:shadow-md transition-all cursor-pointer`}>
+          <span className={`material-symbols-outlined text-${accentColor}-600 text-2xl mb-2`}>{c.icon}</span>
+          <p className={`text-sm font-bold text-${accentColor}-800 mb-1`}>{c.title}</p>
+          <p className={`text-xs text-${accentColor}-500 mb-3`}>{c.desc}</p>
+          <button
+            onClick={() => { if (c.href !== '#') window.location.href = c.href; }}
+            className={`w-full py-1.5 bg-${accentColor}-600 text-white text-xs font-bold rounded-lg hover:bg-${accentColor}-700 cursor-pointer transition-colors`}
+          >
+            {c.btn}
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <div className="absolute inset-0 bg-slate-900/55 backdrop-blur-sm" />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 16 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[82vh] overflow-y-auto"
+          >
+            {/* Header modal */}
+            <div className={`p-5 rounded-t-2xl flex items-center justify-between bg-gradient-to-r ${config.from} ${config.to}`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl ${config.iconBg} flex items-center justify-center shadow-sm`}>
+                  <span className="material-symbols-outlined text-white text-xl">{config.icon}</span>
+                </div>
+                <div>
+                  <h2 className="text-base font-black text-slate-800">{config.label}</h2>
+                  <p className="text-xs text-slate-500">{patient.prenom} {patient.nom} · Séance {patient.seanceNum} · Poste {patient.poste}</p>
+                </div>
+              </div>
+              <button onClick={onClose} className="p-1.5 hover:bg-white/50 rounded-xl transition-all cursor-pointer">
+                <span className="material-symbols-outlined text-slate-500 text-lg">close</span>
+              </button>
+            </div>
+
+            {/* Contenu modal */}
+            <div className="p-5">
+              {type === 'medecin'     && renderCards(medecinCards, 'blue')}
+              {type === 'paramedical' && renderCards(paraCards, 'emerald')}
+              {type === 'dossier'     && (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                    {dossierMeta.map((m) => (
+                      <div key={m.l} className="bg-purple-50 rounded-xl p-2.5 border border-purple-100">
+                        <p className="text-[9px] text-purple-400 uppercase tracking-wide">{m.l}</p>
+                        <p className="text-xs font-bold text-purple-800 mt-0.5">{m.v}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {renderCards(dossierCards, 'purple')}
+                </>
+              )}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/*  COMPOSANT PRINCIPAL                                                */
+/* ═══════════════════════════════════════════════════════════════════ */
 export default function StitchDashboard() {
   const [patients, setPatients] = useState<PatientSeance[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,30 +199,33 @@ export default function StitchDashboard() {
       const res = await fetch(`${API_URL}/rendezvous/aujourdhui`);
       if (res.ok) {
         const rdvs = await res.json();
-        const couleurs = ['blue', 'orange', 'purple', 'emerald', 'pink'];
-        const stats = JSON.parse(localStorage.getItem('chu_seances_stats') || '{}');
+        const stats         = JSON.parse(localStorage.getItem('chu_seances_stats')   || '{}');
         const patientSeances = JSON.parse(localStorage.getItem('chu_seances_patient') || '{}');
-        const patientsList: PatientSeance[] = (rdvs || []).map((rdv: any, i: number) => {
-          const infos = rdv.soso_kevitra_malalaka || '';
+
+        const list: PatientSeance[] = (rdvs || []).filter((rdv: any) => rdv.patient !== null).map((rdv: any, i: number) => {
+          const infos   = rdv.soso_kevitra_malalaka || '';
           const machine = infos.includes('Machine') ? infos.split('|')[1]?.trim() || 'N/A' : 'N/A';
-          const date = new Date(rdv.date_heure);
-          const heure = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-          const savedStat = stats[`rdv_${rdv.id}`];
+          const date    = new Date(rdv.date_heure);
+          const heure   = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+          const saved   = stats[`rdv_${rdv.id}`];
+          const couleurs = ['blue','orange','purple','emerald','pink'];
           return {
             id: rdv.id, nom: rdv.patient.nom, prenom: rdv.patient.prenom,
             initiales: `${rdv.patient.prenom.charAt(0)}${rdv.patient.nom.charAt(0)}`,
             poste: machine, debut: heure,
-            progression: savedStat?.statut === 'termine' ? 100 : savedStat?.progression || 0,
-            statut: savedStat?.statut || 'en_attente',
+            progression: saved?.statut === 'termine' ? 100 : saved?.progression || 0,
+            statut: saved?.statut || 'en_attente',
             couleur: couleurs[i % couleurs.length],
             patientId: rdv.patient.id,
             seanceNum: patientSeances[String(rdv.patient.id)]?.seanceNum || 1,
           };
         });
+
         Object.entries(patientSeances).forEach(([key, val]: [string, any]) => {
-          if (!patientsList.find(p => String(p.patientId) === key) && val.patientName) {
-            patientsList.push({
-              id: parseInt(key) || Date.now(), nom: val.patientName?.split(' ')[1] || '', prenom: val.patientName?.split(' ')[0] || '',
+          if (!list.find(p => String(p.patientId) === key) && val.patientName) {
+            list.push({
+              id: parseInt(key) || Date.now(),
+              nom: val.patientName?.split(' ')[1] || '', prenom: val.patientName?.split(' ')[0] || '',
               initiales: (val.patientName || '??').split(' ').map((n: string) => n.charAt(0)).join(''),
               poste: val.poste || 'N/A',
               debut: val.debut ? new Date(val.debut).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' }) : '--:--',
@@ -71,23 +235,17 @@ export default function StitchDashboard() {
             });
           }
         });
-        setPatients(patientsList);
+        setPatients(list);
       }
     } catch (err) { console.error(err); }
     setLoading(false);
   };
 
-  const total = patients.length;
-  const fait = patients.filter(p => p.statut === 'termine').length;
-  const enCours = patients.filter(p => p.statut === 'en_cours').length;
+  const total    = patients.length;
+  const fait     = patients.filter(p => p.statut === 'termine').length;
+  const enCours  = patients.filter(p => p.statut === 'en_cours').length;
   const enAttente = patients.filter(p => p.statut === 'en_attente').length;
-
-  const handleMarquerFait = (p: PatientSeance) => {
-    const stats = JSON.parse(localStorage.getItem('chu_seances_stats') || '{}');
-    stats[`rdv_${p.id}`] = { ...stats[`rdv_${p.id}`], statut: 'termine', progression: 100 };
-    localStorage.setItem('chu_seances_stats', JSON.stringify(stats));
-    loadPatients();
-  };
+  const pct      = total > 0 ? Math.round((fait / total) * 100) : 0;
 
   const handleDemarrer = (p: PatientSeance) => {
     const stats = JSON.parse(localStorage.getItem('chu_seances_stats') || '{}');
@@ -96,216 +254,248 @@ export default function StitchDashboard() {
     window.location.href = '/dialyses/nouvelle-seance';
   };
 
+  const handleMarquerFait = (p: PatientSeance) => {
+    const stats = JSON.parse(localStorage.getItem('chu_seances_stats') || '{}');
+    stats[`rdv_${p.id}`] = { ...stats[`rdv_${p.id}`], statut: 'termine', progression: 100 };
+    localStorage.setItem('chu_seances_stats', JSON.stringify(stats));
+    loadPatients();
+  };
+
   const openModal = (type: ModalType, patient: PatientSeance) => {
     setPatientSelectionne(patient);
     setModalOpen(type);
   };
 
-  const closeModal = () => {
-    setModalOpen(null);
-    setPatientSelectionne(null);
-  };
+  /* ── KPI cards data ── */
+  const kpiCards = [
+    {
+      label: 'Total du jour', value: total, sub: `${fait}/${total} terminée(s)`,
+      iconName: 'groups', iconBg: 'bg-blue-100', iconColor: 'text-blue-600',
+      barColor: 'bg-blue-500', barPct: total > 0 ? 100 : 0, valueColor: 'text-slate-800',
+    },
+    {
+      label: 'En cours', value: enCours, sub: `${enAttente} en attente`,
+      iconName: 'hourglass_top', iconBg: 'bg-amber-100', iconColor: 'text-amber-600',
+      barColor: 'bg-amber-400', barPct: total > 0 ? Math.round((enCours / total) * 100) : 0, valueColor: 'text-amber-600',
+    },
+    {
+      label: 'Terminées', value: fait, sub: `${pct}% du programme`,
+      iconName: 'check_circle', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600',
+      barColor: 'bg-emerald-500', barPct: pct, valueColor: 'text-emerald-600',
+    },
+    {
+      label: 'Alertes critiques', value: 2, sub: 'Intervention requise',
+      iconName: 'warning', iconBg: 'bg-red-100', iconColor: 'text-red-600',
+      barColor: 'bg-red-500', barPct: 17, valueColor: 'text-red-600',
+    },
+  ];
 
   return (
-    <div className="bg-gradient-to-br from-slate-50 via-white to-blue-50/30 min-h-screen">
-      <main className="min-h-screen">
-        <div className="p-6 space-y-6">
-          <motion.h2 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }} className="text-2xl font-black font-manrope text-slate-800">
-            Tableau de Bord <span className="ml-3 px-3 py-1 bg-blue-100 text-blue-600 text-xs rounded-full font-semibold align-middle">Temps réel</span>
-          </motion.h2>
+    <div className="min-h-screen bg-slate-50/70">
+      <div className="p-6 space-y-6 max-w-7xl mx-auto">
 
-          <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
-              <span className="text-slate-500 text-xs font-semibold">Total aujourd&apos;hui</span>
-              <div className="flex items-baseline gap-2"><span className="text-3xl font-black text-blue-600">{total}</span><span className="text-lg text-slate-300 font-bold">séances</span></div>
-              <p className="text-[11px] text-slate-500 mt-1">{fait}/{total} terminée(s)</p>
-            </div>
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
-              <span className="text-slate-500 text-xs font-semibold">En cours</span>
-              <div className="flex items-end justify-between"><span className="text-3xl font-black text-amber-600">{enCours}</span><span className="material-symbols-outlined text-amber-500/60 text-3xl">hourglass_top</span></div>
-              <p className="text-[11px] text-slate-500 mt-1">{enAttente} en attente</p>
-            </div>
-            <div className="bg-gradient-to-br from-red-500 to-rose-600 p-5 rounded-2xl shadow-md">
-              <span className="text-red-100 text-xs font-semibold">Alertes critiques</span>
-              <div className="flex items-end justify-between"><span className="text-3xl font-black text-white">02</span><span className="material-symbols-outlined text-white text-3xl">warning</span></div>
-            </div>
-          </motion.section>
+        {/* ── Titre ── */}
+        <motion.div
+          initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between"
+        >
+          <div>
+            <h1 className="text-2xl font-black font-manrope text-slate-800">
+              Tableau de Bord
+            </h1>
+            <p className="text-sm text-slate-400 mt-0.5">Service de dialyse · Temps réel</p>
+          </div>
+          <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-full border border-blue-100 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+            En direct
+          </span>
+        </motion.div>
 
-          {/* Liste des dialyses */}
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/60">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold font-manrope text-slate-800">Liste des dialyses du jour</h2>
-              <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">{total} patient{total>1?'s':''}</span>
-            </div>
-            {loading ? (
-              <div className="text-center py-8"><div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto"></div></div>
-            ) : patients.length === 0 ? (
-              <div className="text-center py-8 text-slate-400"><span className="material-symbols-outlined text-4xl mb-2">event_busy</span><p>Aucun RDV aujourd&apos;hui</p></div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead><tr className="text-slate-400 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100"><th className="pb-3 pl-2">Patient</th><th className="pb-3">Poste</th><th className="pb-3">Progression</th><th className="pb-3 text-center">Action</th><th className="pb-3 text-center">Statut</th><th className="pb-3 text-center">Accès</th></tr></thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {patients.map((p, index) => (
-                      <motion.tr key={index} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }} whileHover={{ backgroundColor: '#f8fafc' }} className="group transition-colors">
-                        <td className="py-4 pl-2"><div className="flex items-center gap-3"><div className={`w-10 h-10 rounded-xl bg-gradient-to-br from-${p.couleur}-500 to-${p.couleur}-600 flex items-center justify-center font-bold text-white text-sm shadow-lg shrink-0`}>{p.initiales}</div><div><p className="font-bold text-sm text-slate-800">{p.prenom} {p.nom}</p><p className="text-[10px] text-slate-400">Séance {p.seanceNum}</p></div></div></td>
-                        <td className="py-4"><span className="text-sm font-bold text-slate-700">{p.poste}</span></td>
-                        <td className="py-4"><div className="max-w-[140px]"><div className="flex justify-between text-[10px] mb-1"><span className="text-slate-400">{p.debut}</span><span className="font-bold text-blue-600">{p.progression}%</span></div><div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${p.statut === 'termine' ? 'bg-emerald-500' : 'bg-blue-500'}`} style={{ width: `${p.progression}%` }} /></div></div></td>
-                        <td className="py-4 text-center">
-                          {p.statut === 'en_attente' ? (
-                            <button onClick={() => handleDemarrer(p)} className="px-4 py-2 bg-blue-600 text-white text-[11px] font-bold rounded-lg hover:bg-blue-700 cursor-pointer">Démarrer</button>
-                          ) : p.statut === 'en_cours' ? (
-                            <button onClick={() => handleMarquerFait(p)} className="px-4 py-2 bg-emerald-600 text-white text-[11px] font-bold rounded-lg hover:bg-emerald-700 cursor-pointer">Fait</button>
-                          ) : (
-                            <span className="text-[10px] font-bold text-emerald-600">✅ Fait</span>
-                          )}
-                        </td>
-                        <td className="py-4 text-center"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${p.statut === 'termine' ? 'bg-emerald-50 text-emerald-600' : p.statut === 'en_cours' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>{p.statut === 'termine' ? 'Fait' : p.statut === 'en_cours' ? 'En cours' : 'En attente'}</span></td>
-                        <td className="py-4 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <button onClick={() => openModal('medecin', p)} className="p-2 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-all cursor-pointer" title="Médecin"><span className="material-symbols-outlined text-lg">stethoscope</span></button>
-                            <button onClick={() => openModal('paramedical', p)} className="p-2 rounded-lg hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 transition-all cursor-pointer" title="Paramédical"><span className="material-symbols-outlined text-lg">medical_services</span></button>
-                            <button onClick={() => openModal('dossier', p)} className="p-2 rounded-lg hover:bg-purple-50 text-slate-400 hover:text-purple-600 transition-all cursor-pointer" title="Dossier"><span className="material-symbols-outlined text-lg">folder_open</span></button>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </motion.div>
-        </div>
-      </main>
-
-      {/* MODAL OVERLAY */}
-      <AnimatePresence>
-        {modalOpen && patientSelectionne && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            onClick={closeModal}
-          >
-            {/* Backdrop blur */}
-            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-            
-            {/* Modal */}
+        {/* ── KPI Cards ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        >
+          {kpiCards.map((k, i) => (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-y-auto"
+              key={k.label}
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 + i * 0.07 }}
+              className="bg-white rounded-2xl p-4 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow"
             >
-              {/* Header */}
-              <div className={`p-6 rounded-t-2xl flex items-center justify-between ${
-                modalOpen === 'medecin' ? 'bg-gradient-to-r from-blue-50 to-blue-100' :
-                modalOpen === 'paramedical' ? 'bg-gradient-to-r from-emerald-50 to-emerald-100' :
-                'bg-gradient-to-r from-purple-50 to-purple-100'
-              }`}>
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                    modalOpen === 'medecin' ? 'bg-blue-600' : modalOpen === 'paramedical' ? 'bg-emerald-600' : 'bg-purple-600'
-                  }`}>
-                    <span className="material-symbols-outlined text-white text-2xl">
-                      {modalOpen === 'medecin' ? 'stethoscope' : modalOpen === 'paramedical' ? 'medical_services' : 'folder_open'}
-                    </span>
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-black text-slate-800">
-                      {modalOpen === 'medecin' ? 'Section Médecin' : modalOpen === 'paramedical' ? 'Section Paramédical' : 'Dossier Patient'}
-                    </h2>
-                    <p className="text-sm text-slate-500">{patientSelectionne.prenom} {patientSelectionne.nom} · Séance {patientSelectionne.seanceNum} · Poste {patientSelectionne.poste}</p>
-                  </div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{k.label}</span>
+                <div className={`w-8 h-8 rounded-xl ${k.iconBg} flex items-center justify-center`}>
+                  <span className={`material-symbols-outlined text-lg ${k.iconColor}`}>{k.iconName}</span>
                 </div>
-                <button onClick={closeModal} className="p-2 hover:bg-white/50 rounded-xl transition-all cursor-pointer">
-                  <span className="material-symbols-outlined text-slate-500 text-xl">close</span>
-                </button>
               </div>
-
-              {/* Contenu selon le type */}
-              <div className="p-6">
-                {modalOpen === 'medecin' && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100 hover:shadow-md transition-all cursor-pointer">
-                      <span className="material-symbols-outlined text-blue-600 text-2xl mb-2">prescriptions</span>
-                      <p className="text-sm font-bold text-blue-800 mb-1">Prescription</p>
-                      <p className="text-xs text-blue-500 mb-4">Gérer les prescriptions du patient</p>
-                      <button onClick={() => window.location.href='/dialyses'} className="w-full py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 cursor-pointer">Accéder</button>
-                    </div>
-                    <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100 hover:shadow-md transition-all cursor-pointer">
-                      <span className="material-symbols-outlined text-blue-600 text-2xl mb-2">verified</span>
-                      <p className="text-sm font-bold text-blue-800 mb-1">Validation</p>
-                      <p className="text-xs text-blue-500 mb-4">Valider protocoles et ordonnances</p>
-                      <button onClick={() => window.location.href='/dialyses/prescriptions-validees'} className="w-full py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 cursor-pointer">Valider</button>
-                    </div>
-                    <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100 hover:shadow-md transition-all cursor-pointer">
-                      <span className="material-symbols-outlined text-blue-600 text-2xl mb-2">edit_note</span>
-                      <p className="text-sm font-bold text-blue-800 mb-1">Observations</p>
-                      <p className="text-xs text-blue-500 mb-4">Notes et observations médicales</p>
-                      <button onClick={() => window.location.href='/demandes-avis'} className="w-full py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 cursor-pointer">Consulter</button>
-                    </div>
-                  </div>
-                )}
-
-                {modalOpen === 'paramedical' && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-100 hover:shadow-md transition-all cursor-pointer">
-                      <span className="material-symbols-outlined text-emerald-600 text-2xl mb-2">monitor_heart</span>
-                      <p className="text-sm font-bold text-emerald-800 mb-1">Constantes</p>
-                      <p className="text-xs text-emerald-500 mb-4">Relevé des constantes vitales</p>
-                      <button onClick={() => window.location.href='/dialyses/fiche-surveillance'} className="w-full py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 cursor-pointer">Saisir</button>
-                    </div>
-                    <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-100 hover:shadow-md transition-all cursor-pointer">
-                      <span className="material-symbols-outlined text-emerald-600 text-2xl mb-2">visibility</span>
-                      <p className="text-sm font-bold text-emerald-800 mb-1">Surveillance</p>
-                      <p className="text-xs text-emerald-500 mb-4">Fiche de surveillance dialyse</p>
-                      <button onClick={() => window.location.href='/dialyses/fiche-surveillance'} className="w-full py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 cursor-pointer">Ouvrir</button>
-                    </div>
-                    <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-100 hover:shadow-md transition-all cursor-pointer">
-                      <span className="material-symbols-outlined text-emerald-600 text-2xl mb-2">healing</span>
-                      <p className="text-sm font-bold text-emerald-800 mb-1">Soins</p>
-                      <p className="text-xs text-emerald-500 mb-4">Soins infirmiers et pansements</p>
-                      <button className="w-full py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 cursor-pointer">Noter</button>
-                    </div>
-                  </div>
-                )}
-
-                {modalOpen === 'dossier' && (
-                  <div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                      {[{ l: 'Patient', v: `${patientSelectionne.prenom} ${patientSelectionne.nom}` },{ l: 'Poste', v: patientSelectionne.poste },{ l: 'Début', v: patientSelectionne.debut },{ l: 'Progression', v: `${patientSelectionne.progression}%` },{ l: 'Statut', v: patientSelectionne.statut === 'termine' ? 'Fait' : patientSelectionne.statut === 'en_cours' ? 'En cours' : 'En attente' },{ l: 'Séance', v: `N°${patientSelectionne.seanceNum}` },{ l: 'ID', v: `#${patientSelectionne.patientId}` },{ l: 'Médecin', v: 'Dr. Andrianjato' }].map(i => (<div key={i.l} className="bg-purple-50 rounded-xl p-3 border border-purple-100"><p className="text-[10px] text-purple-400 uppercase">{i.l}</p><p className="text-sm font-bold text-purple-800">{i.v}</p></div>))}
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="p-5 bg-purple-50 rounded-2xl border border-purple-100 hover:shadow-md transition-all cursor-pointer">
-                        <span className="material-symbols-outlined text-purple-600 text-2xl mb-2">history</span>
-                        <p className="text-sm font-bold text-purple-800 mb-1">Historique</p>
-                        <p className="text-xs text-purple-500 mb-4">Historique des séances et prescriptions</p>
-                        <button className="w-full py-2 bg-purple-600 text-white text-xs font-bold rounded-xl hover:bg-purple-700 cursor-pointer">Voir</button>
-                      </div>
-                      <div className="p-5 bg-purple-50 rounded-2xl border border-purple-100 hover:shadow-md transition-all cursor-pointer">
-                        <span className="material-symbols-outlined text-purple-600 text-2xl mb-2">biotech</span>
-                        <p className="text-sm font-bold text-purple-800 mb-1">Examens</p>
-                        <p className="text-xs text-purple-500 mb-4">Résultats d&apos;examens biologiques</p>
-                        <button className="w-full py-2 bg-purple-600 text-white text-xs font-bold rounded-xl hover:bg-purple-700 cursor-pointer">Consulter</button>
-                      </div>
-                      <div className="p-5 bg-purple-50 rounded-2xl border border-purple-100 hover:shadow-md transition-all cursor-pointer">
-                        <span className="material-symbols-outlined text-purple-600 text-2xl mb-2">description</span>
-                        <p className="text-sm font-bold text-purple-800 mb-1">Documents</p>
-                        <p className="text-xs text-purple-500 mb-4">Ordonnances, certificats, CR</p>
-                        <button className="w-full py-2 bg-purple-600 text-white text-xs font-bold rounded-xl hover:bg-purple-700 cursor-pointer">Accéder</button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+              <p className={`text-3xl font-black ${k.valueColor}`}>{k.value}</p>
+              <p className="text-[10px] text-slate-400 mt-1">{k.sub}</p>
+              <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }} animate={{ width: `${k.barPct}%` }}
+                  transition={{ duration: 1, delay: 0.3 + i * 0.1, ease: 'easeOut' }}
+                  className={`h-full rounded-full ${k.barColor}`}
+                />
               </div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          ))}
+        </motion.div>
+
+        {/* ── Tableau dialyses ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden"
+        >
+          {/* Header tableau */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <h2 className="text-base font-bold font-manrope text-slate-800">Dialyses du jour</h2>
+            <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold border border-blue-100">
+              {total} patient{total > 1 ? 's' : ''}
+            </span>
+          </div>
+
+          {/* Contenu tableau */}
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full" />
+            </div>
+          ) : patients.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">
+              <span className="material-symbols-outlined text-5xl mb-3 block text-slate-300">event_busy</span>
+              <p className="text-sm font-medium">Aucun rendez-vous aujourd&apos;hui</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/60">
+                    {['Patient', 'Poste', 'Début', 'Progression', 'Action', 'Statut', 'Médecin', 'Paramédical', 'Dossier'].map((h) => (
+                      <th key={h} className="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {patients.map((p, index) => {
+                    const ac = AVATAR_COLORS[index % AVATAR_COLORS.length];
+                    const isAlerte = p.statut === 'en_cours' && p.progression < 20 && index === 3; // simuler alerte
+                    return (
+                      <motion.tr
+                        key={p.id}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.04 }}
+                        className={`group transition-colors hover:bg-slate-50/80 ${isAlerte ? 'bg-red-50/40' : ''}`}
+                      >
+                        {/* Patient */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className={`w-9 h-9 rounded-xl ${ac.bg} ${ac.text} flex items-center justify-center font-bold text-xs flex-shrink-0`}>
+                              {p.initiales}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-slate-800">{p.prenom} {p.nom}</p>
+                              <p className="text-[9px] text-slate-400">Séance {p.seanceNum}</p>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Poste */}
+                        <td className="px-4 py-3">
+                          <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">{p.poste}</span>
+                        </td>
+
+                        {/* Début */}
+                        <td className="px-4 py-3">
+                          <span className="text-xs text-slate-500 font-medium">{p.debut}</span>
+                        </td>
+
+                        {/* Progression */}
+                        <td className="px-4 py-3">
+                          <ProgressBar value={p.progression} statut={p.statut} />
+                        </td>
+
+                        {/* Action */}
+                        <td className="px-4 py-3">
+                          {p.statut === 'en_attente' ? (
+                            <button
+                              onClick={() => handleDemarrer(p)}
+                              className="px-3 py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded-lg hover:bg-blue-700 transition-colors cursor-pointer whitespace-nowrap"
+                            >
+                              Démarrer
+                            </button>
+                          ) : p.statut === 'en_cours' ? (
+                            <button
+                              onClick={() => handleMarquerFait(p)}
+                              className="px-3 py-1.5 bg-emerald-600 text-white text-[10px] font-bold rounded-lg hover:bg-emerald-700 transition-colors cursor-pointer"
+                            >
+                              Fait ✓
+                            </button>
+                          ) : (
+                            <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                              <span className="material-symbols-outlined text-sm">check_circle</span> Terminé
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Statut */}
+                        <td className="px-4 py-3">
+                          <StatutBadge statut={p.statut} />
+                        </td>
+
+                        {/* ── Médecin ── */}
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => openModal('medecin', p)}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 text-blue-700 text-[10px] font-semibold rounded-lg hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer whitespace-nowrap"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">stethoscope</span>
+                            Médecin
+                          </button>
+                        </td>
+
+                        {/* ── Paramédical ── */}
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => openModal('paramedical', p)}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 text-emerald-700 text-[10px] font-semibold rounded-lg hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer whitespace-nowrap"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">medical_services</span>
+                            Paramédical
+                          </button>
+                        </td>
+
+                        {/* ── Dossier ── */}
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => openModal('dossier', p)}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-purple-50 text-purple-700 text-[10px] font-semibold rounded-lg hover:bg-purple-100 border border-purple-200 transition-colors cursor-pointer whitespace-nowrap"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">folder_open</span>
+                            Dossier
+                          </button>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </motion.div>
+      </div>
+
+      {/* ── Modal ── */}
+      <SectionModal
+        open={modalOpen !== null}
+        type={modalOpen}
+        patient={patientSelectionne}
+        onClose={() => { setModalOpen(null); setPatientSelectionne(null); }}
+      />
     </div>
   );
 }

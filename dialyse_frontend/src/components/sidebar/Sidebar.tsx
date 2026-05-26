@@ -5,215 +5,241 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 
 const menus = [
-  { label: "Tableau de bord", href: "/dashboard", icon: "dashboard" },
-  { label: "Demandes d'avis", href: "/demandes-avis", icon: "clinical_notes" },
-  { label: "Dialyses", href: "/dialyses", icon: "monitor_heart" },
-  { label: "Rendez-vous", href: "/rendez-vous", icon: "event" },
-  { label: "Rapports", href: "/rapports", icon: "lab_profile" },
-  { label: "Archive", href: "/archive", icon: "archive" },
+  {
+    section: "Principal",
+    items: [
+      { label: "Tableau de bord", href: "/dashboard", icon: "dashboard", badge: null, badgeType: null },
+      { label: "Notifications",   href: "/notifications", icon: "notifications", badge: 3, badgeType: "red" },
+    ],
+  },
+  {
+    section: "Médical",
+    items: [
+      { label: "Rendez-vous",      href: "/rendez-vous",    icon: "event",           badge: 7,  badgeType: "blue"   },
+      { label: "Dialyses",         href: "/dialyses",       icon: "monitor_heart",   badge: 5,  badgeType: "amber"  },
+      { label: "Demandes d'avis",  href: "/demandes-avis",  icon: "clinical_notes",  badge: 2,  badgeType: "purple" },
+      { label: "Rapports",         href: "/rapports",       icon: "lab_profile",     badge: 1,  badgeType: "green"  },
+      { label: "Archive",          href: "/archive",        icon: "archive",         badge: null, badgeType: null   },
+    ],
+  },
 ];
 
-const sidebarVariants: Variants = {
-  open: { 
-    x: 0, 
-    transition: { type: "spring" as const, stiffness: 300, damping: 30 } 
-  },
-  closed: { 
-    x: "-100%", 
-    transition: { type: "spring" as const, stiffness: 300, damping: 30 } 
-  },
+const badgeStyles: Record<string, string> = {
+  red:    "bg-red-500 text-white",
+  amber:  "bg-amber-400 text-amber-900",
+  blue:   "bg-blue-400 text-white",
+  green:  "bg-emerald-400 text-emerald-900",
+  purple: "bg-purple-400 text-white",
 };
 
-const itemVariants = {
-  initial: { opacity: 0, x: -20 },
-  animate: (index: number) => ({
-    opacity: 1,
-    x: 0,
-    transition: { delay: index * 0.05, duration: 0.3 },
+const sidebarVariants: Variants = {
+  open:   { x: 0,      transition: { type: "spring", stiffness: 300, damping: 30 } },
+  closed: { x: "-100%", transition: { type: "spring", stiffness: 300, damping: 30 } },
+};
+
+const itemVariants: Variants = {
+  initial:  { opacity: 0, x: -16 },
+  animate: (i: number) => ({
+    opacity: 1, x: 0,
+    transition: { delay: i * 0.04, duration: 0.25 },
   }),
 };
 
-export default function Sidebar() {
+/* ─── Logo CHU Andrainjato ─────────────────────────────────────────── */
+function ChuLogo() {
+  return (
+    <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" className="w-9 h-9">
+      {/* Silhouette Madagascar */}
+      <path
+        d="M38 8 Q30 18 28 30 Q25 44 28 56 Q31 66 38 70 Q44 74 49 67 Q55 57 54 44 Q56 31 51 19 Q46 8 40 7 Z"
+        fill="white" fillOpacity="0.15" stroke="white" strokeOpacity="0.3" strokeWidth="1"
+      />
+      {/* C */}
+      <text x="5"  y="54" fontSize="38" fontWeight="900" fill="#1565c0" fontFamily="Arial Black, sans-serif">C</text>
+      {/* H */}
+      <text x="24" y="54" fontSize="38" fontWeight="900" fill="#e53935" fontFamily="Arial Black, sans-serif">H</text>
+      {/* U */}
+      <text x="48" y="54" fontSize="38" fontWeight="900" fill="#1565c0" fontFamily="Arial Black, sans-serif">U</text>
+      {/* Barre orange */}
+      <line x1="39" y1="14" x2="43" y2="64" stroke="#ff6f00" strokeWidth="3.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+/* ─── Contenu interne de la sidebar ───────────────────────────────── */
+function SidebarContent({ onLinkClick }: { onLinkClick: () => void }) {
   const pathname = usePathname();
+  let itemIndex = 0;
+
+  return (
+    <div className="flex flex-col h-full">
+
+      {/* ── Logo ── */}
+      <div className="px-4 py-4 border-b border-white/10 flex items-center gap-3">
+        <motion.div
+          whileHover={{ scale: 1.06, rotate: -4 }}
+          className="w-11 h-11 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shadow-lg flex-shrink-0 cursor-pointer overflow-hidden"
+        >
+          <ChuLogo />
+        </motion.div>
+        <div>
+          <p className="text-sm font-semibold text-white leading-tight">CHU Andrainjato</p>
+          <p className="text-[9px] text-white/45 uppercase tracking-widest mt-0.5">Centre Hospitalier Univ.</p>
+        </div>
+      </div>
+
+      {/* ── Profil ── */}
+      <motion.div
+        whileHover={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+        className="px-4 py-3 border-b border-white/10 flex items-center gap-3 cursor-pointer transition-colors"
+      >
+        <div className="relative">
+          <div className="w-9 h-9 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-xs font-semibold text-white shadow-md">
+            JA
+          </div>
+          <motion.span
+            animate={{ scale: [1, 1.3, 1] }}
+            transition={{ duration: 2.5, repeat: Infinity }}
+            className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-[#00509e]"
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-white truncate">Dr. Andrianjato</p>
+          <p className="text-[10px] text-white/50 truncate">Néphrologue</p>
+        </div>
+        <span className="material-symbols-outlined text-white/30 text-base">more_vert</span>
+      </motion.div>
+
+      {/* ── Navigation ── */}
+      <nav className="flex-1 px-3 py-3 overflow-y-auto custom-scrollbar space-y-4">
+        {menus.map((group) => (
+          <div key={group.section}>
+            <p className="text-[9px] font-semibold text-white/35 uppercase tracking-widest px-3 pb-1">
+              {group.section}
+            </p>
+            <div className="space-y-0.5">
+              {group.items.map((menu) => {
+                const currentIndex = itemIndex++;
+                const isActive = pathname === menu.href || pathname.startsWith(menu.href + "/");
+                return (
+                  <motion.a
+                    key={menu.href}
+                    href={menu.href}
+                    onClick={onLinkClick}
+                    custom={currentIndex}
+                    variants={itemVariants}
+                    initial="initial"
+                    animate="animate"
+                    whileHover={{ x: 3 }}
+                    whileTap={{ scale: 0.97 }}
+                    className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[12px] font-medium transition-all duration-150 ${
+                      isActive
+                        ? "bg-white/18 text-white border border-white/20 shadow-sm"
+                        : "text-white/65 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="activePill"
+                        className="absolute inset-0 rounded-xl bg-white/18 border border-white/20"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    <span className={`material-symbols-outlined relative z-10 text-[18px] transition-transform duration-150 group-hover:scale-110 ${
+                      isActive ? "text-white" : "text-white/45 group-hover:text-white/80"
+                    }`}>
+                      {menu.icon}
+                    </span>
+                    <span className="relative z-10 flex-1">{menu.label}</span>
+                    {menu.badge !== null && menu.badgeType && (
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className={`relative z-10 text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${badgeStyles[menu.badgeType]}`}
+                      >
+                        {menu.badge}
+                      </motion.span>
+                    )}
+                  </motion.a>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* ── Footer ── */}
+      <div className="px-4 py-3 border-t border-white/10">
+        <div className="flex items-center gap-2">
+          <motion.span
+            animate={{ scale: [1, 1.4, 1] }}
+            transition={{ duration: 2.5, repeat: Infinity }}
+            className="w-2 h-2 bg-emerald-400 rounded-full flex-shrink-0"
+          />
+          <p className="text-[9px] text-white/40 font-medium">Système connecté</p>
+          <p className="text-[9px] text-white/25 ml-auto">v2.5.0</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Composant principal ──────────────────────────────────────────── */
+export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-    
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
-  const handleLinkClick = () => {
-    if (isMobile) {
-      setIsOpen(false);
-    }
-  };
-
-  const sidebarContent = (
-    <>
-      {/* Logo CHU */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="p-6 border-b border-gray-100"
-      >
-        <div className="flex items-center gap-3">
-          <motion.div 
-            whileHover={{ scale: 1.05, rotate: -5 }}
-            className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-white text-2xl">local_hospital</span>
-          </motion.div>
-          <div>
-            <h1 className="text-lg font-bold text-gray-800 leading-tight">CHU</h1>
-            <p className="text-[10px] font-semibold text-gray-400 tracking-wider uppercase">Andrainjato · Dialyse</p>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Profil utilisateur */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        whileHover={{ backgroundColor: '#f8fafc' }}
-        className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50/30 to-white cursor-pointer transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-md shadow-blue-500/20 ring-2 ring-white"
-            >
-              <span className="material-symbols-outlined text-white text-2xl">person</span>
-            </motion.div>
-            <motion.span 
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full ring-2 ring-white" 
-            />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-gray-800 truncate">Dr. Andrianjato</p>
-            <p className="text-[11px] text-gray-500 truncate font-medium">Néphrologue</p>
-            <p className="text-[10px] text-gray-400 truncate">andrianjato@chu.mg</p>
-          </div>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="text-gray-400 hover:text-blue-600 transition-colors"
-          >
-            <span className="material-symbols-outlined text-lg">more_vert</span>
-          </motion.button>
-        </div>
-      </motion.div>
-
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
-        {menus.map((menu, index) => {
-          const isActive = pathname === menu.href || pathname.startsWith(menu.href + "/");
-          return (
-            <motion.a
-              key={menu.href}
-              href={menu.href}
-              onClick={handleLinkClick}
-              custom={index}
-              variants={itemVariants}
-              initial="initial"
-              animate="animate"
-              whileHover={{ x: 4, scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              className={`group relative flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-200 ${
-                isActive
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/25"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-blue-600"
-              }`}
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-lg shadow-blue-500/25"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
-              <span className={`material-symbols-outlined relative z-10 text-xl transition-transform duration-200 group-hover:scale-110 ${
-                isActive ? "text-white" : "text-gray-400 group-hover:text-blue-500"
-              }`}>
-                {menu.icon}
-              </span>
-              <span className="relative z-10">{menu.label}</span>
-              {isActive && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute right-3 z-10 flex items-center gap-1"
-                >
-                  <span className="w-1.5 h-1.5 bg-white rounded-full" />
-                </motion.div>
-              )}
-            </motion.a>
-          );
-        })}
-      </nav>
-
-      {/* Pied de sidebar */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="p-4 border-t border-gray-100"
-      >
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <motion.span 
-            animate={{ scale: [1, 1.3, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-2 h-2 bg-emerald-500 rounded-full" 
-          />
-          <p className="text-[10px] text-gray-400 font-medium">Système connecté</p>
-        </div>
-        <p className="text-[9px] text-gray-300 text-center">v2.4.1 · CHU Dialyse</p>
-      </motion.div>
-    </>
-  );
+  const handleLinkClick = () => { if (isMobile) setIsOpen(false); };
 
   return (
     <>
-      {/* Bouton menu mobile */}
+      {/* Bouton mobile */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-[#00509e] rounded-xl shadow-lg border border-white/20"
         aria-label="Menu"
       >
-        <span className="material-symbols-outlined text-gray-700 text-xl">
+        <span className="material-symbols-outlined text-white text-xl">
           {isOpen ? "close" : "menu"}
         </span>
       </motion.button>
 
-      {/* Version mobile : sidebar fixe en overlay */}
+      {/* Overlay mobile */}
       <AnimatePresence>
         {isOpen && isMobile && (
-          <motion.aside
-            variants={sidebarVariants}
-            initial="closed"
-            animate="open"
-            exit="closed"
-            className="fixed left-0 top-0 h-screen z-40 w-72 flex flex-col bg-white border-r border-gray-100 shadow-2xl"
-          >
-            {sidebarContent}
-          </motion.aside>
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+              onClick={() => setIsOpen(false)}
+            />
+            <motion.aside
+              variants={sidebarVariants}
+              initial="closed" animate="open" exit="closed"
+              className="fixed left-0 top-0 h-screen z-40 w-64 lg:hidden"
+              style={{ background: "linear-gradient(180deg, #003d7a 0%, #00509e 45%, #0066cc 100%)" }}
+            >
+              <SidebarContent onLinkClick={handleLinkClick} />
+            </motion.aside>
+          </>
         )}
       </AnimatePresence>
 
-      {/* Version desktop : sidebar fixe toujours visible */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:h-screen lg:fixed lg:left-0 lg:top-0 lg:bg-white lg:border-r lg:border-gray-100 lg:z-30">
-        {sidebarContent}
+      {/* Desktop */}
+      <aside
+        className="hidden lg:flex lg:flex-col lg:w-64 lg:h-screen lg:fixed lg:left-0 lg:top-0 lg:z-30"
+        style={{ background: "linear-gradient(180deg, #003d7a 0%, #00509e 45%, #0066cc 100%)" }}
+      >
+        <SidebarContent onLinkClick={handleLinkClick} />
       </aside>
     </>
   );
