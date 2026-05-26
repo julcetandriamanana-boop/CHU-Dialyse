@@ -9,11 +9,12 @@ import { PrescriptionModule } from './prescription/prescription.module';
 import { RendezVousModule } from './rendezvous/rendezvous.module';
 import { DemandeAvisModule } from './demande-avis/demande-avis.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { SeanceModule } from './seance/seance.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(databaseConfig),
-    PatientModule, PrescriptionModule, RendezVousModule, DemandeAvisModule, NotificationsModule, MedecinModule,
+    PatientModule, PrescriptionModule, RendezVousModule, DemandeAvisModule, NotificationsModule, MedecinModule, SeanceModule,
   ],
   controllers: [AppController], providers: [AppService],
 })
