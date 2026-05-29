@@ -7,7 +7,6 @@ import { SeanceHemodialyse } from '../entities/seance-hemodialyse.entity';
 export class SeanceController {
   constructor(private readonly service: SeanceService) {}
 
-  @UseGuards(AuthGuard('jwt'))
   @Get()
   async findAll(@Query('patientId') patientId?: number): Promise<SeanceHemodialyse[]> {
     return this.service.findAll(patientId);
