@@ -562,8 +562,6 @@ export default function StitchRendezVousCalendrier() {
             ))}
           </div>
           <button className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500">
-            <span className="material-symbols-outlined text-lg">settings</span>
-          </button>
         </header>
 
         {/* ── Vue Semaine ── */}
