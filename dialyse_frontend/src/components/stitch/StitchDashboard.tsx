@@ -194,20 +194,26 @@ export default function StitchDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const loadPatients = async () => {
+    const loadPatients = async () => {
     try {
       const res = await fetch(`${API_URL}/rendezvous/aujourdhui`);
       if (res.ok) {
         const rdvs = await res.json();
-        const stats         = JSON.parse(localStorage.getItem('chu_seances_stats')   || '{}');
+        const now = new Date();
+        const aujourdHui = now.toISOString().split('T')[0];
+        const rdvAujourdhui = (rdvs || []).filter((rdv: any) => {
+          if (!rdv.patient) return false;
+          const dateRdv = new Date(rdv.date_heure).toISOString().split('T')[0];
+          return dateRdv === aujourdHui;
+        });
+        const stats = JSON.parse(localStorage.getItem('chu_seances_stats') || '{}');
         const patientSeances = JSON.parse(localStorage.getItem('chu_seances_patient') || '{}');
-
-        const list: PatientSeance[] = (rdvs || []).filter((rdv: any) => rdv.patient !== null).map((rdv: any, i: number) => {
-          const infos   = rdv.soso_kevitra_malalaka || '';
-          const machine = infos.includes('Machine') ? infos.split('|')[1]?.trim() || 'N/A' : 'N/A';
-          const date    = new Date(rdv.date_heure);
-          const heure   = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-          const saved   = stats[`rdv_${rdv.id}`];
+        const list: PatientSeance[] = rdvAujourdhui.map((rdv: any, i: number) => {
+          const infos = rdv.soso_kevitra_malalaka || '';
+          const machine = infos.includes('|') ? infos.split('|')[1]?.trim() || 'N/A' : infos || 'N/A';
+          const date = new Date(rdv.date_heure);
+          const heure = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+          const saved = stats[`rdv_${rdv.id}`];
           const couleurs = ['blue','orange','purple','emerald','pink'];
           return {
             id: rdv.id, nom: rdv.patient.nom, prenom: rdv.patient.prenom,
@@ -219,21 +225,6 @@ export default function StitchDashboard() {
             patientId: rdv.patient.id,
             seanceNum: patientSeances[String(rdv.patient.id)]?.seanceNum || 1,
           };
-        });
-
-        Object.entries(patientSeances).forEach(([key, val]: [string, any]) => {
-          if (!list.find(p => String(p.patientId) === key) && val.patientName) {
-            list.push({
-              id: parseInt(key) || Date.now(),
-              nom: val.patientName?.split(' ')[1] || '', prenom: val.patientName?.split(' ')[0] || '',
-              initiales: (val.patientName || '??').split(' ').map((n: string) => n.charAt(0)).join(''),
-              poste: val.poste || 'N/A',
-              debut: val.debut ? new Date(val.debut).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' }) : '--:--',
-              progression: val.statut === 'termine' ? 100 : val.progression || 0,
-              statut: val.statut || 'en_cours', couleur: 'blue',
-              patientId: parseInt(key) || 0, seanceNum: val.seanceNum || 1,
-            });
-          }
         });
         setPatients(list);
       }
