@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 /* ─── Types ─────────────────────────────────────────────────────── */
 interface KitItem {
@@ -190,11 +191,35 @@ function SectionCard({
 function VerificationKitInner() {
   const searchParams = useSearchParams();
   const patientId  = searchParams.get('patientId');
-  const seanceNum  = parseInt(searchParams.get('seanceNum') || '1');
-  const isFirstSeance = seanceNum <= 1;
+  const searchParamsObj = searchParams;
+  const patientIdParam = searchParamsObj.get('patientId');
+  const seanceNumRaw   = searchParamsObj.get('seanceNum');
+  const seanceNum      = parseInt(seanceNumRaw || '1');
 
-  // Auto-sélectionner le type selon le numéro de séance
-  const [seanceType, setSeanceType] = useState<SeanceType>(isFirstSeance ? 'premiere' : 'suivante');
+  const [totalSeances, setTotalSeances] = useState<number>(seanceNum);
+  const [loadingSeances, setLoadingSeances] = useState(false);
+
+  // Charger le vrai nombre de séances depuis le backend
+  useEffect(() => {
+    if (!patientIdParam) return;
+    setLoadingSeances(true);
+    fetch(`${API_URL}/seances?patientId=${patientIdParam}`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) setTotalSeances(data.length);
+        else setTotalSeances(seanceNum); // fallback sur param URL
+      })
+      .catch(() => setTotalSeances(seanceNum))
+      .finally(() => setLoadingSeances(false));
+  }, [patientIdParam]);
+
+  // true = 1ère séance, false = séances suivantes — NON modifiable manuellement
+  const isFirstSeance = totalSeances <= 1;
+
+  // seanceType suit isFirstSeance
+  const [seanceType, setSeanceType] = useState<SeanceType>(
+    seanceNum > 1 ? 'suivante' : 'premiere'
+  );
 
   useEffect(() => {
     setSeanceType(isFirstSeance ? 'premiere' : 'suivante');
