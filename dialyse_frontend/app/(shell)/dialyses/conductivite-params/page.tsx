@@ -179,7 +179,7 @@ function ConductiviteInner() {
           <h1 className="text-2xl font-black font-manrope text-slate-800">Conductivité & Paramètres</h1>
           <p className="text-sm text-slate-400 mt-0.5">Prescription médicale de la séance · CHU Andrainjato</p>
         </div>
-        <button onClick={() => window.history.back()}
+        <button onClick={() => router.push(`/dialyses/section-medecin?patientId=${patientIdParam}&seanceNum=${seanceNumParam}`)}
           className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors cursor-pointer">
           <span className="material-symbols-outlined text-lg">arrow_back</span>Retour
         </button>
