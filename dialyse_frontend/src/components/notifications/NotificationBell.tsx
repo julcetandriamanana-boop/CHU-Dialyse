@@ -16,6 +16,8 @@ import {
   urgenceLabel,
 } from '@/src/services/notification.service';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 const typeIcons: Record<string, string> = {
   success: 'check_circle',
   error:   'emergency',
@@ -34,48 +36,117 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function NotificationBell() {
-  const router                    = useRouter();
+  const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationDB[]>([]);
   const [unreadCount, setUnreadCount]     = useState(0);
   const [isOpen, setIsOpen]               = useState(false);
   const [audioReady, setAudioReady]       = useState(false);
   const [isLoading, setIsLoading]         = useState(false);
-  const prevCountRef                      = useRef(0);
-  const dropdownRef                       = useRef<HTMLDivElement>(null);
+  const [sseConnected, setSseConnected]   = useState(false);
+  const prevCountRef  = useRef(0);
+  const dropdownRef   = useRef<HTMLDivElement>(null);
+  const audioReadyRef = useRef(false);
 
+  // Synchroniser audioReadyRef avec audioReady
+  useEffect(() => {
+    audioReadyRef.current = audioReady;
+  }, [audioReady]);
+
+  // ── Charger les notifications depuis l'API ──────
   const loadNotifications = useCallback(async () => {
     try {
       const [data, count] = await Promise.all([
         fetchNotifications(),
         fetchUnreadCount(),
       ]);
-
-      // ✅ Son si nouvelles notifications
-      if (count > prevCountRef.current && audioReady && prevCountRef.current > 0) {
-        const newest = data.find(n => !n.is_read);
-        playNotificationSound(newest?.urgence || 1);
-      }
-      prevCountRef.current = count;
-
       setNotifications(data.slice(0, 10));
       setUnreadCount(count);
+      prevCountRef.current = count;
     } catch {}
-  }, [audioReady]);
+  }, []);
 
-  // ✅ Polling notifications internes toutes les 30s
+  // ── SSE — Connexion temps réel ──────────────────
   useEffect(() => {
+    let eventSource: EventSource | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout>;
+
+    const connect = () => {
+      try {
+        eventSource = new EventSource(`${API_URL}/notifications/stream`);
+
+        eventSource.onopen = () => {
+          setSseConnected(true);
+          console.log('✅ SSE connecté — notifications en temps réel');
+        };
+
+        // ✅ Événement "notification" reçu en temps réel
+        eventSource.addEventListener('notification', (event: MessageEvent) => {
+          try {
+            const notif: NotificationDB = JSON.parse(event.data);
+            console.log('🔔 Nouvelle notification temps réel:', notif.title);
+
+            // Mettre à jour la liste
+            setNotifications(prev => {
+              const exists = prev.find(n => n.id === notif.id);
+              if (exists) return prev;
+              return [notif, ...prev].slice(0, 10);
+            });
+
+            // Incrémenter le compteur
+            setUnreadCount(c => {
+              const newCount = c + 1;
+              prevCountRef.current = newCount;
+              return newCount;
+            });
+
+            // ✅ Jouer le son si audio activé
+            if (audioReadyRef.current) {
+              playNotificationSound(notif.urgence || 1);
+            }
+
+          } catch (e) {
+            console.error('Erreur parsing SSE:', e);
+          }
+        });
+
+        eventSource.onerror = () => {
+          setSseConnected(false);
+          eventSource?.close();
+          // Reconnexion automatique après 5s
+          reconnectTimer = setTimeout(connect, 5000);
+        };
+
+      } catch (e) {
+        setSseConnected(false);
+        reconnectTimer = setTimeout(connect, 5000);
+      }
+    };
+
+    // Charger d'abord les notifications existantes
     loadNotifications();
-    const interval = setInterval(loadNotifications, 30000);
-    return () => clearInterval(interval);
+
+    // Puis connecter SSE
+    connect();
+
+    // Polling de secours toutes les 60s (si SSE déconnecté)
+    const fallbackInterval = setInterval(() => {
+      if (!sseConnected) {
+        loadNotifications();
+      }
+    }, 60000);
+
+    return () => {
+      eventSource?.close();
+      clearTimeout(reconnectTimer);
+      clearInterval(fallbackInterval);
+    };
   }, [loadNotifications]);
 
-  // ✅ Polling notifications EXTERNES toutes les 60s
+  // Polling externe toutes les 60s
   useEffect(() => {
     const pollExternal = async () => {
       const synced = await pollExternalNotifications();
-      if (synced > 0) {
-        await loadNotifications();
-      }
+      if (synced > 0) await loadNotifications();
     };
     pollExternal();
     const interval = setInterval(pollExternal, 60000);
@@ -94,9 +165,7 @@ export default function NotificationBell() {
   }, []);
 
   const handleBellClick = () => {
-    if (!audioReady) {
-      setAudioReady(true);
-    }
+    if (!audioReady) setAudioReady(true);
     setIsOpen(o => !o);
   };
 
@@ -122,30 +191,27 @@ export default function NotificationBell() {
     e.stopPropagation();
     await deleteNotification(id);
     setNotifications(prev => prev.filter(n => n.id !== id));
-    const newCount = await fetchUnreadCount();
-    setUnreadCount(newCount);
+    setUnreadCount(c => Math.max(0, c - 1));
   };
 
   const handleRefreshExternal = async () => {
     setIsLoading(true);
-    const synced = await pollExternalNotifications();
+    await pollExternalNotifications();
     await loadNotifications();
     setIsLoading(false);
   };
 
-  // Urgence max pour animation cloche
   const maxUrgence = notifications
     .filter(n => !n.is_read)
     .reduce((max, n) => Math.max(max, n.urgence || 1), 0);
 
-  const bellColor = maxUrgence >= 5
-    ? 'text-red-500'
-    : maxUrgence >= 3
-    ? 'text-amber-500'
+  const bellColor = maxUrgence >= 5 ? 'text-red-500'
+    : maxUrgence >= 3 ? 'text-amber-500'
     : 'text-slate-600';
 
   return (
     <div className="relative" ref={dropdownRef}>
+
       {/* ── Cloche ── */}
       <motion.button
         whileHover={{ scale: 1.05 }}
@@ -158,6 +224,11 @@ export default function NotificationBell() {
         <span className={`material-symbols-outlined text-xl ${bellColor}`}>
           notifications
         </span>
+
+        {/* ✅ Indicateur SSE connecté */}
+        <span className={`absolute -bottom-0.5 -left-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${
+          sseConnected ? 'bg-emerald-400' : 'bg-slate-300'
+        }`} title={sseConnected ? 'Temps réel actif' : 'Polling'} />
 
         {/* Badge compteur */}
         <AnimatePresence>
@@ -189,7 +260,7 @@ export default function NotificationBell() {
             transition={{ duration: 0.15 }}
             className="absolute right-0 top-14 w-96 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 overflow-hidden"
           >
-            {/* Header dropdown */}
+            {/* Header */}
             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-50 to-white">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-black text-slate-800">Notifications</h3>
@@ -198,31 +269,37 @@ export default function NotificationBell() {
                     {unreadCount} non lues
                   </span>
                 )}
+                {/* Indicateur SSE */}
+                <span className={`flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                  sseConnected
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-slate-100 text-slate-500'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${sseConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                  {sseConnected ? 'En direct' : 'Polling'}
+                </span>
               </div>
               <div className="flex items-center gap-2">
-                {/* Bouton refresh externe */}
                 <button
                   onClick={handleRefreshExternal}
                   disabled={isLoading}
                   className="p-1 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                  title="Récupérer notifications externes"
+                  title="Synchroniser"
                 >
                   <span className={`material-symbols-outlined text-slate-400 text-sm ${isLoading ? 'animate-spin' : ''}`}>
                     sync
                   </span>
                 </button>
                 {unreadCount > 0 && (
-                  <button
-                    onClick={handleMarkAllRead}
-                    className="text-[10px] font-bold text-blue-600 hover:text-blue-700 cursor-pointer whitespace-nowrap"
-                  >
+                  <button onClick={handleMarkAllRead}
+                    className="text-[10px] font-bold text-blue-600 hover:text-blue-700 cursor-pointer whitespace-nowrap">
                     Tout lu
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Liste notifications */}
+            {/* Liste */}
             <div className="max-h-96 overflow-y-auto divide-y divide-slate-50">
               {notifications.length === 0 ? (
                 <div className="p-8 text-center text-slate-400">
@@ -233,13 +310,14 @@ export default function NotificationBell() {
                 notifications.map((notif) => (
                   <motion.div
                     key={notif.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
                     whileHover={{ backgroundColor: '#f8fafc' }}
                     onClick={() => handleClick(notif)}
                     className={`p-3 cursor-pointer transition-all flex items-start gap-3 group ${
                       notif.is_read ? 'opacity-60' : 'bg-white'
                     }`}
                   >
-                    {/* Icône avec couleur urgence */}
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
                       notif.source === 'externe'
                         ? urgenceColor(notif.urgence || 1)
@@ -257,10 +335,7 @@ export default function NotificationBell() {
                       <div className="flex items-start justify-between gap-1">
                         <p className="text-xs font-bold text-slate-800 truncate">{notif.title}</p>
                         <div className="flex items-center gap-1 shrink-0">
-                          {!notif.is_read && (
-                            <span className="w-2 h-2 bg-blue-500 rounded-full" />
-                          )}
-                          {/* Bouton supprimer */}
+                          {!notif.is_read && <span className="w-2 h-2 bg-blue-500 rounded-full" />}
                           <button
                             onClick={(e) => handleDelete(e, notif.id)}
                             className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-red-100 rounded cursor-pointer"
@@ -274,26 +349,18 @@ export default function NotificationBell() {
 
                       <div className="flex items-center gap-2 mt-1">
                         <p className="text-[9px] text-slate-400">{timeAgo(notif.created_at)}</p>
-
-                        {/* Badge urgence pour notifs externes */}
                         {notif.source === 'externe' && notif.urgence && notif.urgence >= 2 && (
                           <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full border ${urgenceColor(notif.urgence)}`}>
                             {urgenceLabel(notif.urgence)}
                           </span>
                         )}
-
-                        {/* Badge source externe */}
                         {notif.source === 'externe' && (
                           <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
                             EXTERNE
                           </span>
                         )}
-
-                        {/* Nom expéditeur */}
                         {notif.emitter_name && (
-                          <span className="text-[9px] text-slate-400 truncate">
-                            {notif.emitter_name}
-                          </span>
+                          <span className="text-[9px] text-slate-400 truncate">{notif.emitter_name}</span>
                         )}
                       </div>
                     </div>
