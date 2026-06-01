@@ -77,7 +77,7 @@ function SectionModal({
 
   const medecinCards = [
     { icon: 'vaccines',                 title: 'Vérification Kit',          desc: 'Ordonnance kit hémodialyse — 1ère séance et suivantes', btn: 'Ouvrir',   href: `/dialyses/verification-kit?patientId=${patient.patientId}&seanceNum=${patient.seanceNum}`,   color: 'blue' },
-    { icon: 'settings_input_component', title: 'Conductivité & Paramètres', desc: 'Paramètres dialysat, UF, débits et prescription séance', btn: 'Accéder', href: '/dialyses/conductivite-params', color: 'blue' },
+    { icon: 'settings_input_component', title: 'Conductivité & Paramètres', desc: 'Paramètres dialysat, UF, débits et prescription séance', btn: 'Accéder', href: `/dialyses/conductivite-params?patientId=${patient.patientId}&seanceNum=${patient.seanceNum}`, color: 'blue' },
   ];
 
   const paraCards = [
