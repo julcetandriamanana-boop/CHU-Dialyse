@@ -91,25 +91,29 @@ function formatRDV(rdv: RDV): RDVFormatted | null {
   };
 }
 
-function NewRDVForm({ popup, allRdvs, onClose, onCreated }: {
+interface PatientSuggestion { id: number; nom: string; prenom: string; }
+
+function NewRDVForm({ popup, onClose, onCreated }: {
   popup: PopupState;
-  allRdvs: RDVFormatted[];
   onClose: () => void;
   onCreated: () => void;
 }) {
-  const [heureDebut, setHeureDebut] = useState(popup.heureDebut);
-  const [heureFin, setHeureFin]     = useState(popup.heureFin);
-  const [patientId, setPatientId]   = useState('');
-  const [motif, setMotif]           = useState('Séance hémodialyse');
-  const [machine, setMachine]       = useState('Machine 1');
-  const [saving, setSaving]         = useState(false);
-  const [error, setError]           = useState('');
-  const [success, setSuccess]       = useState(false);
+  const [heureDebut, setHeureDebut]         = useState(popup.heureDebut);
+  const [heureFin, setHeureFin]             = useState(popup.heureFin);
+  const [motif, setMotif]                   = useState('Séance hémodialyse');
+  const [machine, setMachine]               = useState('Machine 1');
+  const [saving, setSaving]                 = useState(false);
+  const [error, setError]                   = useState('');
+  const [success, setSuccess]               = useState(false);
+  // Recherche patient
+  const [search, setSearch]                 = useState('');
+  const [suggestions, setSuggestions]       = useState<PatientSuggestion[]>([]);
+  const [showSugg, setShowSugg]             = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<PatientSuggestion | null>(null);
+  // Numéro de séance depuis API
+  const [numSeance, setNumSeance]           = useState<number | null>(null);
+  const [loadingSeance, setLoadingSeance]   = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
-  const numSeance = patientId
-    ? allRdvs.filter(r => r.patientId === Number(patientId)).length + 1
-    : null;
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -119,6 +123,45 @@ function NewRDVForm({ popup, allRdvs, onClose, onCreated }: {
     return () => document.removeEventListener('mousedown', handler);
   }, [onClose]);
 
+  // Recherche patient dans l'API
+  const searchPatient = async (val: string) => {
+    setSearch(val);
+    setSelectedPatient(null);
+    setNumSeance(null);
+    if (val.length < 2) { setSuggestions([]); setShowSugg(false); return; }
+    try {
+      const res = await fetch(`${API_URL}/patients?search=${encodeURIComponent(val)}`);
+      if (res.ok) {
+        const data = await res.json();
+        const list: PatientSuggestion[] = (data.data || data || []).slice(0, 6).map((p: any) => ({
+          id: p.id, nom: p.nom, prenom: p.prenom,
+        }));
+        setSuggestions(list);
+        setShowSugg(list.length > 0);
+      }
+    } catch { setSuggestions([]); }
+  };
+
+  // Sélection patient → charger nombre de séances
+  const selectPatient = async (p: PatientSuggestion) => {
+    setSelectedPatient(p);
+    setSearch(`${p.prenom} ${p.nom}`);
+    setSuggestions([]);
+    setShowSugg(false);
+    setLoadingSeance(true);
+    try {
+      const res = await fetch(`${API_URL}/seances?patientId=${p.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        const count = Array.isArray(data) ? data.length : (data.data?.length ?? 0);
+        setNumSeance(count + 1);
+      } else {
+        setNumSeance(1);
+      }
+    } catch { setNumSeance(1); }
+    setLoadingSeance(false);
+  };
+
   if (!popup.date) return null;
 
   const dateStr = popup.date.toLocaleDateString('fr-FR', {
@@ -126,7 +169,7 @@ function NewRDVForm({ popup, allRdvs, onClose, onCreated }: {
   });
 
   const handleSubmit = async () => {
-    if (!patientId) { setError('ID patient requis'); return; }
+    if (!selectedPatient) { setError('Sélectionnez un patient'); return; }
     if (heureDebut >= heureFin) { setError("L'heure de fin doit être après le début"); return; }
     setSaving(true);
     setError('');
@@ -138,7 +181,7 @@ function NewRDVForm({ popup, allRdvs, onClose, onCreated }: {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          patientId: Number(patientId),
+          patientId: selectedPatient.id,
           date_heure: dateHeure.toISOString(),
           motif,
           statut: 'planifié',
@@ -152,15 +195,13 @@ function NewRDVForm({ popup, allRdvs, onClose, onCreated }: {
         const errData = await res.json().catch(() => ({}));
         setError(errData?.message || 'Erreur lors de la création');
       }
-    } catch {
-      setError('Erreur réseau');
-    }
+    } catch { setError('Erreur réseau'); }
     setSaving(false);
   };
 
   const winH = typeof window !== 'undefined' ? window.innerHeight : 800;
   const winW = typeof window !== 'undefined' ? window.innerWidth  : 1200;
-  const top  = Math.min(popup.y, winH - 480);
+  const top  = Math.min(popup.y, winH - 520);
   const left = Math.min(popup.x, winW - 316);
 
   return (
@@ -171,9 +212,10 @@ function NewRDVForm({ popup, allRdvs, onClose, onCreated }: {
       exit={{ opacity: 0, scale: 0.93, y: -6 }}
       transition={{ duration: 0.14 }}
       style={{ position: 'fixed', zIndex: 1000, top, left, width: 300 }}
-      className="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
+      className="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-visible"
     >
-      <div className="bg-[#00509e] px-4 py-3 flex items-center justify-between">
+      {/* Header */}
+      <div className="bg-[#00509e] px-4 py-3 flex items-center justify-between rounded-t-2xl">
         <div>
           <p className="text-white text-[11px] opacity-75 capitalize mb-0.5">{dateStr}</p>
           <p className="text-white text-sm font-semibold">Nouveau rendez-vous</p>
@@ -183,25 +225,30 @@ function NewRDVForm({ popup, allRdvs, onClose, onCreated }: {
         </button>
       </div>
 
+      {/* Succès */}
       <AnimatePresence>
         {success && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="absolute inset-0 bg-white flex flex-col items-center justify-center gap-3 z-10"
+            className="absolute inset-0 bg-white rounded-2xl flex flex-col items-center justify-center gap-3 z-10"
           >
             <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
               <span className="material-symbols-outlined text-3xl text-emerald-600">check_circle</span>
             </div>
             <p className="text-sm font-semibold text-slate-700">RDV créé avec succès</p>
-            {numSeance && (
-              <p className="text-xs text-slate-400">Séance #{numSeance} · {machine}</p>
+            {numSeance && selectedPatient && (
+              <p className="text-xs text-slate-400">
+                {selectedPatient.prenom} {selectedPatient.nom} · Séance #{numSeance} · {machine}
+              </p>
             )}
           </motion.div>
         )}
       </AnimatePresence>
 
       <div className="p-4 space-y-3">
+
+        {/* Intervalle de temps */}
         <div>
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Intervalle de temps</label>
           <div className="flex items-center gap-2">
@@ -213,18 +260,67 @@ function NewRDVForm({ popup, allRdvs, onClose, onCreated }: {
           </div>
         </div>
 
-        <div>
-          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">ID Patient</label>
-          <div className="flex gap-2">
-            <input type="number" placeholder="ex: 4" value={patientId} onChange={e => setPatientId(e.target.value)}
-              className="flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400 text-slate-700 placeholder-slate-300" />
-            <div className={`flex-shrink-0 px-3 py-2 rounded-lg border text-sm font-bold transition-all ${
-              numSeance ? 'bg-blue-50 border-blue-200 text-[#00509e]' : 'bg-slate-50 border-slate-200 text-slate-300'
-            }`}>#{numSeance ?? '—'}</div>
+        {/* Recherche patient */}
+        <div className="relative">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">
+            Patient
+            {selectedPatient && <span className="text-emerald-500 normal-case font-normal ml-2">✓ Sélectionné</span>}
+          </label>
+          <div className="relative">
+            <span className="material-symbols-outlined text-slate-400 text-sm absolute left-2.5 top-1/2 -translate-y-1/2">search</span>
+            <input
+              type="text"
+              placeholder="Rechercher par nom..."
+              value={search}
+              onChange={e => searchPatient(e.target.value)}
+              className={`w-full text-sm border rounded-lg pl-8 pr-3 py-2 focus:outline-none transition-all text-slate-700 placeholder-slate-300 ${
+                selectedPatient ? 'border-emerald-400 bg-emerald-50/30' : 'border-slate-200 focus:border-blue-400'
+              }`}
+            />
           </div>
-          {numSeance && <p className="text-[10px] text-slate-400 mt-1 pl-1">Séance n°{numSeance} pour ce patient</p>}
+
+          {/* Suggestions dropdown */}
+          {showSugg && suggestions.length > 0 && (
+            <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+              {suggestions.map(p => (
+                <button key={p.id} onClick={() => selectPatient(p)}
+                  className="w-full px-3 py-2 text-left text-xs hover:bg-blue-50 flex items-center gap-2 transition-colors border-b border-slate-50 last:border-b-0">
+                  <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                    {p.prenom.charAt(0)}{p.nom.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800">{p.prenom} {p.nom}</p>
+                    <p className="text-slate-400">ID #{p.id}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Carte patient sélectionné + numéro séance */}
+          {selectedPatient && (
+            <div className="mt-2 flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg">
+              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[11px] font-bold flex-shrink-0">
+                {selectedPatient.prenom.charAt(0)}{selectedPatient.nom.charAt(0)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-slate-800 truncate">{selectedPatient.prenom} {selectedPatient.nom}</p>
+                <p className="text-[10px] text-slate-400">ID #{selectedPatient.id}</p>
+              </div>
+              <div className={`flex-shrink-0 text-center px-2 py-1 rounded-lg border transition-all ${
+                numSeance ? 'bg-blue-50 border-blue-200' : 'bg-slate-100 border-slate-200'
+              }`}>
+                <p className="text-[9px] text-slate-400">Séance</p>
+                {loadingSeance
+                  ? <span className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin block mx-auto" />
+                  : <p className="text-sm font-bold text-[#00509e]">#{numSeance ?? '—'}</p>
+                }
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* Motif */}
         <div>
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Motif</label>
           <select value={motif} onChange={e => setMotif(e.target.value)}
@@ -237,6 +333,7 @@ function NewRDVForm({ popup, allRdvs, onClose, onCreated }: {
           </select>
         </div>
 
+        {/* Machine toggle */}
         <div>
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Machine</label>
           <div className="grid grid-cols-3 gap-1.5">
@@ -703,7 +800,6 @@ export default function StitchRendezVousCalendrier() {
         {popup.visible && (
           <NewRDVForm
             popup={popup}
-            allRdvs={rdvs}
             onClose={() => setPopup(p => ({ ...p, visible: false }))}
             onCreated={loadRDV}
           />
