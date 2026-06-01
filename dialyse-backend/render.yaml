@@ -9,3 +9,7 @@ services:
         value: production
       - key: PORT
         value: 3001
+      - key: DIALYSE_SERVICE_ID
+        value: d604bde1-c9dd-4284-a690-0c5ed9be6a37
+      - key: DIALYSE_CHU_ID
+        value: 1e5bbbb7-fa10-4d59-8848-2d0ce96a9394

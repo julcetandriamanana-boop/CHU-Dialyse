@@ -1,53 +1,114 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { NotificationDB, fetchNotifications, fetchUnreadCount, markAsRead, markAllAsRead, playNotificationSound } from '@/src/services/notification.service';
+import {
+  NotificationDB,
+  fetchNotifications,
+  fetchUnreadCount,
+  markAsRead,
+  markAllAsRead,
+  deleteNotification,
+  pollExternalNotifications,
+  playNotificationSound,
+  urgenceColor,
+  urgenceLabel,
+} from '@/src/services/notification.service';
+
+const typeIcons: Record<string, string> = {
+  success: 'check_circle',
+  error:   'emergency',
+  warning: 'warning',
+  info:    'info',
+};
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1)  return 'À l\'instant';
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  return `${Math.floor(h / 24)}j`;
+}
 
 export default function NotificationBell() {
-  const router = useRouter();
+  const router                    = useRouter();
   const [notifications, setNotifications] = useState<NotificationDB[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
-  const [audioReady, setAudioReady] = useState(false);
+  const [unreadCount, setUnreadCount]     = useState(0);
+  const [isOpen, setIsOpen]               = useState(false);
+  const [audioReady, setAudioReady]       = useState(false);
+  const [isLoading, setIsLoading]         = useState(false);
+  const prevCountRef                      = useRef(0);
+  const dropdownRef                       = useRef<HTMLDivElement>(null);
 
   const loadNotifications = useCallback(async () => {
     try {
-      const data = await fetchNotifications();
-      const count = await fetchUnreadCount();
-      setNotifications(data.slice(0, 10));
-      if (count > unreadCount && audioReady) {
-        playNotificationSound();
+      const [data, count] = await Promise.all([
+        fetchNotifications(),
+        fetchUnreadCount(),
+      ]);
+
+      // ✅ Son si nouvelles notifications
+      if (count > prevCountRef.current && audioReady && prevCountRef.current > 0) {
+        const newest = data.find(n => !n.is_read);
+        playNotificationSound(newest?.urgence || 1);
       }
+      prevCountRef.current = count;
+
+      setNotifications(data.slice(0, 10));
       setUnreadCount(count);
     } catch {}
-  }, [unreadCount, audioReady]);
+  }, [audioReady]);
 
+  // ✅ Polling notifications internes toutes les 30s
   useEffect(() => {
     loadNotifications();
     const interval = setInterval(loadNotifications, 30000);
     return () => clearInterval(interval);
   }, [loadNotifications]);
 
-  // Activer l'audio au premier clic sur la cloche
+  // ✅ Polling notifications EXTERNES toutes les 60s
+  useEffect(() => {
+    const pollExternal = async () => {
+      const synced = await pollExternalNotifications();
+      if (synced > 0) {
+        await loadNotifications();
+      }
+    };
+    pollExternal();
+    const interval = setInterval(pollExternal, 60000);
+    return () => clearInterval(interval);
+  }, [loadNotifications]);
+
+  // Fermer dropdown si clic dehors
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
   const handleBellClick = () => {
     if (!audioReady) {
-      playNotificationSound(); // Débloque l'API Audio
       setAudioReady(true);
     }
-    setIsOpen(!isOpen);
+    setIsOpen(o => !o);
   };
 
   const handleClick = async (notif: NotificationDB) => {
     if (!notif.is_read) {
       await markAsRead(notif.id);
       setUnreadCount(c => Math.max(0, c - 1));
-      setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
+      setNotifications(prev =>
+        prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n)
+      );
     }
-    if (notif.link) {
-      router.push(notif.link);
-    }
+    if (notif.link) router.push(notif.link);
     setIsOpen(false);
   };
 
@@ -57,29 +118,48 @@ export default function NotificationBell() {
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
   };
 
-  const typeStyles: Record<string, string> = {
-    success: 'bg-emerald-100 text-emerald-600 border-emerald-200',
-    error: 'bg-red-100 text-red-600 border-red-200',
-    warning: 'bg-amber-100 text-amber-600 border-amber-200',
-    info: 'bg-blue-100 text-blue-600 border-blue-200',
+  const handleDelete = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    await deleteNotification(id);
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    const newCount = await fetchUnreadCount();
+    setUnreadCount(newCount);
   };
 
-  const typeIcons: Record<string, string> = {
-    success: 'check_circle',
-    error: 'error',
-    warning: 'warning',
-    info: 'info',
+  const handleRefreshExternal = async () => {
+    setIsLoading(true);
+    const synced = await pollExternalNotifications();
+    await loadNotifications();
+    setIsLoading(false);
   };
+
+  // Urgence max pour animation cloche
+  const maxUrgence = notifications
+    .filter(n => !n.is_read)
+    .reduce((max, n) => Math.max(max, n.urgence || 1), 0);
+
+  const bellColor = maxUrgence >= 5
+    ? 'text-red-500'
+    : maxUrgence >= 3
+    ? 'text-amber-500'
+    : 'text-slate-600';
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
+      {/* ── Cloche ── */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={handleBellClick}
+        animate={maxUrgence >= 4 ? { rotate: [0, -10, 10, -10, 10, 0] } : {}}
+        transition={{ repeat: maxUrgence >= 4 ? Infinity : 0, repeatDelay: 3, duration: 0.5 }}
         className="relative p-2.5 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-100"
       >
-        <span className="material-symbols-outlined text-slate-600 text-xl">notifications</span>
+        <span className={`material-symbols-outlined text-xl ${bellColor}`}>
+          notifications
+        </span>
+
+        {/* Badge compteur */}
         <AnimatePresence>
           {unreadCount > 0 && (
             <motion.span
@@ -87,61 +167,150 @@ export default function NotificationBell() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
-              className="absolute -top-1 -right-1 min-w-[20px] h-[20px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-lg"
+              className={`absolute -top-1 -right-1 min-w-[20px] h-[20px] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-lg ${
+                maxUrgence >= 5 ? 'bg-red-500' :
+                maxUrgence >= 3 ? 'bg-amber-500' :
+                'bg-blue-500'
+              }`}
             >
-              {unreadCount}
+              {unreadCount > 99 ? '99+' : unreadCount}
             </motion.span>
           )}
         </AnimatePresence>
       </motion.button>
 
+      {/* ── Dropdown ── */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            className="absolute right-0 top-14 w-80 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 overflow-hidden"
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 top-14 w-96 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 overflow-hidden"
           >
+            {/* Header dropdown */}
             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-50 to-white">
-              <h3 className="text-sm font-black text-slate-800">Notifications</h3>
-              {unreadCount > 0 && (
-                <button onClick={handleMarkAllRead} className="text-[10px] font-bold text-blue-600 hover:text-blue-700 cursor-pointer">
-                  Tout marquer lu
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-black text-slate-800">Notifications</h3>
+                {unreadCount > 0 && (
+                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full">
+                    {unreadCount} non lues
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Bouton refresh externe */}
+                <button
+                  onClick={handleRefreshExternal}
+                  disabled={isLoading}
+                  className="p-1 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                  title="Récupérer notifications externes"
+                >
+                  <span className={`material-symbols-outlined text-slate-400 text-sm ${isLoading ? 'animate-spin' : ''}`}>
+                    sync
+                  </span>
                 </button>
-              )}
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleMarkAllRead}
+                    className="text-[10px] font-bold text-blue-600 hover:text-blue-700 cursor-pointer whitespace-nowrap"
+                  >
+                    Tout lu
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="max-h-96 overflow-y-auto">
+            {/* Liste notifications */}
+            <div className="max-h-96 overflow-y-auto divide-y divide-slate-50">
               {notifications.length === 0 ? (
-                <div className="p-6 text-center text-slate-400">
-                  <span className="material-symbols-outlined text-3xl mb-2">notifications_off</span>
-                  <p className="text-xs">Aucune notification</p>
+                <div className="p-8 text-center text-slate-400">
+                  <span className="material-symbols-outlined text-4xl mb-2 block">notifications_off</span>
+                  <p className="text-xs font-medium">Aucune notification</p>
                 </div>
               ) : (
-                notifications.map(notif => (
+                notifications.map((notif) => (
                   <motion.div
                     key={notif.id}
                     whileHover={{ backgroundColor: '#f8fafc' }}
                     onClick={() => handleClick(notif)}
-                    className={`p-4 border-b border-slate-50 cursor-pointer transition-all flex items-start gap-3 ${notif.is_read ? 'opacity-60' : ''}`}
+                    className={`p-3 cursor-pointer transition-all flex items-start gap-3 group ${
+                      notif.is_read ? 'opacity-60' : 'bg-white'
+                    }`}
                   >
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${typeStyles[notif.type]}`}>
-                      <span className="material-symbols-outlined text-sm">{notif.icon || typeIcons[notif.type]}</span>
+                    {/* Icône avec couleur urgence */}
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                      notif.source === 'externe'
+                        ? urgenceColor(notif.urgence || 1)
+                        : notif.type === 'success' ? 'bg-emerald-100 text-emerald-600 border-emerald-200'
+                        : notif.type === 'error'   ? 'bg-red-100 text-red-600 border-red-200'
+                        : notif.type === 'warning' ? 'bg-amber-100 text-amber-600 border-amber-200'
+                        : 'bg-blue-100 text-blue-600 border-blue-200'
+                    }`}>
+                      <span className="material-symbols-outlined text-sm">
+                        {notif.icon || typeIcons[notif.type] || 'notifications'}
+                      </span>
                     </div>
+
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
+                      <div className="flex items-start justify-between gap-1">
                         <p className="text-xs font-bold text-slate-800 truncate">{notif.title}</p>
-                        {!notif.is_read && <span className="w-2 h-2 bg-blue-500 rounded-full shrink-0 ml-1" />}
+                        <div className="flex items-center gap-1 shrink-0">
+                          {!notif.is_read && (
+                            <span className="w-2 h-2 bg-blue-500 rounded-full" />
+                          )}
+                          {/* Bouton supprimer */}
+                          <button
+                            onClick={(e) => handleDelete(e, notif.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-red-100 rounded cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-red-400 text-xs">close</span>
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-[11px] text-slate-500 line-clamp-2">{notif.message}</p>
-                      <p className="text-[9px] text-slate-400 mt-1">
-                        {new Date(notif.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </p>
+
+                      <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">{notif.message}</p>
+
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-[9px] text-slate-400">{timeAgo(notif.created_at)}</p>
+
+                        {/* Badge urgence pour notifs externes */}
+                        {notif.source === 'externe' && notif.urgence && notif.urgence >= 2 && (
+                          <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full border ${urgenceColor(notif.urgence)}`}>
+                            {urgenceLabel(notif.urgence)}
+                          </span>
+                        )}
+
+                        {/* Badge source externe */}
+                        {notif.source === 'externe' && (
+                          <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                            EXTERNE
+                          </span>
+                        )}
+
+                        {/* Nom expéditeur */}
+                        {notif.emitter_name && (
+                          <span className="text-[9px] text-slate-400 truncate">
+                            {notif.emitter_name}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </motion.div>
                 ))
               )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-3 border-t border-slate-100 bg-slate-50/50">
+              <button
+                onClick={() => { router.push('/notifications'); setIsOpen(false); }}
+                className="w-full py-2 text-xs font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">open_in_new</span>
+                Voir toutes les notifications
+              </button>
             </div>
           </motion.div>
         )}
