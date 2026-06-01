@@ -4,15 +4,19 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
-  // Configuration CORS
+
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3002', 'https://chu-dialyse-frontend.onrender.com'],
-    methods: 'GET,POST,PUT,DELETE,PATCH',
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:3002',
+      'https://chu-dialyse-frontend.onrender.com',
+      'https://chu-dialyse.onrender.com',
+    ],
+    methods: 'GET,POST,PUT,DELETE,PATCH,OPTIONS',
     credentials: true,
   });
 
-  // Configuration Swagger
   const config = new DocumentBuilder()
     .setTitle('CHU Andrainjato - API Dialyse')
     .setDescription('Documentation complète de l\'API du service de dialyse')
@@ -22,7 +26,9 @@ async function bootstrap() {
     .addTag('Rendez-vous', 'Gestion des rendez-vous')
     .addTag('Demandes d\'avis', 'Gestion des demandes d\'avis')
     .addTag('Notifications', 'Système de notifications')
-    .addServer('https://chu-dialyse.onrender.com', 'Serveur Render').addServer('http://localhost:3001', 'Serveur local')
+    // ✅ LOCAL EN PREMIER — Swagger sélectionne le premier par défaut
+    .addServer('http://localhost:3001', 'Serveur local (développement)')
+    .addServer('https://chu-dialyse.onrender.com', 'Serveur Render (production)')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
