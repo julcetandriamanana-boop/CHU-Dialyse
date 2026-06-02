@@ -552,7 +552,7 @@ export default function StitchDashboard() {
     try {
       await fetch(`${API_URL}/rendezvous/${p.id}/demarrer`, { method: 'POST' });
       await loadPatients();
-      window.location.href = '/dialyses/nouvelle-seance';
+      // ✅ Reste sur le dashboard — pas de redirection
     } finally { setActionLoading(null); }
   }, [loadPatients]);
 
