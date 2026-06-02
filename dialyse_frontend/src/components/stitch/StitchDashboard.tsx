@@ -1,9 +1,11 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const DUREE_SEANCE_MS = 4 * 60 * 60 * 1000; // 4 heures en ms
 
 interface PatientSeance {
   id: number;
@@ -11,36 +13,93 @@ interface PatientSeance {
   prenom: string;
   initiales: string;
   poste: string;
-  debut: string;
+  debut: string;         // heure affichée du RDV "HH:MM"
+  debutTimestamp: number; // timestamp UTC du RDV
   progression: number;
   statut: 'en_cours' | 'en_attente' | 'termine';
   couleur: string;
   patientId: number;
   seanceNum: number;
+  alerte: 'retard' | 'bientot' | 'normal';
 }
 
 type ModalType = 'medecin' | 'paramedical' | 'dossier' | null;
 
-/* ── Couleurs avatar par index ── */
 const AVATAR_COLORS = [
-  { bg: 'bg-blue-100',   text: 'text-blue-700'   },
-  { bg: 'bg-emerald-100',text: 'text-emerald-700' },
-  { bg: 'bg-amber-100',  text: 'text-amber-700'   },
-  { bg: 'bg-purple-100', text: 'text-purple-700'  },
-  { bg: 'bg-rose-100',   text: 'text-rose-700'    },
-  { bg: 'bg-cyan-100',   text: 'text-cyan-700'    },
+  { bg: 'bg-blue-100',    text: 'text-blue-700'    },
+  { bg: 'bg-emerald-100', text: 'text-emerald-700'  },
+  { bg: 'bg-amber-100',   text: 'text-amber-700'    },
+  { bg: 'bg-purple-100',  text: 'text-purple-700'   },
+  { bg: 'bg-rose-100',    text: 'text-rose-700'     },
+  { bg: 'bg-cyan-100',    text: 'text-cyan-700'     },
 ];
+
+/* ══════════════════════════════════════════════════════════
+   LOGIQUE 1 — Calcul progression automatique
+   Basé sur heureDebut (localStorage) et durée standard 4h
+══════════════════════════════════════════════════════════ */
+function calculerProgression(
+  statut: PatientSeance['statut'],
+  heureDebutLS: number | null,
+): number {
+  if (statut === 'termine')    return 100;
+  if (statut === 'en_attente') return 0;
+  if (statut === 'en_cours') {
+    if (!heureDebutLS) return 5; // démarré mais pas encore de timestamp → 5%
+    const elapsed = Date.now() - heureDebutLS;
+    const pct = Math.round((elapsed / DUREE_SEANCE_MS) * 100);
+    // Plafond à 95% — seul le bouton "Fait ✓" met à 100%
+    return Math.min(95, Math.max(5, pct));
+  }
+  return 0;
+}
+
+/* ══════════════════════════════════════════════════════════
+   LOGIQUE 3 — Calcul alerte visuelle
+   En retard  : heure RDV dépassée + statut en_attente
+   Bientôt    : RDV dans les 30 prochaines minutes
+   Normal     : tout le reste
+══════════════════════════════════════════════════════════ */
+function calculerAlerte(
+  debutTimestamp: number,
+  statut: PatientSeance['statut'],
+): PatientSeance['alerte'] {
+  if (statut === 'termine') return 'normal';
+  const maintenant = Date.now();
+  const diffMs = debutTimestamp - maintenant;
+  const diffMin = diffMs / 60000;
+
+  if (statut === 'en_attente' && diffMs < 0) return 'retard';   // heure dépassée
+  if (diffMin >= 0 && diffMin <= 30)          return 'bientot';  // dans 30 min
+  return 'normal';
+}
 
 /* ── Badge statut ── */
 function StatutBadge({ statut }: { statut: PatientSeance['statut'] }) {
-  if (statut === 'termine')   return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Terminé</span>;
-  if (statut === 'en_cours')  return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">En cours</span>;
-  return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">En attente</span>;
+  if (statut === 'termine')  return (
+    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+      Terminé
+    </span>
+  );
+  if (statut === 'en_cours') return (
+    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+      En cours
+    </span>
+  );
+  return (
+    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+      En attente
+    </span>
+  );
 }
 
 /* ── Barre de progression ── */
 function ProgressBar({ value, statut }: { value: number; statut: PatientSeance['statut'] }) {
-  const color = statut === 'termine' ? 'bg-emerald-500' : statut === 'en_cours' ? 'bg-blue-500' : 'bg-slate-300';
+  const color =
+    statut === 'termine'  ? 'bg-emerald-500' :
+    statut === 'en_cours' ? 'bg-blue-500'    :
+    'bg-slate-300';
+
   return (
     <div className="w-24">
       <div className="flex justify-between text-[9px] mb-1">
@@ -48,9 +107,8 @@ function ProgressBar({ value, statut }: { value: number; statut: PatientSeance['
       </div>
       <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
         <motion.div
-          initial={{ width: 0 }}
           animate={{ width: `${value}%` }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
           className={`h-full rounded-full ${color}`}
         />
       </div>
@@ -70,20 +128,34 @@ function SectionModal({
   if (!open || !patient || !type) return null;
 
   const config = {
-    medecin:     { label: 'Section Médecin',    icon: 'stethoscope',       from: 'from-blue-50',    to: 'to-blue-100',    iconBg: 'bg-blue-600',    accent: 'blue'    },
-    paramedical: { label: 'Section Paramédical', icon: 'medical_services',  from: 'from-emerald-50', to: 'to-emerald-100', iconBg: 'bg-emerald-600', accent: 'emerald' },
-    dossier:     { label: 'Dossier Patient',     icon: 'folder_open',       from: 'from-purple-50',  to: 'to-purple-100',  iconBg: 'bg-purple-600',  accent: 'purple'  },
+    medecin:     { label: 'Section Médecin',     icon: 'stethoscope',      from: 'from-blue-50',    to: 'to-blue-100',    iconBg: 'bg-blue-600'    },
+    paramedical: { label: 'Section Paramédical',  icon: 'medical_services', from: 'from-emerald-50', to: 'to-emerald-100', iconBg: 'bg-emerald-600' },
+    dossier:     { label: 'Dossier Patient',      icon: 'folder_open',      from: 'from-purple-50',  to: 'to-purple-100',  iconBg: 'bg-purple-600'  },
   }[type];
 
   const medecinCards = [
-    { icon: 'vaccines',                 title: 'Vérification Kit',          desc: 'Ordonnance kit hémodialyse — 1ère séance et suivantes', btn: 'Ouvrir',   href: `/dialyses/verification-kit?patientId=${patient.patientId}&seanceNum=${patient.seanceNum}`,   color: 'blue' },
-    { icon: 'settings_input_component', title: 'Conductivité & Paramètres', desc: 'Paramètres dialysat, UF, débits et prescription séance', btn: 'Accéder', href: `/dialyses/conductivite-params?patientId=${patient.patientId}&seanceNum=${patient.seanceNum}`, color: 'blue' },
+    {
+      icon: 'vaccines',
+      title: 'Vérification Kit',
+      desc: 'Ordonnance kit hémodialyse — 1ère séance et suivantes',
+      btn: 'Ouvrir',
+      href: `/dialyses/verification-kit?patientId=${patient.patientId}&seanceNum=${patient.seanceNum}`,
+      color: 'blue',
+    },
+    {
+      icon: 'settings_input_component',
+      title: 'Conductivité & Paramètres',
+      desc: 'Paramètres dialysat, UF, débits et prescription séance',
+      btn: 'Accéder',
+      href: `/dialyses/conductivite-params?patientId=${patient.patientId}&seanceNum=${patient.seanceNum}`,
+      color: 'blue',
+    },
   ];
 
   const paraCards = [
-    { icon: 'monitor_heart', title: 'Constantes',   desc: 'Relevé des constantes vitales',   btn: 'Saisir',  href: '/dialyses/fiche-surveillance', color: 'emerald' },
-    { icon: 'visibility',    title: 'Surveillance', desc: 'Fiche de surveillance dialyse',   btn: 'Ouvrir',  href: '/dialyses/fiche-surveillance', color: 'emerald' },
-    { icon: 'healing',       title: 'Soins',        desc: 'Soins infirmiers et pansements',  btn: 'Noter',   href: '#',                            color: 'emerald' },
+    { icon: 'monitor_heart', title: 'Constantes',   desc: 'Relevé des constantes vitales',  btn: 'Saisir', href: '/dialyses/fiche-surveillance', color: 'emerald' },
+    { icon: 'visibility',    title: 'Surveillance', desc: 'Fiche de surveillance dialyse',  btn: 'Ouvrir', href: '/dialyses/fiche-surveillance', color: 'emerald' },
+    { icon: 'healing',       title: 'Soins',        desc: 'Soins infirmiers et pansements', btn: 'Noter',  href: '#',                            color: 'emerald' },
   ];
 
   const dossierMeta = [
@@ -106,7 +178,10 @@ function SectionModal({
   const renderCards = (cards: typeof medecinCards, accentColor: string) => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       {cards.map((c) => (
-        <div key={c.title} className={`p-4 bg-${accentColor}-50 rounded-xl border border-${accentColor}-100 hover:shadow-md transition-all cursor-pointer`}>
+        <div
+          key={c.title}
+          className={`p-4 bg-${accentColor}-50 rounded-xl border border-${accentColor}-100 hover:shadow-md transition-all cursor-pointer`}
+        >
           <span className={`material-symbols-outlined text-${accentColor}-600 text-2xl mb-2`}>{c.icon}</span>
           <p className={`text-sm font-bold text-${accentColor}-800 mb-1`}>{c.title}</p>
           <p className={`text-xs text-${accentColor}-500 mb-3`}>{c.desc}</p>
@@ -138,7 +213,6 @@ function SectionModal({
             onClick={(e) => e.stopPropagation()}
             className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[82vh] overflow-y-auto"
           >
-            {/* Header modal */}
             <div className={`p-5 rounded-t-2xl flex items-center justify-between bg-gradient-to-r ${config.from} ${config.to}`}>
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl ${config.iconBg} flex items-center justify-center shadow-sm`}>
@@ -146,7 +220,9 @@ function SectionModal({
                 </div>
                 <div>
                   <h2 className="text-base font-black text-slate-800">{config.label}</h2>
-                  <p className="text-xs text-slate-500">{patient.prenom} {patient.nom} · Séance {patient.seanceNum} · Poste {patient.poste}</p>
+                  <p className="text-xs text-slate-500">
+                    {patient.prenom} {patient.nom} · Séance {patient.seanceNum} · Poste {patient.poste}
+                  </p>
                 </div>
               </div>
               <button onClick={onClose} className="p-1.5 hover:bg-white/50 rounded-xl transition-all cursor-pointer">
@@ -154,7 +230,6 @@ function SectionModal({
               </button>
             </div>
 
-            {/* Contenu modal */}
             <div className="p-5">
               {type === 'medecin'     && renderCards(medecinCards, 'blue')}
               {type === 'paramedical' && renderCards(paraCards, 'emerald')}
@@ -179,85 +254,157 @@ function SectionModal({
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════ */
-/*  COMPOSANT PRINCIPAL                                                */
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════
+   COMPOSANT PRINCIPAL
+══════════════════════════════════════════════════════════ */
 export default function StitchDashboard() {
-  const [patients, setPatients] = useState<PatientSeance[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState<ModalType>(null);
+  const router  = useRouter();
+  const [patients, setPatients]               = useState<PatientSeance[]>([]);
+  const [loading, setLoading]                 = useState(true);
+  const [modalOpen, setModalOpen]             = useState<ModalType>(null);
   const [patientSelectionne, setPatientSelectionne] = useState<PatientSeance | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    loadPatients();
-    const interval = setInterval(loadPatients, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-    const loadPatients = async () => {
+  /* ── Chargement + recalcul toutes les 30s ── */
+  const loadPatients = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/rendezvous/aujourdhui`);
-      if (res.ok) {
-        const rdvs = await res.json();
-        const now = new Date();
-        const aujourdHui = now.toISOString().split('T')[0];
-        const rdvAujourdhui = (rdvs || []).filter((rdv: any) => {
-          if (!rdv.patient) return false;
-          const dateRdv = new Date(rdv.date_heure).toISOString().split('T')[0];
-          return dateRdv === aujourdHui;
-        });
-        const stats = JSON.parse(localStorage.getItem('chu_seances_stats') || '{}');
-        const patientSeances = JSON.parse(localStorage.getItem('chu_seances_patient') || '{}');
-        const list: PatientSeance[] = rdvAujourdhui.map((rdv: any, i: number) => {
-          const infos = rdv.soso_kevitra_malalaka || '';
-          const machine = infos.includes('|') ? infos.split('|')[1]?.trim() || 'N/A' : infos || 'N/A';
-          const date = new Date(rdv.date_heure);
-          const heure = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-          const saved = stats[`rdv_${rdv.id}`];
-          const couleurs = ['blue','orange','purple','emerald','pink'];
-          return {
-            id: rdv.id, nom: rdv.patient.nom, prenom: rdv.patient.prenom,
-            initiales: `${rdv.patient.prenom.charAt(0)}${rdv.patient.nom.charAt(0)}`,
-            poste: machine, debut: heure,
-            progression: saved?.statut === 'termine' ? 100 : saved?.progression || 0,
-            statut: saved?.statut || 'en_attente',
-            couleur: couleurs[i % couleurs.length],
-            patientId: rdv.patient.id,
-            seanceNum: patientSeances[String(rdv.patient.id)]?.seanceNum || 1,
-          };
-        });
-        setPatients(list);
-      }
-    } catch (err) { console.error(err); }
-    setLoading(false);
-  };
+      if (!res.ok) { setPatients([]); return; }
 
-  const total    = patients.length;
-  const fait     = patients.filter(p => p.statut === 'termine').length;
-  const enCours  = patients.filter(p => p.statut === 'en_cours').length;
-  const enAttente = patients.filter(p => p.statut === 'en_attente').length;
-  const pct      = total > 0 ? Math.round((fait / total) * 100) : 0;
+      const rdvs = await res.json();
 
-  const handleDemarrer = (p: PatientSeance) => {
+      // Garder uniquement les RDV avec patient valide
+      const rdvValides = (rdvs || []).filter((rdv: any) => !!rdv.patient);
+
+      // Récupérer les stats localStorage
+      const stats         = JSON.parse(localStorage.getItem('chu_seances_stats')   || '{}');
+      const patientSeances = JSON.parse(localStorage.getItem('chu_seances_patient') || '{}');
+
+      const list: PatientSeance[] = rdvValides.map((rdv: any, i: number) => {
+        const infos   = rdv.soso_kevitra_malalaka || '';
+        const machine = infos.includes('|') ? infos.split('|')[1]?.trim() || 'N/A' : infos || 'N/A';
+
+        const dateRdv     = new Date(rdv.date_heure);
+        const heure       = `${String(dateRdv.getHours()).padStart(2,'0')}:${String(dateRdv.getMinutes()).padStart(2,'0')}`;
+        const timestamp   = dateRdv.getTime();
+
+        const saved       = stats[`rdv_${rdv.id}`] || null;
+        const statutLS    = saved?.statut as PatientSeance['statut'] | undefined;
+        const heureDebutLS = saved?.heureDebut as number | null ?? null;
+
+        const statut: PatientSeance['statut'] = statutLS || 'en_attente';
+
+        // ✅ LOGIQUE 1 — Progression automatique recalculée à chaque appel
+        const progression = calculerProgression(statut, heureDebutLS);
+
+        // ✅ LOGIQUE 3 — Alerte visuelle calculée dynamiquement
+        const alerte = calculerAlerte(timestamp, statut);
+
+        const couleurs = ['blue', 'orange', 'purple', 'emerald', 'pink'];
+
+        return {
+          id:             rdv.id,
+          nom:            rdv.patient.nom,
+          prenom:         rdv.patient.prenom,
+          initiales:      `${rdv.patient.prenom.charAt(0)}${rdv.patient.nom.charAt(0)}`,
+          poste:          machine,
+          debut:          heure,
+          debutTimestamp: timestamp,
+          progression,
+          statut,
+          alerte,
+          couleur:        couleurs[i % couleurs.length],
+          patientId:      rdv.patient.id,
+          seanceNum:      patientSeances[String(rdv.patient.id)]?.seanceNum || 1,
+        };
+      });
+
+      // Tri par heure croissante (déjà fait côté backend mais on sécurise)
+      list.sort((a, b) => a.debutTimestamp - b.debutTimestamp);
+
+      setPatients(list);
+    } catch (err) {
+      console.error('Erreur chargement dialyses du jour :', err);
+      setPatients([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /* ── Refresh toutes les 30s ── */
+  useEffect(() => {
+    loadPatients();
+    intervalRef.current = setInterval(loadPatients, 30000);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [loadPatients]);
+
+  /* ── SSE — mise à jour temps réel si nouveau RDV ── */
+  useEffect(() => {
+    let es: EventSource | null = null;
+
+    const connect = () => {
+      try {
+        es = new EventSource(`${API_URL}/notifications/stream`);
+        es.addEventListener('notification', () => {
+          // Une notification = potentiellement un nouveau RDV → reload
+          loadPatients();
+        });
+        es.onerror = () => {
+          es?.close();
+          setTimeout(connect, 5000);
+        };
+      } catch {}
+    };
+
+    connect();
+    return () => es?.close();
+  }, [loadPatients]);
+
+  /* ── Actions ── */
+  const handleDemarrer = useCallback((p: PatientSeance) => {
     const stats = JSON.parse(localStorage.getItem('chu_seances_stats') || '{}');
-    stats[`rdv_${p.id}`] = { statut: 'en_cours', progression: 0, heureDebut: Date.now() };
+    stats[`rdv_${p.id}`] = {
+      statut:     'en_cours',
+      progression: 0,
+      heureDebut:  Date.now(), // timestamp réel de démarrage
+    };
     localStorage.setItem('chu_seances_stats', JSON.stringify(stats));
+    // Recalcul immédiat sans attendre le prochain interval
+    loadPatients();
     window.location.href = '/dialyses/nouvelle-seance';
-  };
+  }, [loadPatients]);
 
-  const handleMarquerFait = (p: PatientSeance) => {
+  const handleMarquerFait = useCallback((p: PatientSeance) => {
     const stats = JSON.parse(localStorage.getItem('chu_seances_stats') || '{}');
-    stats[`rdv_${p.id}`] = { ...stats[`rdv_${p.id}`], statut: 'termine', progression: 100 };
+    stats[`rdv_${p.id}`] = {
+      ...stats[`rdv_${p.id}`],
+      statut:      'termine',
+      progression: 100,
+    };
     localStorage.setItem('chu_seances_stats', JSON.stringify(stats));
     loadPatients();
-  };
+  }, [loadPatients]);
 
-  const openModal = (type: ModalType, patient: PatientSeance) => {
+  /* ── LOGIQUE 2 — Prendre RDV ── */
+  const handlePrendreRdv = useCallback((p: PatientSeance) => {
+    router.push(`/rendez-vous?patientId=${p.patientId}`);
+  }, [router]);
+
+  const openModal = useCallback((type: ModalType, patient: PatientSeance) => {
     setPatientSelectionne(patient);
     setModalOpen(type);
-  };
+  }, []);
 
-  /* ── KPI cards data ── */
+  /* ── KPI ── */
+  const total     = patients.length;
+  const fait      = patients.filter(p => p.statut === 'termine').length;
+  const enCours   = patients.filter(p => p.statut === 'en_cours').length;
+  const enAttente = patients.filter(p => p.statut === 'en_attente').length;
+  const enRetard  = patients.filter(p => p.alerte === 'retard').length;
+  const pct       = total > 0 ? Math.round((fait / total) * 100) : 0;
+
   const kpiCards = [
     {
       label: 'Total du jour', value: total, sub: `${fait}/${total} terminée(s)`,
@@ -275,9 +422,10 @@ export default function StitchDashboard() {
       barColor: 'bg-emerald-500', barPct: pct, valueColor: 'text-emerald-600',
     },
     {
-      label: 'Alertes critiques', value: 2, sub: 'Intervention requise',
+      label: 'En retard', value: enRetard, sub: enRetard > 0 ? 'Intervention requise' : 'Aucun retard',
       iconName: 'warning', iconBg: 'bg-red-100', iconColor: 'text-red-600',
-      barColor: 'bg-red-500', barPct: 17, valueColor: 'text-red-600',
+      barColor: 'bg-red-500', barPct: total > 0 ? Math.round((enRetard / total) * 100) : 0,
+      valueColor: enRetard > 0 ? 'text-red-600' : 'text-slate-400',
     },
   ];
 
@@ -291,9 +439,7 @@ export default function StitchDashboard() {
           className="flex items-center justify-between"
         >
           <div>
-            <h1 className="text-2xl font-black font-manrope text-slate-800">
-              Tableau de Bord
-            </h1>
+            <h1 className="text-2xl font-black font-manrope text-slate-800">Tableau de Bord</h1>
             <p className="text-sm text-slate-400 mt-0.5">Service de dialyse · Temps réel</p>
           </div>
           <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-full border border-blue-100 flex items-center gap-1.5">
@@ -340,7 +486,6 @@ export default function StitchDashboard() {
           transition={{ delay: 0.3 }}
           className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden"
         >
-          {/* Header tableau */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
             <h2 className="text-base font-bold font-manrope text-slate-800">Dialyses du jour</h2>
             <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold border border-blue-100">
@@ -348,7 +493,6 @@ export default function StitchDashboard() {
             </span>
           </div>
 
-          {/* Contenu tableau */}
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full" />
@@ -356,7 +500,7 @@ export default function StitchDashboard() {
           ) : patients.length === 0 ? (
             <div className="text-center py-12 text-slate-400">
               <span className="material-symbols-outlined text-5xl mb-3 block text-slate-300">event_busy</span>
-              <p className="text-sm font-medium">Aucun rendez-vous aujourd&apos;hui</p>
+              <p className="text-sm font-medium">Aucune séance de dialyse programmée aujourd&apos;hui.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -373,14 +517,20 @@ export default function StitchDashboard() {
                 <tbody className="divide-y divide-slate-50">
                   {patients.map((p, index) => {
                     const ac = AVATAR_COLORS[index % AVATAR_COLORS.length];
-                    const isAlerte = p.statut === 'en_cours' && p.progression < 20 && index === 3; // simuler alerte
+
+                    // ✅ LOGIQUE 3 — Couleur de fond selon alerte
+                    const rowBg =
+                      p.alerte === 'retard'  ? 'bg-red-50/50' :
+                      p.alerte === 'bientot' ? 'bg-amber-50/40' :
+                      '';
+
                     return (
                       <motion.tr
                         key={p.id}
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.04 }}
-                        className={`group transition-colors hover:bg-slate-50/80 ${isAlerte ? 'bg-red-50/40' : ''}`}
+                        className={`group transition-colors hover:bg-slate-50/80 ${rowBg}`}
                       >
                         {/* Patient */}
                         <td className="px-4 py-3">
@@ -389,7 +539,20 @@ export default function StitchDashboard() {
                               {p.initiales}
                             </div>
                             <div>
-                              <p className="text-xs font-bold text-slate-800">{p.prenom} {p.nom}</p>
+                              <div className="flex items-center gap-1.5">
+                                <p className="text-xs font-bold text-slate-800">{p.prenom} {p.nom}</p>
+                                {/* Badge alerte */}
+                                {p.alerte === 'retard' && (
+                                  <span className="px-1.5 py-0.5 rounded-full text-[8px] font-black bg-red-100 text-red-600 border border-red-200">
+                                    EN RETARD
+                                  </span>
+                                )}
+                                {p.alerte === 'bientot' && (
+                                  <span className="px-1.5 py-0.5 rounded-full text-[8px] font-black bg-amber-100 text-amber-600 border border-amber-200">
+                                    BIENTÔT
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-[9px] text-slate-400">Séance {p.seanceNum}</p>
                             </div>
                           </div>
@@ -402,15 +565,17 @@ export default function StitchDashboard() {
 
                         {/* Début */}
                         <td className="px-4 py-3">
-                          <span className="text-xs text-slate-500 font-medium">{p.debut}</span>
+                          <span className={`text-xs font-medium ${p.alerte === 'retard' ? 'text-red-500 font-bold' : 'text-slate-500'}`}>
+                            {p.debut}
+                          </span>
                         </td>
 
-                        {/* Progression */}
+                        {/* ✅ Progression — recalculée automatiquement */}
                         <td className="px-4 py-3">
                           <ProgressBar value={p.progression} statut={p.statut} />
                         </td>
 
-                        {/* Action */}
+                        {/* ✅ Action — avec bouton Prendre RDV si terminé */}
                         <td className="px-4 py-3">
                           {p.statut === 'en_attente' ? (
                             <button
@@ -427,9 +592,20 @@ export default function StitchDashboard() {
                               Fait ✓
                             </button>
                           ) : (
-                            <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
-                              <span className="material-symbols-outlined text-sm">check_circle</span> Terminé
-                            </span>
+                            /* ✅ LOGIQUE 2 — Prendre RDV quand terminé */
+                            <div className="flex flex-col gap-1">
+                              <button
+                                onClick={() => handlePrendreRdv(p)}
+                                className="px-3 py-1.5 bg-violet-600 text-white text-[10px] font-bold rounded-lg hover:bg-violet-700 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1"
+                              >
+                                <span className="material-symbols-outlined text-[11px]">event_available</span>
+                                Prendre RDV
+                              </button>
+                              <span className="text-[9px] font-bold text-emerald-600 flex items-center gap-0.5">
+                                <span className="material-symbols-outlined text-[10px]">check_circle</span>
+                                Terminé
+                              </span>
+                            </div>
                           )}
                         </td>
 
@@ -438,7 +614,7 @@ export default function StitchDashboard() {
                           <StatutBadge statut={p.statut} />
                         </td>
 
-                        {/* ── Médecin ── */}
+                        {/* Médecin */}
                         <td className="px-4 py-3">
                           <button
                             onClick={() => openModal('medecin', p)}
@@ -449,7 +625,7 @@ export default function StitchDashboard() {
                           </button>
                         </td>
 
-                        {/* ── Paramédical ── */}
+                        {/* Paramédical */}
                         <td className="px-4 py-3">
                           <button
                             onClick={() => openModal('paramedical', p)}
@@ -460,7 +636,7 @@ export default function StitchDashboard() {
                           </button>
                         </td>
 
-                        {/* ── Dossier ── */}
+                        {/* Dossier */}
                         <td className="px-4 py-3">
                           <button
                             onClick={() => openModal('dossier', p)}
@@ -480,7 +656,7 @@ export default function StitchDashboard() {
         </motion.div>
       </div>
 
-      {/* ── Modal ── */}
+      {/* Modal */}
       <SectionModal
         open={modalOpen !== null}
         type={modalOpen}
