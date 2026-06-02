@@ -1,0 +1,46 @@
+]633;E;{   echo "=== DATABASE CONFIG ==="\x3b   cat /d/projectCHU/dialyse-backend/src/config/database.config.ts\x3b   echo\x3b   echo "=== ENTITIES ==="\x3b   grep -Rni "@Entity" /d/projectCHU/dialyse-backend/src/entities\x3b   echo\x3b   echo "=== SERVICE REFERENCES BACKEND ==="\x3b   grep -Rni "service_id\\|serviceId\\|service_uuid\\|serviceUuid\\|DIALYSE_SERVICE_ID" /d/projectCHU/dialyse-backend/src || true\x3b   echo\x3b   echo "=== SERVICE REFERENCES FRONTEND ==="\x3b   grep -Rni "service_id\\|serviceId\\|service_uuid\\|serviceUuid\\|DIALYSE_SERVICE_ID" /d/projectCHU/dialyse_frontend/src || true\x3b   echo\x3b   echo "=== BACKEND RENDER YAML ==="\x3b   cat /d/projectCHU/dialyse-backend/render.yaml\x3b } > /d/projectCHU/audit_service_dialyse.txt;f4543fca-e22a-48db-ad28-36ff3a4d6979]633;C=== DATABASE CONFIG ===
+import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+
+// URL de connexion PostgreSQL (Render)
+const POSTGRES_URL = 'postgresql://dialyse_user:RxipD4kAINXvnDLymGdJramt46oDYbOe@dpg-d87e970g4nts73dqv2i0-a.ohio-postgres.render.com/dialyse';
+
+export const databaseConfig: TypeOrmModuleOptions = {
+  type: 'postgres',
+  url: POSTGRES_URL,
+  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+  synchronize: true,
+  logging: true,
+  ssl: { rejectUnauthorized: false },
+};
+
+=== ENTITIES ===
+/d/projectCHU/dialyse-backend/src/entities/demande-avis.entity.ts:5:@Entity({ name: 'demande_avis' })
+/d/projectCHU/dialyse-backend/src/entities/medecin.entity.ts:6:@Entity({ name: 'medecin' })
+/d/projectCHU/dialyse-backend/src/entities/notification.entity.ts:3:@Entity({ name: 'notifications' })
+/d/projectCHU/dialyse-backend/src/entities/patient.entity.ts:8:@Entity('patients') // Nom de la table dans la base de données
+/d/projectCHU/dialyse-backend/src/entities/prescription-history.entity.ts:4:@Entity({ name: 'prescription_status_history' })
+/d/projectCHU/dialyse-backend/src/entities/prescription.entity.ts:5:@Entity({ name: 'prescription' })
+/d/projectCHU/dialyse-backend/src/entities/rendez-vous.entity.ts:5:@Entity({ name: 'rendez_vous' })
+/d/projectCHU/dialyse-backend/src/entities/seance-hemodialyse.entity.ts:4:@Entity({ name: 'seance_hemodialyse' })
+/d/projectCHU/dialyse-backend/src/entities/user.entity.ts:10:@Entity({ name: 'users' })
+
+=== SERVICE REFERENCES BACKEND ===
+/d/projectCHU/dialyse-backend/src/config/service-id.config.ts:1:export const DIALYSE_SERVICE_ID =
+/d/projectCHU/dialyse-backend/src/config/service-id.config.ts:2:  process.env.DIALYSE_SERVICE_ID || 'd604bde1-c9dd-4284-a690-0c5ed9be6a37';
+
+=== SERVICE REFERENCES FRONTEND ===
+/d/projectCHU/dialyse_frontend/src/config/service-id.ts:1:export const DIALYSE_SERVICE_ID =
+/d/projectCHU/dialyse_frontend/src/config/service-id.ts:2:  process.env.NEXT_PUBLIC_DIALYSE_SERVICE_ID || 'd604bde1-c9dd-4284-a690-0c5ed9be6a37';
+
+=== BACKEND RENDER YAML ===
+services:
+  - type: web
+    name: chu-dialyse-backend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001

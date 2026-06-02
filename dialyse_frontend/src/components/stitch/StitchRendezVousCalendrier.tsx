@@ -1,7 +1,8 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -93,26 +94,25 @@ function formatRDV(rdv: RDV): RDVFormatted | null {
 
 interface PatientSuggestion { id: number; nom: string; prenom: string; }
 
-function NewRDVForm({ popup, onClose, onCreated }: {
+function NewRDVForm({ popup, onClose, onCreated, preselectedPatientId }: {
   popup: PopupState;
   onClose: () => void;
   onCreated: () => void;
+  preselectedPatientId?: number | null;
 }) {
-  const [heureDebut, setHeureDebut]         = useState(popup.heureDebut);
-  const [heureFin, setHeureFin]             = useState(popup.heureFin);
-  const [motif, setMotif]                   = useState('Séance hémodialyse');
-  const [machine, setMachine]               = useState('Machine 1');
-  const [saving, setSaving]                 = useState(false);
-  const [error, setError]                   = useState('');
-  const [success, setSuccess]               = useState(false);
-  // Recherche patient
-  const [search, setSearch]                 = useState('');
-  const [suggestions, setSuggestions]       = useState<PatientSuggestion[]>([]);
-  const [showSugg, setShowSugg]             = useState(false);
+  const [heureDebut, setHeureDebut]           = useState(popup.heureDebut);
+  const [heureFin, setHeureFin]               = useState(popup.heureFin);
+  const [motif, setMotif]                     = useState('Séance hémodialyse');
+  const [machine, setMachine]                 = useState('Machine 1');
+  const [saving, setSaving]                   = useState(false);
+  const [error, setError]                     = useState('');
+  const [success, setSuccess]                 = useState(false);
+  const [search, setSearch]                   = useState('');
+  const [suggestions, setSuggestions]         = useState<PatientSuggestion[]>([]);
+  const [showSugg, setShowSugg]               = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<PatientSuggestion | null>(null);
-  // Numéro de séance depuis API
-  const [numSeance, setNumSeance]           = useState<number | null>(null);
-  const [loadingSeance, setLoadingSeance]   = useState(false);
+  const [numSeance, setNumSeance]             = useState<number | null>(null);
+  const [loadingSeance, setLoadingSeance]     = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -123,7 +123,6 @@ function NewRDVForm({ popup, onClose, onCreated }: {
     return () => document.removeEventListener('mousedown', handler);
   }, [onClose]);
 
-  // Recherche patient dans l'API
   const searchPatient = async (val: string) => {
     setSearch(val);
     setSelectedPatient(null);
@@ -142,7 +141,6 @@ function NewRDVForm({ popup, onClose, onCreated }: {
     } catch { setSuggestions([]); }
   };
 
-  // Sélection patient → charger nombre de séances
   const selectPatient = async (p: PatientSuggestion) => {
     setSelectedPatient(p);
     setSearch(`${p.prenom} ${p.nom}`);
@@ -168,6 +166,7 @@ function NewRDVForm({ popup, onClose, onCreated }: {
     weekday: 'long', day: 'numeric', month: 'long',
   });
 
+  // ✅ CORRIGÉ : utilise /rendezvous/creer avec les bons champs
   const handleSubmit = async () => {
     if (!selectedPatient) { setError('Sélectionnez un patient'); return; }
     if (heureDebut >= heureFin) { setError("L'heure de fin doit être après le début"); return; }
@@ -177,25 +176,40 @@ function NewRDVForm({ popup, onClose, onCreated }: {
       const [h, m] = heureDebut.split(':').map(Number);
       const dateHeure = new Date(popup.date!);
       dateHeure.setHours(h, m, 0, 0);
-      const res = await fetch(`${API_URL}/rendezvous`, {
+
+      const body = {
+        patientId:             selectedPatient.id,
+        date_heure:            dateHeure.toISOString(),
+        motif,
+        statut:                'planifié',
+        numero_seance:         numSeance ?? 1,
+        machine,
+        soso_kevitra_malalaka: `Séance #${numSeance ?? 1} | ${machine}`,
+      };
+
+      console.log('📤 Création RDV :', body);
+
+      // ✅ Route correcte : /rendezvous/creer
+      const res = await fetch(`${API_URL}/rendezvous/creer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          patientId: selectedPatient.id,
-          date_heure: dateHeure.toISOString(),
-          motif,
-          statut: 'planifié',
-          soso_kevitra_malalaka: `Séance #${numSeance} | ${machine}`,
-        }),
+        body: JSON.stringify(body),
       });
+
       if (res.ok) {
+        const created = await res.json();
+        console.log('✅ RDV créé :', created);
         setSuccess(true);
-        setTimeout(() => { onCreated(); onClose(); }, 900);
+        setTimeout(() => { onCreated(); onClose(); }, 1200);
       } else {
         const errData = await res.json().catch(() => ({}));
-        setError(errData?.message || 'Erreur lors de la création');
+        console.error('❌ Erreur backend :', errData);
+        setError(errData?.message || `Erreur ${res.status}`);
       }
-    } catch { setError('Erreur réseau'); }
+    } catch (e) {
+      console.error('❌ Erreur réseau :', e);
+      setError('Erreur réseau — vérifiez que le backend tourne sur le port 3001');
+    }
     setSaving(false);
   };
 
@@ -214,7 +228,6 @@ function NewRDVForm({ popup, onClose, onCreated }: {
       style={{ position: 'fixed', zIndex: 1000, top, left, width: 300 }}
       className="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-visible"
     >
-      {/* Header */}
       <div className="bg-[#00509e] px-4 py-3 flex items-center justify-between rounded-t-2xl">
         <div>
           <p className="text-white text-[11px] opacity-75 capitalize mb-0.5">{dateStr}</p>
@@ -225,7 +238,6 @@ function NewRDVForm({ popup, onClose, onCreated }: {
         </button>
       </div>
 
-      {/* Succès */}
       <AnimatePresence>
         {success && (
           <motion.div
@@ -236,10 +248,11 @@ function NewRDVForm({ popup, onClose, onCreated }: {
             <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
               <span className="material-symbols-outlined text-3xl text-emerald-600">check_circle</span>
             </div>
-            <p className="text-sm font-semibold text-slate-700">RDV créé avec succès</p>
+            <p className="text-sm font-semibold text-slate-700">RDV créé avec succès ✅</p>
             {numSeance && selectedPatient && (
-              <p className="text-xs text-slate-400">
-                {selectedPatient.prenom} {selectedPatient.nom} · Séance #{numSeance} · {machine}
+              <p className="text-xs text-slate-400 text-center px-4">
+                {selectedPatient.prenom} {selectedPatient.nom}<br/>
+                Séance #{numSeance} · {machine}
               </p>
             )}
           </motion.div>
@@ -247,8 +260,6 @@ function NewRDVForm({ popup, onClose, onCreated }: {
       </AnimatePresence>
 
       <div className="p-4 space-y-3">
-
-        {/* Intervalle de temps */}
         <div>
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Intervalle de temps</label>
           <div className="flex items-center gap-2">
@@ -260,7 +271,6 @@ function NewRDVForm({ popup, onClose, onCreated }: {
           </div>
         </div>
 
-        {/* Recherche patient */}
         <div className="relative">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">
             Patient
@@ -278,8 +288,6 @@ function NewRDVForm({ popup, onClose, onCreated }: {
               }`}
             />
           </div>
-
-          {/* Suggestions dropdown */}
           {showSugg && suggestions.length > 0 && (
             <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
               {suggestions.map(p => (
@@ -296,8 +304,6 @@ function NewRDVForm({ popup, onClose, onCreated }: {
               ))}
             </div>
           )}
-
-          {/* Carte patient sélectionné + numéro séance */}
           {selectedPatient && (
             <div className="mt-2 flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg">
               <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[11px] font-bold flex-shrink-0">
@@ -320,7 +326,6 @@ function NewRDVForm({ popup, onClose, onCreated }: {
           )}
         </div>
 
-        {/* Motif */}
         <div>
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Motif</label>
           <select value={motif} onChange={e => setMotif(e.target.value)}
@@ -333,7 +338,6 @@ function NewRDVForm({ popup, onClose, onCreated }: {
           </select>
         </div>
 
-        {/* Machine toggle */}
         <div>
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Machine</label>
           <div className="grid grid-cols-3 gap-1.5">
@@ -348,9 +352,12 @@ function NewRDVForm({ popup, onClose, onCreated }: {
           </div>
         </div>
 
-        {error && <p className="text-xs text-red-500 flex items-center gap-1">
-          <span className="material-symbols-outlined text-sm">error</span>{error}
-        </p>}
+        {error && (
+          <div className="flex items-start gap-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+            <span className="material-symbols-outlined text-red-500 text-sm mt-0.5">error</span>
+            <p className="text-xs text-red-600">{error}</p>
+          </div>
+        )}
 
         <div className="flex gap-2 pt-1">
           <button onClick={onClose}
@@ -370,8 +377,10 @@ function NewRDVForm({ popup, onClose, onCreated }: {
   );
 }
 
-export default function StitchRendezVousCalendrier() {
-  const now = new Date();
+function StitchRendezVousCalendrierInner() {
+  const now          = new Date();
+  const searchParams = useSearchParams();
+  const patientIdFromUrl = searchParams.get('patientId');
 
   const [rdvs, setRdvs]                 = useState<RDVFormatted[]>([]);
   const [loading, setLoading]           = useState(true);
@@ -384,15 +393,21 @@ export default function StitchRendezVousCalendrier() {
     visible: false, date: null, heureDebut: '08:00', heureFin: '09:00', x: 0, y: 0,
   });
 
+  // ✅ Charge tous les RDV depuis /rendezvous
   const loadRDV = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/rendezvous`);
       if (res.ok) {
         const data: RDV[] = await res.json();
+        console.log(`✅ ${data.length} RDV chargés`);
         setRdvs(data.map(formatRDV).filter(Boolean) as RDVFormatted[]);
+      } else {
+        console.error('❌ Erreur chargement RDV :', res.status);
       }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error('❌ Erreur réseau :', err);
+    }
     setLoading(false);
   }, []);
 
@@ -482,7 +497,6 @@ export default function StitchRendezVousCalendrier() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
-
       <aside className="w-56 flex-shrink-0 border-r border-slate-200 flex flex-col bg-slate-50 overflow-y-auto">
         <div className="px-3 pt-4 pb-3">
           <div className="flex items-center justify-between mb-2">
@@ -642,11 +656,6 @@ export default function StitchRendezVousCalendrier() {
                           </motion.div>
                         );
                       })}
-                      {rdvJour.length===0 && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <p className="text-[9px] text-slate-200 rotate-90 whitespace-nowrap">Cliquer pour ajouter</p>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
@@ -668,9 +677,6 @@ export default function StitchRendezVousCalendrier() {
                 {HEURES_GRILLE.map(h => (
                   <div key={h} className="border-b border-slate-100" style={{ height:`${CELL_H}px` }} />
                 ))}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-start justify-end p-2">
-                  <span className="text-[10px] text-blue-300 font-bold">+ RDV</span>
-                </div>
                 {isToday(currentDate) && (
                   <div className="absolute left-0 right-0 z-20 flex items-center pointer-events-none" style={{ top:`${nowTop}px` }}>
                     <div className="w-2.5 h-2.5 rounded-full bg-red-500 -ml-1.5" />
@@ -719,7 +725,7 @@ export default function StitchRendezVousCalendrier() {
                       {rdvJour.slice(0,3).map(rdv => {
                         const s = TYPE_STYLES[rdv.type];
                         return (
-                          <div key={rdv.id} className={`${s.bg} border-l-4 ${s.border} rounded-r-lg px-2 py-1 overflow-hidden`}>
+                          <div key={rdv.id} className={`${s.bg} border-l-4 ${s.border} rounded-r-lg px-2 py-1`}>
                             <p className={`text-[10px] font-bold ${s.text} truncate`}>{rdv.heure}</p>
                             <p className={`text-[11px] font-semibold ${s.text} truncate`}>{rdv.patientPrenom} {rdv.patientNom}</p>
                           </div>
@@ -802,9 +808,19 @@ export default function StitchRendezVousCalendrier() {
             popup={popup}
             onClose={() => setPopup(p => ({ ...p, visible: false }))}
             onCreated={loadRDV}
+            preselectedPatientId={patientIdFromUrl ? parseInt(patientIdFromUrl) : null}
           />
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+
+export default function StitchRendezVousCalendrier() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-32"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>}>
+      <StitchRendezVousCalendrierInner />
+    </Suspense>
   );
 }

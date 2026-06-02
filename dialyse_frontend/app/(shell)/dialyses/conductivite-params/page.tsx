@@ -130,41 +130,39 @@ function ConductiviteInner() {
     setTimeout(() => setToast(null), 3500);
   };
 
-  // ✅ Enregistrer prescription conductivité dans BD
+  const goBack = () => {
+    window.location.href = `/dialyses/section-medecin?patientId=${patientIdParam || ''}&seanceNum=${seanceNumParam || '1'}`;
+  };
+
   const handleSave = async () => {
     if (!patientIdParam) {
-      showToast('⚠️ Aucun patient lié — revenez depuis le tableau de bord', 'error');
+      showToast('Aucun patient lié — revenez depuis le tableau de bord', 'error');
       return;
     }
-
     setSaveStatus('saving');
-
-    const prescription = {
-      patient:           { id: parseInt(patientIdParam) },
-      medicament:        `Conductivité séance N°${form.seanceNum || seanceNumParam || '?'} — ${form.dialyseur || 'Dialyseur N/A'}`,
-      dosage:            `Na:${form.na || '—'} Bicar:${form.bicar || '—'} K:${form.k} Ca:${form.ca} T°:${form.tempDialysat}°C Débit:${form.debitDialysat}ml/min`,
-      frequence:         `Séance HD — Générateur ${form.generateur || 'N/A'} — Poste ${form.poste || 'N/A'}`,
-      date_prescription: form.date || new Date().toISOString().split('T')[0],
-      workflow_statut:   'actif',
-    };
-
     try {
       const res = await fetch(`${API_URL}/prescriptions`, {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(prescription),
+        body: JSON.stringify({
+          patient:           { id: parseInt(patientIdParam) },
+          medicament:        `Conductivité séance N°${form.seanceNum || seanceNumParam || '?'} — ${form.dialyseur || 'Dialyseur N/A'}`,
+          dosage:            `Na:${form.na || '—'} Bicar:${form.bicar || '—'} K:${form.k} Ca:${form.ca} T°:${form.tempDialysat}°C Débit:${form.debitDialysat}ml/min`,
+          frequence:         `Séance HD — Générateur ${form.generateur || 'N/A'} — Poste ${form.poste || 'N/A'}`,
+          date_prescription: form.date || new Date().toISOString().split('T')[0],
+          workflow_statut:   'actif',
+        }),
       });
-
       if (res.ok) {
         setSaveStatus('success');
-        showToast('✅ Paramètres de conductivité enregistrés', 'success');
+        showToast('Paramètres de conductivité enregistrés', 'success');
         setTimeout(() => setSaveStatus('idle'), 3000);
       } else {
         throw new Error('Erreur serveur');
       }
     } catch {
       setSaveStatus('error');
-      showToast('❌ Erreur — réessayez', 'error');
+      showToast('Erreur — réessayez', 'error');
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
   };
@@ -179,9 +177,13 @@ function ConductiviteInner() {
           <h1 className="text-2xl font-black font-manrope text-slate-800">Conductivité & Paramètres</h1>
           <p className="text-sm text-slate-400 mt-0.5">Prescription médicale de la séance · CHU Andrainjato</p>
         </div>
-        <button onClick={() => router.push(`/dialyses/section-medecin?patientId=${patientIdParam}&seanceNum=${seanceNumParam}`)}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors cursor-pointer">
-          <span className="material-symbols-outlined text-lg">arrow_back</span>Retour
+        {/* ✅ BOUTON RETOUR FONCTIONNEL */}
+        <button
+          onClick={goBack}
+          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-lg">arrow_back</span>
+          Retour
         </button>
       </motion.div>
 
@@ -331,34 +333,47 @@ function ConductiviteInner() {
 
       {/* ── Actions ── */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-        className="flex items-center justify-end gap-3 pb-6">
-        <button onClick={() => setForm({ ...DEFAULT_FORM, date: new Date().toISOString().split('T')[0] })}
-          className="px-5 py-2.5 text-xs font-semibold text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
-          Réinitialiser
-        </button>
-        <button onClick={() => window.print()}
-          className="px-5 py-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors flex items-center gap-1.5 cursor-pointer">
-          <span className="material-symbols-outlined text-base">print</span>Imprimer
+        className="flex items-center justify-between gap-3 pb-6">
+
+        {/* ✅ Bouton retour à gauche */}
+        <button
+          onClick={goBack}
+          className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-base">arrow_back</span>
+          Retour aux choix médecin
         </button>
 
-        {/* ✅ Bouton Enregistrer fonctionnel */}
-        <button
-          onClick={handleSave}
-          disabled={saveStatus === 'saving' || saveStatus === 'success'}
-          className={`px-6 py-2.5 text-xs font-bold text-white rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-70 ${
-            saveStatus === 'success'
-              ? 'bg-emerald-600'
-              : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'
-          }`}>
-          {saveStatus === 'saving' && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-          {saveStatus === 'success' && <span className="material-symbols-outlined text-base">check_circle</span>}
-          {saveStatus === 'idle'    && <span className="material-symbols-outlined text-base">save</span>}
-          {saveStatus === 'error'   && <span className="material-symbols-outlined text-base">error</span>}
-          {saveStatus === 'saving'  ? 'Enregistrement...' :
-           saveStatus === 'success' ? 'Enregistré ✓'     :
-           saveStatus === 'error'   ? 'Réessayer'         :
-           'Enregistrer la prescription'}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setForm({ ...DEFAULT_FORM, date: new Date().toISOString().split('T')[0] })}
+            className="px-5 py-2.5 text-xs font-semibold text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+          >
+            Réinitialiser
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="px-5 py-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-base">print</span>Imprimer
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saveStatus === 'saving' || saveStatus === 'success'}
+            className={`px-6 py-2.5 text-xs font-bold text-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-70 ${
+              saveStatus === 'success' ? 'bg-emerald-600' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          >
+            {saveStatus === 'saving'  && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+            {saveStatus === 'success' && <span className="material-symbols-outlined text-base">check_circle</span>}
+            {saveStatus === 'idle'    && <span className="material-symbols-outlined text-base">save</span>}
+            {saveStatus === 'error'   && <span className="material-symbols-outlined text-base">error</span>}
+            {saveStatus === 'saving'  ? 'Enregistrement...' :
+             saveStatus === 'success' ? 'Enregistré ✓'      :
+             saveStatus === 'error'   ? 'Réessayer'          :
+             'Enregistrer la prescription'}
+          </button>
+        </div>
       </motion.div>
 
       {/* ── Toast ── */}
