@@ -1,7 +1,6 @@
 import {
   Entity, Column, PrimaryGeneratedColumn,
   OneToMany, ManyToOne, JoinColumn,
-  CreateDateColumn,
 } from 'typeorm';
 import { Prescription }      from './prescription.entity';
 import { RendezVous }        from './rendez-vous.entity';
@@ -43,36 +42,32 @@ export class Patient {
   prenom: string;
 
   @Column({ type: 'date', nullable: true })
-  dateNaissance: Date;
+  dateNaissance: Date | null;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
-  telephone: string;
+  telephone: string | null;
 
   @Column({ type: 'text', nullable: true })
-  notes: string;
+  notes: string | null;
 
-  // ✅ Statut du traitement dialyse
   @Column({ type: 'varchar', length: 20, default: 'actif', nullable: true })
-  traitement_statut: string;
+  traitement_statut: string | null;
 
-  // ✅ Motif de clôture
   @Column({ type: 'varchar', length: 50, nullable: true })
-  traitement_motif_cloture: string;
+  traitement_motif_cloture: string | null;
 
-  // ✅ Date de clôture
   @Column({ type: 'timestamp', nullable: true })
-  traitement_date_cloture: Date;
+  traitement_date_cloture: Date | null;
 
-  // ✅ Notes de clôture
   @Column({ type: 'text', nullable: true })
-  traitement_notes_cloture: string;
+  traitement_notes_cloture: string | null;
 
   @ManyToOne(() => Service, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'service_id' })
   service: Service;
 
   @Column({ type: 'uuid', nullable: true, default: 'd604bde1-c9dd-4284-a690-0c5ed9be6a37' })
-  service_id: string;
+  service_id: string | null;
 
   @OneToMany(() => Prescription, (p) => p.patient)
   prescriptions: Prescription[];
