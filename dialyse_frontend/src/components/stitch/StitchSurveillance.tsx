@@ -20,6 +20,8 @@ interface LigneSurveillance {
   uf_obtenue: string;
   ptm: string;
   incidents_cliniques: string;
+  dialyseur_retourne: boolean;
+  heure_retournement: string;
 }
 
 interface SurveillanceForm {
@@ -40,6 +42,7 @@ const LIGNE_VIDE: LigneSurveillance = {
   heure: '30 min', ta: '', pouls: '', debit_sang: '',
   pression_veineuse: '', pression_arterielle: '',
   uf_affiche: '', uf_obtenue: '', ptm: '', incidents_cliniques: '',
+  dialyseur_retourne: false, heure_retournement: '',
 };
 
 const DEFAULT_FORM: SurveillanceForm = {
@@ -51,17 +54,55 @@ const DEFAULT_FORM: SurveillanceForm = {
 
 type SaveStatus = 'idle' | 'saving' | 'success' | 'error';
 
+// ── Sons ───────────────────────────────────────
+function playBipSuccess() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    osc.frequency.setValueAtTime(1200, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.25);
+  } catch {}
+}
+
+function playBipUndo() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, ctx.currentTime);
+    osc.frequency.setValueAtTime(400, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.2);
+  } catch {}
+}
+
 function Toast({ msg, type }: { msg: string; type: 'success' | 'error' }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 40 }}
-      className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 text-white text-sm font-semibold ${
-        type === 'success' ? 'bg-emerald-600' : 'bg-red-500'
+      initial={{ opacity: 0, y: 60, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 60, scale: 0.8 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-white text-sm font-bold ${
+        type === 'success'
+          ? 'bg-gradient-to-r from-emerald-500 to-teal-600 shadow-emerald-200'
+          : 'bg-gradient-to-r from-red-500 to-rose-600 shadow-red-200'
       }`}
     >
-      <span className="material-symbols-outlined text-lg">
+      <span className="material-symbols-outlined text-xl">
         {type === 'success' ? 'check_circle' : 'error'}
       </span>
       {msg}
@@ -114,6 +155,8 @@ function SurveillanceInner() {
                   uf_obtenue:          l.uf_obtenue || '',
                   ptm:                 l.ptm || '',
                   incidents_cliniques: l.incidents_cliniques || '',
+                  dialyseur_retourne:  l.dialyseur_retourne ?? false,
+                  heure_retournement:  l.heure_retournement || '',
                 }))
               : Array.from({ length: 7 }, () => ({ ...LIGNE_VIDE }));
 
@@ -146,11 +189,42 @@ function SurveillanceInner() {
   const set = (key: keyof SurveillanceForm) => (val: string) =>
     setForm(f => ({ ...f, [key]: val }));
 
-  const updateLigne = (idx: number, field: keyof LigneSurveillance, val: string) => {
+  const updateLigne = (idx: number, field: keyof LigneSurveillance, val: any) => {
     setForm(f => ({
       ...f,
       lignes: f.lignes.map((l, i) => i === idx ? { ...l, [field]: val } : l),
     }));
+  };
+
+  // ✅ Toggle dialyseur retourné avec horodatage automatique + bip
+  const toggleDialyseurRetourne = (idx: number) => {
+    const ligne = form.lignes[idx];
+    const nouveauStatut = !ligne.dialyseur_retourne;
+
+    if (nouveauStatut) {
+      const now = new Date();
+      const heure = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      setForm(f => ({
+        ...f,
+        lignes: f.lignes.map((l, i) => i === idx ? {
+          ...l,
+          dialyseur_retourne: true,
+          heure_retournement: heure,
+        } : l),
+      }));
+      playBipSuccess();
+      showToast(`🔄 Dialyseur retourné à ${heure} (ligne ${idx + 1})`, 'success');
+    } else {
+      setForm(f => ({
+        ...f,
+        lignes: f.lignes.map((l, i) => i === idx ? {
+          ...l,
+          dialyseur_retourne: false,
+          heure_retournement: '',
+        } : l),
+      }));
+      playBipUndo();
+    }
   };
 
   const handleSave = async () => {
@@ -199,88 +273,161 @@ function SurveillanceInner() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/60 p-6 space-y-5 max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20 p-6 space-y-5 max-w-7xl mx-auto">
 
-      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-xl md:text-2xl font-black text-slate-800 uppercase tracking-wide">
+      {/* En-tête avec dégradé */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+        className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-xl shadow-indigo-200/40 p-5 flex items-center justify-between flex-wrap gap-3"
+      >
+        <div className="text-white">
+          <h1 className="text-xl md:text-2xl font-black uppercase tracking-wide flex items-center gap-2">
+            <span className="material-symbols-outlined text-3xl">monitor_heart</span>
             Fiche de surveillance en hémodialyse
           </h1>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <p className="text-xs md:text-sm text-blue-100 mt-1 font-semibold">
             {patient ? `${patient.prenom} ${patient.nom}` : '—'} · Séance N°{seanceNum} · {formatHeureRdv()}
           </p>
         </div>
-        <button onClick={goBack}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors cursor-pointer">
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={goBack}
+          className="flex items-center gap-1.5 px-4 py-2 bg-white/15 backdrop-blur-sm text-white text-sm font-bold rounded-xl hover:bg-white/25 transition-all cursor-pointer border border-white/20"
+        >
           <span className="material-symbols-outlined text-lg">arrow_back</span>
           Retour
-        </button>
+        </motion.button>
       </motion.div>
 
       {!patientId && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 flex items-center gap-3">
-          <span className="material-symbols-outlined text-amber-500 text-base">warning</span>
-          <span className="text-xs font-semibold text-amber-700">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl px-4 py-3 flex items-center gap-3 shadow-lg shadow-amber-100"
+        >
+          <span className="material-symbols-outlined text-amber-600 text-lg">warning</span>
+          <span className="text-sm font-bold text-amber-800">
             Aucun patient lié — revenez depuis le tableau de bord
           </span>
-        </div>
+        </motion.div>
       )}
 
-      <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="bg-white rounded-2xl shadow-sm border border-slate-200/70 overflow-hidden">
+      {/* TABLEAU SURVEILLANCE */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, type: 'spring', stiffness: 150 }}
+        className="bg-white rounded-2xl shadow-xl shadow-blue-100/40 border border-blue-100/50 overflow-hidden"
+      >
         <div className="overflow-x-auto">
           <table className="w-full text-xs border-collapse">
             <thead>
-              <tr className="bg-slate-100 border-b-2 border-slate-300">
-                <th className="px-2 py-2 text-[10px] font-black text-slate-700 uppercase border-r border-slate-300 w-16">HEURE</th>
-                <th className="px-2 py-2 text-[10px] font-black text-slate-700 uppercase border-r border-slate-300 w-20">TA</th>
-                <th className="px-2 py-2 text-[10px] font-black text-slate-700 uppercase border-r border-slate-300 w-16">POULS</th>
-                <th className="px-2 py-2 text-[10px] font-black text-slate-700 uppercase border-r border-slate-300 w-20">DÉBIT SANG</th>
-                <th className="px-2 py-2 text-[10px] font-black text-slate-700 uppercase border-r border-slate-300 w-20">PRESSION VEINEUSE</th>
-                <th className="px-2 py-2 text-[10px] font-black text-slate-700 uppercase border-r border-slate-300 w-20">PRESSION ARTÉRIELLE</th>
-                <th className="px-2 py-2 text-[10px] font-black text-slate-700 uppercase border-r border-slate-300 w-20">UF AFFICHÉ</th>
-                <th className="px-2 py-2 text-[10px] font-black text-slate-700 uppercase border-r border-slate-300 w-20">UF OBTENUE</th>
-                <th className="px-2 py-2 text-[10px] font-black text-slate-700 uppercase border-r border-slate-300 w-16">PTM</th>
-                <th className="px-2 py-2 text-[10px] font-black text-slate-700 uppercase">INCIDENTS CLINIQUES ET TECHNIQUES</th>
+              <tr className="bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100 border-b-2 border-indigo-200">
+                <th className="px-2 py-3 text-[10px] font-black text-indigo-900 uppercase border-r border-indigo-200 w-16">HEURE</th>
+                <th className="px-2 py-3 text-[10px] font-black text-indigo-900 uppercase border-r border-indigo-200 w-20">TA</th>
+                <th className="px-2 py-3 text-[10px] font-black text-indigo-900 uppercase border-r border-indigo-200 w-16">POULS</th>
+                <th className="px-2 py-3 text-[10px] font-black text-indigo-900 uppercase border-r border-indigo-200 w-20">DÉBIT SANG</th>
+                <th className="px-2 py-3 text-[10px] font-black text-indigo-900 uppercase border-r border-indigo-200 w-20">PRESS. VEINEUSE</th>
+                <th className="px-2 py-3 text-[10px] font-black text-indigo-900 uppercase border-r border-indigo-200 w-20">PRESS. ARTÉRIELLE</th>
+                <th className="px-2 py-3 text-[10px] font-black text-indigo-900 uppercase border-r border-indigo-200 w-20">UF AFFICHÉ</th>
+                <th className="px-2 py-3 text-[10px] font-black text-indigo-900 uppercase border-r border-indigo-200 w-20">UF OBTENUE</th>
+                <th className="px-2 py-3 text-[10px] font-black text-indigo-900 uppercase border-r border-indigo-200 w-16">PTM</th>
+                <th className="px-2 py-3 text-[10px] font-black text-indigo-900 uppercase">INCIDENTS CLINIQUES & TECHNIQUES</th>
+                <th className="px-2 py-3 text-[10px] font-black text-indigo-900 uppercase w-32">ACTIONS</th>
               </tr>
             </thead>
             <tbody>
               {form.lignes.map((ligne, idx) => (
-                <tr key={idx} className="border-b border-slate-200 hover:bg-slate-50/30">
+                <motion.tr
+                  key={idx}
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.15 + idx * 0.05, type: 'spring', stiffness: 200 }}
+                  className={`border-b border-slate-100 transition-all ${
+                    ligne.dialyseur_retourne
+                      ? 'bg-gradient-to-r from-emerald-50/60 to-teal-50/40'
+                      : idx % 2 === 0 ? 'bg-slate-50/30 hover:bg-blue-50/40' : 'bg-white hover:bg-blue-50/40'
+                  }`}
+                >
                   <td className="border-r border-slate-200 p-0">
-                    <input type="text" value={ligne.heure}
+                    <input
+                      type="text"
+                      value={ligne.heure}
                       onChange={e => updateLigne(idx, 'heure', e.target.value)}
-                      className="w-full px-2 py-2 text-center text-xs font-bold text-slate-700 bg-slate-50/50 focus:outline-none focus:bg-white" />
+                      className="w-full px-2 py-2.5 text-center text-xs font-black text-indigo-700 bg-transparent focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-300 transition-all"
+                    />
                   </td>
                   {(['ta','pouls','debit_sang','pression_veineuse','pression_arterielle','uf_affiche','uf_obtenue','ptm'] as (keyof LigneSurveillance)[]).map(field => (
                     <td key={field} className="border-r border-slate-200 p-0">
-                      <input type="text" value={ligne[field]}
+                      <input
+                        type="text"
+                        value={ligne[field] as string}
                         onChange={e => updateLigne(idx, field, e.target.value)}
-                        className="w-full px-2 py-2 text-center text-xs focus:outline-none focus:bg-blue-50/30" />
+                        className="w-full px-2 py-2.5 text-center text-xs font-semibold focus:outline-none focus:bg-blue-50 focus:ring-2 focus:ring-blue-300 transition-all"
+                      />
                     </td>
                   ))}
-                  <td className="p-0">
-                    <input type="text" value={ligne.incidents_cliniques}
+                  <td className="border-r border-slate-200 p-0">
+                    <input
+                      type="text"
+                      value={ligne.incidents_cliniques}
                       onChange={e => updateLigne(idx, 'incidents_cliniques', e.target.value)}
                       placeholder={idx === 1 ? 'Ex : Retourner le dialyseur' : ''}
-                      className="w-full px-2 py-2 text-xs focus:outline-none focus:bg-blue-50/30 placeholder-slate-300" />
+                      className="w-full px-2 py-2.5 text-xs focus:outline-none focus:bg-blue-50 focus:ring-2 focus:ring-blue-300 placeholder-slate-300 transition-all"
+                    />
                   </td>
-                </tr>
+                  {/* ✅ Bouton DIALYSEUR RETOURNÉ */}
+                  <td className="p-1.5 text-center">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.92 }}
+                      animate={ligne.dialyseur_retourne ? {
+                        boxShadow: [
+                          '0 0 0 0 rgba(16, 185, 129, 0.4)',
+                          '0 0 0 8px rgba(16, 185, 129, 0)',
+                        ],
+                      } : {}}
+                      transition={{ duration: 1.5, repeat: ligne.dialyseur_retourne ? Infinity : 0 }}
+                      onClick={() => toggleDialyseurRetourne(idx)}
+                      className={`w-full px-2 py-1.5 text-[10px] font-black rounded-lg cursor-pointer transition-all flex items-center justify-center gap-1 ${
+                        ligne.dialyseur_retourne
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-200'
+                          : 'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 hover:from-emerald-100 hover:to-teal-100 hover:text-emerald-700 border border-slate-300'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-sm">
+                        {ligne.dialyseur_retourne ? 'check_circle' : 'sync'}
+                      </span>
+                      {ligne.dialyseur_retourne ? `${ligne.heure_retournement} ✓` : 'Retourné'}
+                    </motion.button>
+                  </td>
+                </motion.tr>
               ))}
             </tbody>
           </table>
         </div>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-        className="bg-white rounded-2xl shadow-sm border border-slate-200/70 p-5">
+      {/* PARAMÈTRES TECHNIQUES */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="bg-white rounded-2xl shadow-lg shadow-emerald-100/40 border border-emerald-100/50 p-5"
+      >
+        <h3 className="text-xs font-black text-emerald-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-base">tune</span>
+          Paramètres techniques
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
             { label: 'Orifice cathéter',         key: 'orifice_catheter',         ph: 'Bon' },
@@ -289,127 +436,190 @@ function SurveillanceInner() {
             { label: 'ΔVS',                      key: 'delta_vs',                 ph: '5%' },
             { label: 'PRU',                      key: 'pru',                      ph: '70%' },
           ].map(f => (
-            <div key={f.key}>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">{f.label}</label>
-              <input type="text" placeholder={f.ph}
+            <motion.div key={f.key} whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 300 }}>
+              <label className="block text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1.5">
+                {f.label}
+              </label>
+              <input
+                type="text"
+                placeholder={f.ph}
                 value={(form as any)[f.key]}
                 onChange={e => set(f.key as keyof SurveillanceForm)(e.target.value)}
-                className="w-full px-3 py-2 text-sm font-semibold border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all" />
-            </div>
+                className="w-full px-3 py-2.5 text-sm font-semibold border-2 border-emerald-100 rounded-xl bg-emerald-50/30 focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-100 transition-all"
+              />
+            </motion.div>
           ))}
         </div>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-        className="bg-white rounded-2xl shadow-sm border border-slate-200/70 p-5">
-        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">
+      {/* RECIRCULATION CIRCUIT */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="bg-white rounded-2xl shadow-lg shadow-purple-100/40 border border-purple-100/50 p-5"
+      >
+        <h3 className="text-xs font-black text-purple-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+          <span className="material-symbols-outlined text-base">sync_alt</span>
           Recirculation circuit
-        </label>
+        </h3>
         <div className="grid grid-cols-3 gap-3">
           {[
-            { val: 'BONNE',    color: 'emerald', sub: '0 – 10 min'  },
-            { val: 'MOYENNE',  color: 'amber',   sub: '10 – 20 min' },
-            { val: 'MAUVAISE', color: 'red',     sub: '+ 20 min'    },
+            { val: 'BONNE',    grad: 'from-emerald-400 to-teal-500',   shadow: 'shadow-emerald-200', text: 'text-emerald-700' },
+            { val: 'MOYENNE',  grad: 'from-amber-400 to-orange-500',   shadow: 'shadow-amber-200',   text: 'text-amber-700'   },
+            { val: 'MAUVAISE', grad: 'from-red-400 to-rose-600',       shadow: 'shadow-red-200',     text: 'text-red-700'     },
           ].map(opt => (
-            <button key={opt.val} onClick={() => set('recirculation')(opt.val)}
-              className={`p-3 rounded-xl border-2 transition-all cursor-pointer text-center ${
+            <motion.button
+              key={opt.val}
+              whileHover={{ scale: 1.03, y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => set('recirculation')(opt.val)}
+              className={`p-4 rounded-2xl border-2 transition-all cursor-pointer text-center ${
                 form.recirculation === opt.val
-                  ? opt.color === 'emerald' ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
-                  : opt.color === 'amber'   ? 'border-amber-400 bg-amber-50 text-amber-700'
-                  :                           'border-red-400 bg-red-50 text-red-700'
-                  : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'
-              }`}>
-              <p className="text-sm font-black">{opt.val}</p>
-              <p className="text-[10px] mt-0.5 opacity-70">{opt.sub}</p>
-            </button>
+                  ? `bg-gradient-to-br ${opt.grad} text-white shadow-xl ${opt.shadow}`
+                  : `bg-white border-slate-200 ${opt.text} hover:border-slate-400 shadow-sm`
+              }`}
+            >
+              <p className="text-base font-black">{opt.val}</p>
+            </motion.button>
           ))}
         </div>
 
-        <div className="mt-4">
-          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+        <div className="mt-5 pt-5 border-t border-purple-100">
+          <label className="block text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-3 flex items-center gap-1">
+            <span className="material-symbols-outlined text-sm">timer</span>
             Temps de compression Veine
           </label>
-          <input type="text" placeholder="ex: 8 min"
-            value={form.temps_compression_veine}
-            onChange={e => set('temps_compression_veine')(e.target.value)}
-            className="w-full md:w-1/3 px-3 py-2 text-sm font-semibold border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all" />
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { val: '0-10 min',   grad: 'from-emerald-400 to-teal-500', shadow: 'shadow-emerald-200', text: 'text-emerald-700' },
+              { val: '10-20 min',  grad: 'from-amber-400 to-orange-500', shadow: 'shadow-amber-200',   text: 'text-amber-700'   },
+              { val: '+20 min',    grad: 'from-red-400 to-rose-600',     shadow: 'shadow-red-200',     text: 'text-red-700'     },
+            ].map(opt => (
+              <motion.button
+                key={opt.val}
+                whileHover={{ scale: 1.03, y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => set('temps_compression_veine')(opt.val)}
+                className={`p-3 rounded-xl border-2 transition-all cursor-pointer text-center ${
+                  form.temps_compression_veine === opt.val
+                    ? `bg-gradient-to-br ${opt.grad} text-white shadow-lg ${opt.shadow}`
+                    : `bg-white border-slate-200 ${opt.text} hover:border-slate-400 shadow-sm`
+                }`}
+              >
+                <p className="text-sm font-black">{opt.val}</p>
+              </motion.button>
+            ))}
+          </div>
         </div>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-        className="bg-white rounded-2xl shadow-sm border border-slate-200/70 p-5">
+      {/* PIÈGE & DEALEUR */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="bg-white rounded-2xl shadow-lg shadow-rose-100/40 border border-rose-100/50 p-5"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-              Piège à bulle
-            </label>
-            <div className="flex gap-2">
-              {['propre', 'caillot'].map(opt => (
-                <button key={opt} onClick={() => set('piege_bulle')(opt)}
-                  className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                    form.piege_bulle === opt
-                      ? opt === 'propre' ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-red-50 border-red-300 text-red-700'
-                      : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300'
-                  }`}>
-                  {form.piege_bulle === opt && '✓ '}{opt.toUpperCase()}
-                </button>
-              ))}
+          {([
+            { label: 'Piège à bulle', key: 'piege_bulle' as keyof SurveillanceForm },
+            { label: 'Dealeur',       key: 'dealeur'     as keyof SurveillanceForm },
+          ]).map(item => (
+            <div key={item.key}>
+              <label className="block text-[10px] font-bold text-rose-600 uppercase tracking-wider mb-2">
+                {item.label}
+              </label>
+              <div className="flex gap-2">
+                {['propre', 'caillot'].map(opt => (
+                  <motion.button
+                    key={opt}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => set(item.key)(opt)}
+                    className={`flex-1 py-2.5 rounded-xl text-xs font-black border-2 transition-all cursor-pointer ${
+                      (form as any)[item.key] === opt
+                        ? opt === 'propre'
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-600 border-emerald-600 text-white shadow-md shadow-emerald-200'
+                          : 'bg-gradient-to-r from-red-500 to-rose-600 border-red-600 text-white shadow-md shadow-red-200'
+                        : 'bg-white border-slate-200 text-slate-500 hover:border-slate-400'
+                    }`}
+                  >
+                    {(form as any)[item.key] === opt && '✓ '}{opt.toUpperCase()}
+                  </motion.button>
+                ))}
+              </div>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-              Dealeur
-            </label>
-            <div className="flex gap-2">
-              {['propre', 'caillot'].map(opt => (
-                <button key={opt} onClick={() => set('dealeur')(opt)}
-                  className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                    form.dealeur === opt
-                      ? opt === 'propre' ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-red-50 border-red-300 text-red-700'
-                      : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300'
-                  }`}>
-                  {form.dealeur === opt && '✓ '}{opt.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }}
-        className="bg-white rounded-2xl shadow-sm border border-slate-200/70 p-5">
-        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+      {/* INFIRMIER */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.55 }}
+        className="bg-white rounded-2xl shadow-lg shadow-indigo-100/40 border border-indigo-100/50 p-5"
+      >
+        <label className="block text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+          <span className="material-symbols-outlined text-sm">person</span>
           Infirmier(e) en charge
         </label>
-        <input type="text" placeholder="Ex : Harisoa M."
+        <input
+          type="text"
+          placeholder="Ex : Harisoa M."
           value={form.infirmier_nom}
           onChange={e => set('infirmier_nom')(e.target.value)}
-          className="w-full px-3 py-2 text-sm font-semibold border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all" />
+          className="w-full px-3 py-2.5 text-sm font-semibold border-2 border-indigo-100 rounded-xl bg-indigo-50/30 focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100 transition-all"
+        />
       </motion.div>
 
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
-        className="flex items-center justify-between gap-3 pb-6 flex-wrap">
-        <button onClick={goBack}
-          className="px-5 py-2.5 text-sm font-semibold text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer flex items-center gap-2">
+      {/* ACTIONS */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="flex items-center justify-between gap-3 pb-6 flex-wrap"
+      >
+        <motion.button
+          whileHover={{ scale: 1.03, x: -3 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={goBack}
+          className="px-5 py-2.5 text-sm font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:border-slate-400 hover:shadow-lg transition-all cursor-pointer flex items-center gap-2"
+        >
           <span className="material-symbols-outlined text-base">arrow_back</span>
           Retour
-        </button>
+        </motion.button>
 
         <div className="flex gap-3">
-          <button onClick={() => setForm({ ...DEFAULT_FORM, lignes: Array.from({ length: 7 }, () => ({ ...LIGNE_VIDE })) })}
-            className="px-5 py-2.5 text-xs font-semibold text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setForm({ ...DEFAULT_FORM, lignes: Array.from({ length: 7 }, () => ({ ...LIGNE_VIDE })) })}
+            className="px-5 py-2.5 text-xs font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:border-slate-400 transition-all cursor-pointer"
+          >
             Réinitialiser
-          </button>
-          <button onClick={() => window.print()}
-            className="px-5 py-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors cursor-pointer flex items-center gap-1.5">
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => window.print()}
+            className="px-5 py-2.5 text-xs font-black text-white bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl shadow-md shadow-amber-200 hover:shadow-lg transition-all cursor-pointer flex items-center gap-1.5"
+          >
             <span className="material-symbols-outlined text-base">print</span>
             Imprimer
-          </button>
-          <button onClick={handleSave} disabled={saveStatus === 'saving' || saveStatus === 'success'}
-            className={`px-6 py-2.5 text-xs font-bold text-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-70 ${
-              saveStatus === 'success' ? 'bg-emerald-600' : 'bg-emerald-600 hover:bg-emerald-700'
-            }`}>
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleSave}
+            disabled={saveStatus === 'saving' || saveStatus === 'success'}
+            className={`px-6 py-2.5 text-xs font-black text-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-70 shadow-lg ${
+              saveStatus === 'success'
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-600 shadow-emerald-200'
+                : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-200'
+            }`}
+          >
             {saveStatus === 'saving'  && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
             {saveStatus === 'success' && <span className="material-symbols-outlined text-base">check_circle</span>}
             {saveStatus === 'idle'    && <span className="material-symbols-outlined text-base">save</span>}
@@ -418,7 +628,7 @@ function SurveillanceInner() {
              saveStatus === 'success' ? 'Enregistré ✓'      :
              saveStatus === 'error'   ? 'Réessayer'          :
              'Enregistrer'}
-          </button>
+          </motion.button>
         </div>
       </motion.div>
 
@@ -433,7 +643,7 @@ export default function StitchSurveillance() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-screen">
-        <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
       </div>
     }>
       <SurveillanceInner />
