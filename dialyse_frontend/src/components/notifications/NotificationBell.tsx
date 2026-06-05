@@ -52,6 +52,23 @@ export default function NotificationBell() {
     audioReadyRef.current = audioReady;
   }, [audioReady]);
 
+  // Activer audio dès la premiere interaction sur la page
+  useEffect(() => {
+    if (audioReady) return;
+    const enableAudio = () => {
+      setAudioReady(true);
+      console.log('Audio active');
+    };
+    document.addEventListener('click', enableAudio, { once: true });
+    document.addEventListener('keydown', enableAudio, { once: true });
+    document.addEventListener('touchstart', enableAudio, { once: true });
+    return () => {
+      document.removeEventListener('click', enableAudio);
+      document.removeEventListener('keydown', enableAudio);
+      document.removeEventListener('touchstart', enableAudio);
+    };
+  }, [audioReady]);
+
   // ── Charger les notifications depuis l'API ──────
   const loadNotifications = useCallback(async () => {
     try {
