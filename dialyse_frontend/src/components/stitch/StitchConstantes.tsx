@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { InfirmierProfil, getInfirmierActif } from '@/src/components/profil/InfirmierProfilModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -69,6 +70,7 @@ function ConstantesInner() {
   const [loading, setLoading]       = useState(true);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [toast, setToast]           = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [infirmier, setInfirmier] = useState<InfirmierProfil | null>(null);
 
   const showToast = (msg: string, type: 'success' | 'error') => {
     setToast({ msg, type });
@@ -120,6 +122,15 @@ function ConstantesInner() {
   }, [patientId, rdvId]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
+
+  // Charger profil infirmier actif
+  useEffect(() => {
+    const inf = getInfirmierActif();
+    if (inf) {
+      setInfirmier(inf);
+      setForm(f => ({ ...f, infirmier_nom: inf.nom_complet }));
+    }
+  }, []);
 
   const set = (key: keyof ConstantesForm) => (val: string) =>
     setForm(f => ({ ...f, [key]: val }));

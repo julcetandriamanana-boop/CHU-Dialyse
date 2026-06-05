@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { InfirmierProfil, getInfirmierActif } from '@/src/components/profil/InfirmierProfilModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -138,6 +139,7 @@ function SoinsInner() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [etape, setEtape]           = useState<EtapeNum>(1);
   const [toast, setToast]           = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [infirmier, setInfirmier] = useState<InfirmierProfil | null>(null);
 
   const showToast = (msg: string, type: 'success' | 'error') => {
     setToast({ msg, type });
@@ -192,6 +194,14 @@ function SoinsInner() {
   }, [patientId, rdvId]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
+
+  useEffect(() => {
+    const inf = getInfirmierActif();
+    if (inf) {
+      setInfirmier(inf);
+      setForm(f => ({ ...f, infirmier_nom: inf.nom_complet }));
+    }
+  }, []);
 
   const set = (key: keyof SoinsForm) => (val: any) =>
     setForm(f => ({ ...f, [key]: val }));
