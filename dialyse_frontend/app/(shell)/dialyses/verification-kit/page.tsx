@@ -17,41 +17,41 @@ type SeanceType = 'premiere' | 'suivante';
 type SectionStatus = 'idle' | 'saving' | 'vu';
 
 const KIT_PREMIERE: KitItem[] = [
-  { name: 'Acide non glucosé 10l', qty: 1, prixUnit: '', montant: '' },
-  { name: 'Bétadine jaune', qty: 1, prixUnit: '', montant: '' },
-  { name: 'Bétadine rouge', qty: 1, prixUnit: '', montant: '' },
-  { name: 'Héparine ou Lovenox', qty: 2, prixUnit: '', montant: '' },
-  { name: 'Lidocaïne 2%', qty: 2, prixUnit: '', montant: '' },
-  { name: 'Compresse stérile 40X40', qty: '6 boîtes', prixUnit: '', montant: '' },
-  { name: 'Fil à peau', qty: 1, prixUnit: '', montant: '' },
-  { name: "Gant d'examen non stérile", qty: 6, prixUnit: '', montant: '' },
-  { name: 'Gant stérile 7', qty: 6, prixUnit: '', montant: '' },
-  { name: 'Ligne artério-veineuse', qty: 1, prixUnit: '', montant: '' },
+  { name: 'Acide non glucose 10l', qty: 1, prixUnit: '', montant: '' },
+  { name: 'Betadine jaune', qty: 1, prixUnit: '', montant: '' },
+  { name: 'Betadine rouge', qty: 1, prixUnit: '', montant: '' },
+  { name: 'Heparine ou Lovenox', qty: 2, prixUnit: '', montant: '' },
+  { name: 'Lidocaine 2%', qty: 2, prixUnit: '', montant: '' },
+  { name: 'Compresse sterile 40X40', qty: '6 boites', prixUnit: '', montant: '' },
+  { name: 'Fil a peau', qty: 1, prixUnit: '', montant: '' },
+  { name: "Gant d'examen non sterile", qty: 6, prixUnit: '', montant: '' },
+  { name: 'Gant sterile 7', qty: 6, prixUnit: '', montant: '' },
+  { name: 'Ligne artero-veineuse', qty: 1, prixUnit: '', montant: '' },
   { name: 'Masque chirurgical', qty: 6, prixUnit: '', montant: '' },
   { name: 'Rein artificiel (Dialyseur) F6/F7/F8', qty: 1, prixUnit: '', montant: '' },
   { name: 'Seringue 10cc', qty: 6, prixUnit: '', montant: '' },
   { name: 'Seringue 20cc', qty: 6, prixUnit: '', montant: '' },
   { name: 'Seringue 5cc', qty: 6, prixUnit: '', montant: '' },
-  { name: 'SSI 9‰', qty: 1, prixUnit: '', montant: '' },
-  { name: 'Cathéter double voie', qty: 1, prixUnit: '', montant: '' },
+  { name: 'SSI 9 pour mille', qty: 1, prixUnit: '', montant: '' },
+  { name: 'Catheter double voie', qty: 1, prixUnit: '', montant: '' },
   { name: 'Dakin', qty: 1, prixUnit: '', montant: '' },
   { name: 'Perfuseur', qty: 1, prixUnit: '', montant: '' },
   { name: 'Solucart 750g', qty: 1, prixUnit: '', montant: '' },
 ];
 
 const KIT_SUIVANTE: KitItem[] = [
-  { name: 'Acide non glucosé', qty: 1, prixUnit: '', montant: '' },
+  { name: 'Acide non glucose', qty: 1, prixUnit: '', montant: '' },
   { name: 'Lovenox 4000 UI', qty: 3, prixUnit: '', montant: '' },
-  { name: 'Compresse stérile 40X40', qty: '2 boîtes', prixUnit: '', montant: '' },
-  { name: "Gant d'examen non stérile", qty: 6, prixUnit: '', montant: '' },
-  { name: 'Gant stérile 7/0', qty: 6, prixUnit: '', montant: '' },
+  { name: 'Compresse sterile 40X40', qty: '2 boites', prixUnit: '', montant: '' },
+  { name: "Gant d'examen non sterile", qty: 6, prixUnit: '', montant: '' },
+  { name: 'Gant sterile 7/0', qty: 6, prixUnit: '', montant: '' },
   { name: 'Masque chirurgicale', qty: 6, prixUnit: '', montant: '' },
   { name: 'Rein artificiel (Dialyseur) F7/F8', qty: 1, prixUnit: '', montant: '' },
   { name: 'Seringue 10cc', qty: 6, prixUnit: '', montant: '' },
   { name: 'Seringue 20cc', qty: 6, prixUnit: '', montant: '' },
   { name: 'Seringue 5cc', qty: 6, prixUnit: '', montant: '' },
   { name: 'SSI 500ml', qty: 4, prixUnit: '', montant: '' },
-  { name: 'Ligne artério-veineuse', qty: 1, prixUnit: '', montant: '' },
+  { name: 'Ligne artero-veineuse', qty: 1, prixUnit: '', montant: '' },
   { name: 'Solucart', qty: 1, prixUnit: '', montant: '' },
   { name: 'Dakin', qty: 1, prixUnit: '', montant: '' },
   { name: 'Perfuseur', qty: 1, prixUnit: '', montant: '' },
@@ -60,18 +60,33 @@ const KIT_SUIVANTE: KitItem[] = [
 const KIT_SOIN: KitItem[] = [
   { name: 'SSI 500 ml', qty: '06 flacons', prixUnit: '', montant: '' },
   { name: 'Dakin 125ml', qty: '01', prixUnit: '', montant: '' },
-  { name: 'Sécurifixe 10x25cm', qty: '02', prixUnit: '', montant: '' },
+  { name: 'Securifixe 10x25cm', qty: '02', prixUnit: '', montant: '' },
   { name: 'Calot chirurgical', qty: '06', prixUnit: '', montant: '' },
-  { name: 'Cathéter double voie pour dialyse', qty: '01', prixUnit: '', montant: '' },
+  { name: 'Catheter double voie pour dialyse', qty: '01', prixUnit: '', montant: '' },
   { name: 'Solucart 750g', qty: '01', prixUnit: '', montant: '' },
-  { name: 'Rasoirs (épicerie)', qty: '01', prixUnit: '', montant: '' },
+  { name: 'Rasoirs (epicerie)', qty: '01', prixUnit: '', montant: '' },
   { name: 'Perfuseurs', qty: '01', prixUnit: '', montant: '' },
 ];
 
-function KitTable({
-  rows,
-  onChange,
-}: {
+function playBipSuccess() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    osc.frequency.setValueAtTime(1200, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+  } catch {}
+}
+
+
+function KitTable({ rows, onChange }: {
   rows: KitItem[];
   onChange: (idx: number, field: keyof KitItem, val: string) => void;
 }) {
@@ -79,64 +94,52 @@ function KitTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-left">
+      <table className="w-full">
         <thead>
-          <tr className="bg-slate-50 border-b border-slate-100">
-            <th className="px-4 py-2.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Désignation</th>
-            <th className="px-3 py-2.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-24">Quantité</th>
-            <th className="px-3 py-2.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-32">Prix unit. (Ar)</th>
-            <th className="px-3 py-2.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-32">Montant (Ar)</th>
+          <tr className="bg-gradient-to-r from-cyan-100 via-blue-100 to-indigo-100 border-b-2 border-blue-200">
+            <th className="px-4 py-3 text-[10px] font-black text-blue-900 uppercase tracking-wider text-left">Designation</th>
+            <th className="px-3 py-3 text-[10px] font-black text-blue-900 uppercase tracking-wider w-24 text-center">Quantite</th>
+            <th className="px-3 py-3 text-[10px] font-black text-blue-900 uppercase tracking-wider w-32 text-center">Prix unit. (Ar)</th>
+            <th className="px-3 py-3 text-[10px] font-black text-blue-900 uppercase tracking-wider w-32 text-center">Montant (Ar)</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-50">
+        <tbody>
           {rows.map((row, i) => (
-            <motion.tr
-              key={i}
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.02 }}
-              className="hover:bg-slate-50/60 transition-colors"
-            >
-              <td className="px-4 py-2.5 text-xs font-medium text-slate-700">{row.name}</td>
+            <motion.tr key={i}
+              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.025, type: 'spring', stiffness: 200 }}
+              className={`border-b border-slate-100 hover:bg-blue-50/40 transition-colors ${i % 2 === 0 ? 'bg-slate-50/30' : 'bg-white'}`}>
+              <td className="px-4 py-2.5 text-xs font-semibold text-slate-700">{row.name}</td>
               <td className="px-3 py-2.5">
-                <input
-                  type="text"
-                  value={row.qty}
-                  onChange={(e) => onChange(i, 'qty', e.target.value)}
-                  className="w-full px-2 py-1.5 text-xs font-semibold text-center border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:border-blue-400 focus:bg-white transition-all"
-                />
+                <input type="text" value={row.qty}
+                  onChange={e => onChange(i, 'qty', e.target.value)}
+                  className="w-full px-2 py-1.5 text-xs font-bold text-center border-2 border-cyan-100 rounded-lg bg-cyan-50/30 focus:outline-none focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-100 transition-all" />
               </td>
               <td className="px-3 py-2.5">
-                <input
-                  type="number"
-                  value={row.prixUnit}
-                  placeholder="0"
-                  onChange={(e) => {
+                <input type="number" value={row.prixUnit} placeholder="0"
+                  onChange={e => {
                     onChange(i, 'prixUnit', e.target.value);
                     const qty = parseFloat(String(row.qty)) || 0;
-                    const pu = parseFloat(e.target.value) || 0;
+                    const pu  = parseFloat(e.target.value) || 0;
                     onChange(i, 'montant', String(qty * pu));
                   }}
-                  className="w-full px-2 py-1.5 text-xs font-semibold text-right border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:border-blue-400 focus:bg-white transition-all"
-                />
+                  className="w-full px-2 py-1.5 text-xs font-semibold text-right border-2 border-blue-100 rounded-lg bg-blue-50/30 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all" />
               </td>
               <td className="px-3 py-2.5">
-                <input
-                  type="number"
-                  value={row.montant}
-                  placeholder="0"
-                  onChange={(e) => onChange(i, 'montant', e.target.value)}
-                  className="w-full px-2 py-1.5 text-xs font-semibold text-right border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:border-blue-400 focus:bg-white transition-all"
-                />
+                <input type="number" value={row.montant} placeholder="0"
+                  onChange={e => onChange(i, 'montant', e.target.value)}
+                  className="w-full px-2 py-1.5 text-xs font-semibold text-right border-2 border-indigo-100 rounded-lg bg-indigo-50/30 focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all" />
               </td>
             </motion.tr>
           ))}
         </tbody>
         <tfoot>
-          <tr className="border-t-2 border-slate-200 bg-slate-50">
-            <td colSpan={3} className="px-4 py-3 text-xs font-bold text-slate-600 text-right uppercase">Total</td>
-            <td className="px-3 py-3">
-              <span className="text-sm font-black text-blue-700">{total.toLocaleString('fr-MG')} Ar</span>
+          <tr className="border-t-2 border-blue-300 bg-gradient-to-r from-cyan-50 to-blue-50">
+            <td colSpan={3} className="px-4 py-3 text-xs font-black text-blue-700 text-right uppercase tracking-wider">Total</td>
+            <td className="px-3 py-3 text-right">
+              <span className="text-sm font-black text-blue-700 bg-white px-3 py-1 rounded-lg border-2 border-blue-300 shadow-sm">
+                {total.toLocaleString('fr-MG')} Ar
+              </span>
             </td>
           </tr>
         </tfoot>
@@ -145,78 +148,48 @@ function KitTable({
   );
 }
 
-function Toast({ msg, type }: { msg: string; type: 'success' | 'error' }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 40 }}
-      className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 text-white text-sm font-semibold ${
-        type === 'success' ? 'bg-emerald-600' : 'bg-red-500'
-      }`}
-    >
-      <span className="material-symbols-outlined text-lg">
-        {type === 'success' ? 'check_circle' : 'error'}
-      </span>
-      {msg}
-    </motion.div>
-  );
-}
-
-function VuCard({
-  title,
-  onReopen,
-}: {
-  title: string;
-  onReopen: () => void;
-}) {
+function VuCard({ title, onReopen }: { title: string; onReopen: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.96 }}
-      className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex items-center gap-4"
+      transition={{ type: 'spring', stiffness: 200 }}
+      className="bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border-2 border-emerald-300 rounded-2xl px-5 py-4 flex items-center gap-4 shadow-lg shadow-emerald-100/50"
     >
-      <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shadow-sm flex-shrink-0">
-        <span className="material-symbols-outlined text-white text-xl">check_circle</span>
-      </div>
-      <div className="flex-1">
-        <p className="text-sm font-bold text-emerald-800">{title}</p>
-        <p className="text-[10px] text-emerald-600 mt-0.5">Enregistré dans la base de données ✓</p>
-      </div>
-      <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-black rounded-full shadow-sm">VU ✓</span>
-      <button
-        onClick={onReopen}
-        className="text-emerald-600 hover:text-emerald-800 transition-colors p-1.5 hover:bg-emerald-100 rounded-lg cursor-pointer"
+      <motion.div
+        animate={{ boxShadow: ['0 0 0 0 rgba(16,185,129,0.4)', '0 0 0 12px rgba(16,185,129,0)'] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+        className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md shadow-emerald-200 flex-shrink-0"
       >
+        <span className="material-symbols-outlined text-white text-xl">check_circle</span>
+      </motion.div>
+      <div className="flex-1">
+        <p className="text-sm font-black text-emerald-800">{title}</p>
+        <p className="text-[10px] text-emerald-600 mt-0.5 font-semibold">Enregistre en base de donnees</p>
+      </div>
+      <span className="px-3 py-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-black rounded-full shadow-md shadow-emerald-200">VU</span>
+      <button onClick={onReopen}
+        className="text-emerald-600 hover:text-emerald-800 p-1.5 hover:bg-emerald-100 rounded-lg cursor-pointer transition-colors"
+        title="Rouvrir">
         <span className="material-symbols-outlined text-base">expand_more</span>
       </button>
     </motion.div>
   );
 }
 
-function KitSection({
-  icon,
-  title,
-  sub,
-  iconBg,
-  rows,
-  onChangeRow,
-  onReset,
-  status,
-  onVu,
-  color,
-}: {
+
+function KitSection({ icon, title, sub, gradient, accent, rows, onChangeRow, onReset, status, onVu }: {
   icon: string;
   title: string;
   sub: string;
-  iconBg: string;
+  gradient: string;
+  accent: 'blue' | 'emerald' | 'amber';
   rows: KitItem[];
   onChangeRow: (i: number, f: keyof KitItem, v: string) => void;
   onReset: () => void;
   status: SectionStatus;
   onVu: () => void;
-  color: 'blue' | 'emerald' | 'amber';
 }) {
   const [open, setOpen] = useState(true);
 
@@ -224,11 +197,11 @@ function KitSection({
     if (status === 'vu') setOpen(false);
   }, [status]);
 
-  const btnClass = {
-    blue: 'bg-blue-600 hover:bg-blue-700',
-    emerald: 'bg-emerald-600 hover:bg-emerald-700',
-    amber: 'bg-amber-600 hover:bg-amber-700',
-  }[color];
+  const btnGrad = {
+    blue:    'from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 shadow-blue-200',
+    emerald: 'from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-emerald-200',
+    amber:   'from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-amber-200',
+  }[accent];
 
   if (status === 'vu' && !open) {
     return <VuCard title={title} onReopen={() => setOpen(true)} />;
@@ -236,28 +209,25 @@ function KitSection({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border border-slate-200/70 shadow-sm overflow-hidden"
+      transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+      className="bg-white rounded-2xl shadow-xl shadow-blue-100/40 border border-blue-100/50 overflow-hidden"
     >
-      <div className={`px-5 py-4 border-b border-slate-100 flex items-center gap-3 ${iconBg}`}>
-        <div className="w-9 h-9 rounded-xl bg-white/80 flex items-center justify-center shadow-sm">
-          <span className="material-symbols-outlined text-xl text-slate-600">{icon}</span>
+      <div className={`bg-gradient-to-r ${gradient} px-5 py-4 flex items-center gap-3`}>
+        <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+          <span className="material-symbols-outlined text-white text-xl">{icon}</span>
         </div>
         <div className="flex-1">
-          <p className="text-sm font-bold text-slate-800">{title}</p>
-          <p className="text-[10px] text-slate-500 mt-0.5">{sub}</p>
+          <p className="text-sm font-black text-white">{title}</p>
+          <p className="text-[10px] text-white/80 mt-0.5 font-semibold">{sub}</p>
         </div>
         {status === 'vu' && (
-          <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full border border-emerald-200">
-            VU ✓
-          </span>
+          <span className="px-2 py-0.5 bg-white/20 text-white text-[10px] font-black rounded-full border border-white/30">VU</span>
         )}
-        <button
-          onClick={() => setOpen((o) => !o)}
-          className="p-1 hover:bg-white/60 rounded-lg transition-colors cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-slate-400 text-lg">
+        <button onClick={() => setOpen(o => !o)}
+          className="p-1.5 hover:bg-white/20 rounded-lg cursor-pointer transition-colors">
+          <span className="material-symbols-outlined text-white text-lg">
             {open ? 'expand_less' : 'expand_more'}
           </span>
         </button>
@@ -273,27 +243,33 @@ function KitSection({
             style={{ overflow: 'hidden' }}
           >
             <KitTable rows={rows} onChange={onChangeRow} />
-            <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between gap-2">
-              <button
+            <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between gap-2 bg-slate-50/50">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={onReset}
-                className="px-4 py-2 text-xs font-semibold text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-bold text-slate-600 bg-white border-2 border-slate-200 rounded-xl hover:border-slate-400 transition-all cursor-pointer"
               >
-                Réinitialiser
-              </button>
+                Reinitialiser
+              </motion.button>
 
               <div className="flex gap-2">
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => window.print()}
-                  className="px-4 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors cursor-pointer flex items-center gap-1"
+                  className="px-4 py-2 text-xs font-bold text-cyan-700 bg-cyan-50 border-2 border-cyan-200 rounded-xl hover:bg-cyan-100 transition-all cursor-pointer flex items-center gap-1.5"
                 >
                   <span className="material-symbols-outlined text-sm">print</span>
                   Imprimer
-                </button>
+                </motion.button>
 
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={onVu}
                   disabled={status === 'saving'}
-                  className={`px-5 py-2 text-xs font-black text-white rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm disabled:opacity-60 ${btnClass}`}
+                  className={`px-5 py-2 text-xs font-black text-white rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md disabled:opacity-60 bg-gradient-to-r ${btnGrad}`}
                 >
                   {status === 'saving' ? (
                     <>
@@ -306,7 +282,7 @@ function KitSection({
                       Vu
                     </>
                   )}
-                </button>
+                </motion.button>
               </div>
             </div>
           </motion.div>
@@ -316,29 +292,49 @@ function KitSection({
   );
 }
 
+function Toast({ msg, type }: { msg: string; type: 'success' | 'error' }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 60, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 60, scale: 0.8 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-white text-sm font-bold ${
+        type === 'success'
+          ? 'bg-gradient-to-r from-emerald-500 to-teal-600 shadow-emerald-200'
+          : 'bg-gradient-to-r from-red-500 to-rose-600 shadow-red-200'
+      }`}
+    >
+      <span className="material-symbols-outlined text-xl">
+        {type === 'success' ? 'check_circle' : 'error'}
+      </span>
+      {msg}
+    </motion.div>
+  );
+}
+
+
 function VerificationKitInner() {
-  const searchParams = useSearchParams();
+  const searchParams   = useSearchParams();
   const patientIdParam = searchParams.get('patientId');
-  const seanceNumRaw = searchParams.get('seanceNum');
-  const seanceNum = parseInt(seanceNumRaw || '1');
+  const seanceNumRaw   = searchParams.get('seanceNum');
+  const seanceNum      = parseInt(seanceNumRaw || '1');
+  const rdvId          = searchParams.get('rendezVousId');
 
   const [seanceType, setSeanceType] = useState<SeanceType>(seanceNum > 1 ? 'suivante' : 'premiere');
 
   const [patient, setPatient] = useState({
-    nom: '',
-    age: '',
-    sexe: 'M',
-    adresse: '',
-    service: 'Hémodialyse',
+    nom: '', age: '', sexe: 'M', adresse: '',
+    service: 'Hemodialyse',
     date: new Date().toISOString().split('T')[0],
   });
 
-  const [rows1, setRows1] = useState<KitItem[]>(KIT_PREMIERE.map((i) => ({ ...i })));
-  const [rows2, setRows2] = useState<KitItem[]>(KIT_SUIVANTE.map((i) => ({ ...i })));
+  const [rows1, setRows1]       = useState<KitItem[]>(KIT_PREMIERE.map((i) => ({ ...i })));
+  const [rows2, setRows2]       = useState<KitItem[]>(KIT_SUIVANTE.map((i) => ({ ...i })));
   const [rowsSoin, setRowsSoin] = useState<KitItem[]>(KIT_SOIN.map((i) => ({ ...i })));
 
-  const [status1, setStatus1] = useState<SectionStatus>('idle');
-  const [status2, setStatus2] = useState<SectionStatus>('idle');
+  const [status1, setStatus1]       = useState<SectionStatus>('idle');
+  const [status2, setStatus2]       = useState<SectionStatus>('idle');
   const [statusSoin, setStatusSoin] = useState<SectionStatus>('idle');
 
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
@@ -350,7 +346,6 @@ function VerificationKitInner() {
 
   useEffect(() => {
     if (!patientIdParam) return;
-
     fetch(`${API_URL}/patients/${patientIdParam}`)
       .then((r) => r.json())
       .then((data) => {
@@ -367,7 +362,7 @@ function VerificationKitInner() {
   }, [patientIdParam]);
 
   const goBack = () => {
-    window.location.href = `/dialyses/section-medecin?patientId=${patientIdParam || ''}&seanceNum=${seanceNum}`;
+    window.location.href = `/dialyses/section-medecin?patientId=${patientIdParam || ''}&rendezVousId=${rdvId || ''}&seanceNum=${seanceNum}`;
   };
 
   const updateRow = (
@@ -385,12 +380,10 @@ function VerificationKitInner() {
     setStatus: React.Dispatch<React.SetStateAction<SectionStatus>>,
   ) => {
     if (!patientIdParam) {
-      showToast('Aucun patient lié — revenez depuis les choix médecin', 'error');
+      showToast('Aucun patient lie', 'error');
       return;
     }
-
     setStatus('saving');
-
     try {
       const promises = rows
         .filter((r) => r.name && String(r.qty).trim() !== '')
@@ -408,17 +401,14 @@ function VerificationKitInner() {
             }),
           }),
         );
-
       const results = await Promise.all(promises);
-      const allOk = results.every((r) => r.ok);
-
-      if (!allOk) throw new Error('Erreur serveur');
-
+      if (!results.every((r) => r.ok)) throw new Error('Erreur');
       setStatus('vu');
-      showToast(`Kit "${kitLabel}" enregistré et marqué vu`, 'success');
+      playBipSuccess();
+      showToast(`Kit "${kitLabel}" enregistre`, 'success');
     } catch {
       setStatus('idle');
-      showToast("Erreur lors de l'enregistrement", 'error');
+      showToast("Erreur enregistrement", 'error');
     }
   };
 
@@ -427,238 +417,260 @@ function VerificationKitInner() {
     ? status1 === 'vu' && statusSoin === 'vu'
     : status2 === 'vu';
 
+
   return (
-    <div className="min-h-screen bg-slate-50/60 p-6 space-y-5 max-w-5xl mx-auto">
-      {/* En-tête */}
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50/30 via-blue-50/20 to-indigo-50/20 p-6 space-y-5 max-w-6xl mx-auto">
+
+      {/* HEADER */}
       <motion.div
-        initial={{ opacity: 0, y: -12 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+        className="bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-700 rounded-2xl shadow-xl shadow-blue-200/40 p-5 flex items-center justify-between flex-wrap gap-3"
       >
-        <div>
-          <h1 className="text-2xl font-black font-manrope text-slate-800">Vérification Kit</h1>
-          <p className="text-sm text-slate-400 mt-0.5">Ordonnance hémodialyse · CHU Andrainjato</p>
+        <div className="text-white">
+          <h1 className="text-xl md:text-2xl font-black flex items-center gap-2">
+            <span className="material-symbols-outlined text-3xl">vaccines</span>
+            Verification Kit
+          </h1>
+          <p className="text-xs md:text-sm text-blue-100 mt-1 font-semibold">
+            Ordonnance hemodialyse - CHU Andrainjato
+          </p>
         </div>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={goBack}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-4 py-2 bg-white/15 backdrop-blur-sm text-white text-sm font-bold rounded-xl hover:bg-white/25 transition-all cursor-pointer border border-white/20"
         >
           <span className="material-symbols-outlined text-lg">arrow_back</span>
           Retour
-        </button>
+        </motion.button>
       </motion.div>
 
-      {/* Bandeau patient */}
+      {/* BANDEAU PATIENT */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className={`rounded-xl px-4 py-2.5 flex items-center gap-3 border ${
-          patientIdParam ? 'bg-blue-50 border-blue-200' : 'bg-amber-50 border-amber-200'
+        className={`rounded-xl px-4 py-3 flex items-center gap-3 border-2 ${
+          patientIdParam
+            ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+            : 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300'
         }`}
       >
-        <span className={`material-symbols-outlined text-base ${patientIdParam ? 'text-blue-500' : 'text-amber-500'}`}>
+        <span className={`material-symbols-outlined text-lg ${patientIdParam ? 'text-blue-500' : 'text-amber-500'}`}>
           {patientIdParam ? 'person' : 'warning'}
         </span>
-        <span className={`text-xs font-semibold ${patientIdParam ? 'text-blue-700' : 'text-amber-700'}`}>
+        <span className={`text-sm font-bold ${patientIdParam ? 'text-blue-800' : 'text-amber-800'}`}>
           {patientIdParam
-            ? `Patient ID #${patientIdParam}${patient.nom ? ` · ${patient.nom}` : ''} · Séance N°${seanceNum}`
-            : 'Aucun patient lié — revenez depuis les choix médecin'}
+            ? `Patient ID #${patientIdParam}${patient.nom ? ' - ' + patient.nom : ''} - Seance N${seanceNum}`
+            : 'Aucun patient lie - revenez depuis les choix medecin'
+          }
         </span>
       </motion.div>
 
-      {/* Toggle */}
+      {/* TOGGLE TYPE SEANCE */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl border border-slate-200/70 shadow-sm px-5 py-4 flex items-center gap-4 flex-wrap"
+        transition={{ delay: 0.05 }}
+        className="bg-white rounded-2xl shadow-lg shadow-cyan-100/40 border border-cyan-100/50 p-4 flex items-center gap-4 flex-wrap"
       >
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-blue-600 text-xl">info</span>
-          <span className="text-sm font-semibold text-slate-700">Type de séance :</span>
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-200">
+            <span className="material-symbols-outlined text-white text-lg">tune</span>
+          </div>
+          <span className="text-sm font-bold text-slate-700">Type de seance :</span>
         </div>
 
         <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
-          {(['premiere', 'suivante'] as SeanceType[]).map((t) => (
-            <button
+          {(['premiere', 'suivante'] as SeanceType[]).map(t => (
+            <motion.button
               key={t}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setSeanceType(t)}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
                 seanceType === t
-                  ? 'bg-white text-blue-700 shadow-sm border border-slate-200'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-200'
                   : 'text-slate-500 hover:text-slate-700'
               }`}
             >
-              {t === 'premiere' ? '1ère séance' : 'Séances suivantes'}
-            </button>
+              {t === 'premiere' ? '1ere seance' : 'Seances suivantes'}
+            </motion.button>
           ))}
         </div>
 
-        <span
-          className={`ml-auto px-3 py-1 rounded-full text-[10px] font-bold border ${
-            isPremiereSeance
-              ? 'bg-blue-50 text-blue-700 border-blue-200'
-              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-          }`}
-        >
-          {isPremiereSeance ? '🔵 1ère séance' : '🟢 Séances suivantes'}
+        <span className={`ml-auto px-3 py-1.5 rounded-full text-[10px] font-black border-2 ${
+          isPremiereSeance
+            ? 'bg-blue-50 text-blue-700 border-blue-300'
+            : 'bg-emerald-50 text-emerald-700 border-emerald-300'
+        }`}>
+          {isPremiereSeance ? '1ERE SEANCE ACTIVE' : 'SEANCES SUIVANTES ACTIVES'}
         </span>
       </motion.div>
 
-      {/* Infos patient */}
+      {/* INFOS PATIENT */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl border border-slate-200/70 shadow-sm p-5"
+        transition={{ delay: 0.1 }}
+        className="bg-white rounded-2xl shadow-lg shadow-blue-100/40 border border-blue-100/50 overflow-hidden"
       >
-        <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-4 pb-2 border-b border-blue-50">
-          Informations Patient
-        </p>
+        <div className="bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100 px-5 py-3">
+          <h2 className="text-xs font-black text-blue-900 uppercase tracking-wider flex items-center gap-2">
+            <span className="material-symbols-outlined text-base">badge</span>
+            Informations Patient
+          </h2>
+        </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="p-5 grid grid-cols-2 md:grid-cols-3 gap-4">
           {[
-            { label: 'Nom & Prénoms', key: 'nom', type: 'text', placeholder: 'Rakoto Jean' },
-            { label: 'Âge', key: 'age', type: 'number', placeholder: '45' },
-            { label: 'Adresse', key: 'adresse', type: 'text', placeholder: 'Fianarantsoa' },
-            { label: 'Service', key: 'service', type: 'text', placeholder: 'Hémodialyse' },
-            { label: "Date de l'ordonnance", key: 'date', type: 'date', placeholder: '' },
-          ].map((f) => (
-            <div key={f.key}>
-              <label className="block text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                {f.label}
-              </label>
-              <input
-                type={f.type}
-                placeholder={f.placeholder}
+            { label: 'Nom et Prenoms',   key: 'nom',     type: 'text',   ph: 'Rakoto Jean'   },
+            { label: 'Age',              key: 'age',     type: 'number', ph: '45'            },
+            { label: 'Adresse',          key: 'adresse', type: 'text',   ph: 'Fianarantsoa'  },
+            { label: 'Service',          key: 'service', type: 'text',   ph: 'Hemodialyse'   },
+            { label: "Date ordonnance",  key: 'date',    type: 'date',   ph: ''              },
+          ].map(f => (
+            <motion.div key={f.key} whileHover={{ y: -2 }}>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">{f.label}</label>
+              <input type={f.type} placeholder={f.ph}
                 value={(patient as any)[f.key]}
-                onChange={(e) => setPatient((p) => ({ ...p, [f.key]: e.target.value }))}
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:border-blue-400 focus:bg-white transition-all"
-              />
-            </div>
+                onChange={e => setPatient(p => ({ ...p, [f.key]: e.target.value }))}
+                className="w-full px-3 py-2 text-sm font-semibold border-2 border-blue-100 rounded-xl bg-blue-50/30 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all" />
+            </motion.div>
           ))}
-
           <div>
-            <label className="block text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Sexe</label>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Sexe</label>
             <div className="flex gap-2">
-              {['M', 'F'].map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setPatient((p) => ({ ...p, sexe: s }))}
-                  className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+              {['M', 'F'].map(s => (
+                <motion.button key={s}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setPatient(p => ({ ...p, sexe: s }))}
+                  className={`flex-1 py-2 rounded-xl text-sm font-black border-2 transition-all cursor-pointer ${
                     patient.sexe === s
                       ? s === 'M'
-                        ? 'bg-blue-50 border-blue-300 text-blue-700'
-                        : 'bg-pink-50 border-pink-300 text-pink-700'
-                      : 'bg-slate-50 border-slate-200 text-slate-500'
-                  }`}
-                >
+                        ? 'bg-gradient-to-r from-blue-500 to-cyan-600 border-blue-600 text-white shadow-md shadow-blue-200'
+                        : 'bg-gradient-to-r from-pink-500 to-rose-600 border-pink-600 text-white shadow-md shadow-pink-200'
+                      : 'bg-white border-slate-200 text-slate-500 hover:border-slate-400'
+                  }`}>
                   {s}
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>
         </div>
       </motion.div>
 
+
+      {/* SECTIONS KITS */}
       <AnimatePresence mode="wait">
         {isPremiereSeance && (
-          <motion.div
-            key="premiere"
-            className="space-y-5"
+          <motion.div key="premiere" className="space-y-5"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-          >
+            exit={{ opacity: 0, y: -12 }}>
+
             <KitSection
               icon="vaccines"
-              title="Kit Hémodialyse — 1ère Séance"
-              sub="Ordonnance complète · Nouveau patient"
-              iconBg="bg-gradient-to-r from-blue-50 to-blue-100/50"
+              title="Kit Hemodialyse - 1ere Seance"
+              sub="Ordonnance complete - Nouveau patient"
+              gradient="from-blue-500 via-indigo-500 to-purple-600"
+              accent="blue"
               rows={rows1}
               onChangeRow={(i, f, v) => updateRow(setRows1, i, f, v)}
-              onReset={() => setRows1(KIT_PREMIERE.map((i) => ({ ...i })))}
+              onReset={() => setRows1(KIT_PREMIERE.map(i => ({ ...i })))}
               status={status1}
-              onVu={() => handleVu(rows1, '1ère séance hémodialyse', setStatus1)}
-              color="blue"
+              onVu={() => handleVu(rows1, '1ere seance hemodialyse', setStatus1)}
             />
 
             <KitSection
               icon="medical_services"
-              title="Ordonnance Kit 1er Soin — Service Hémodialyse"
-              sub="Matériel de soin cathéter"
-              iconBg="bg-gradient-to-r from-amber-50 to-amber-100/50"
+              title="Ordonnance Kit 1er Soin - Service Hemodialyse"
+              sub="Materiel de soin catheter"
+              gradient="from-amber-500 via-orange-500 to-red-500"
+              accent="amber"
               rows={rowsSoin}
               onChangeRow={(i, f, v) => updateRow(setRowsSoin, i, f, v)}
-              onReset={() => setRowsSoin(KIT_SOIN.map((i) => ({ ...i })))}
+              onReset={() => setRowsSoin(KIT_SOIN.map(i => ({ ...i })))}
               status={statusSoin}
-              onVu={() => handleVu(rowsSoin, 'Kit 1er soin cathéter', setStatusSoin)}
-              color="amber"
+              onVu={() => handleVu(rowsSoin, 'Kit 1er soin catheter', setStatusSoin)}
             />
           </motion.div>
         )}
 
         {!isPremiereSeance && (
-          <motion.div
-            key="suivante"
+          <motion.div key="suivante"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-          >
+            exit={{ opacity: 0, y: -12 }}>
+
             <KitSection
               icon="autorenew"
-              title="Kit Hémodialyse — Séances Suivantes"
+              title="Kit Hemodialyse - Seances Suivantes"
               sub="Ordonnance renouvellement"
-              iconBg="bg-gradient-to-r from-emerald-50 to-emerald-100/50"
+              gradient="from-emerald-500 via-teal-500 to-cyan-600"
+              accent="emerald"
               rows={rows2}
               onChangeRow={(i, f, v) => updateRow(setRows2, i, f, v)}
-              onReset={() => setRows2(KIT_SUIVANTE.map((i) => ({ ...i })))}
+              onReset={() => setRows2(KIT_SUIVANTE.map(i => ({ ...i })))}
               status={status2}
-              onVu={() => handleVu(rows2, 'Séances suivantes hémodialyse', setStatus2)}
-              color="emerald"
+              onVu={() => handleVu(rows2, 'Seances suivantes hemodialyse', setStatus2)}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Bloc retour après validation */}
+      {/* BANNIERE SUCCES */}
       <AnimatePresence>
         {allVu && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.96 }}
-            className="bg-blue-600 rounded-2xl p-5 shadow-lg shadow-blue-200/40"
+            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+            className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 rounded-2xl p-5 shadow-xl shadow-emerald-200/40"
           >
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 0.6, repeat: 2 }}
+                  className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/30"
+                >
                   <span className="material-symbols-outlined text-white text-2xl">task_alt</span>
-                </div>
+                </motion.div>
                 <div>
-                  <p className="text-white text-sm font-black">Kits vérifiés avec succès ✓</p>
-                  <p className="text-blue-100 text-xs mt-0.5">
-                    Retournez vers Vérification kit / Conductivité & Paramètres
+                  <p className="text-white text-sm font-black">Kits verifies avec succes</p>
+                  <p className="text-emerald-100 text-xs mt-0.5 font-semibold">
+                    Tous les kits ont ete enregistres
                   </p>
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <button
+              <div className="flex gap-2 flex-wrap">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => {
-                    window.location.href = `/dialyses/conductivite-params?patientId=${patientIdParam || ''}&seanceNum=${seanceNum}`;
+                    window.location.href = `/dialyses/conductivite-params?patientId=${patientIdParam || ''}&rendezVousId=${rdvId || ''}&seanceNum=${seanceNum}`;
                   }}
-                  className="px-5 py-3 bg-white/15 text-white text-sm font-bold rounded-xl hover:bg-white/20 transition-all cursor-pointer flex items-center gap-2 border border-white/20"
+                  className="px-4 py-2.5 bg-white/20 text-white text-xs font-black rounded-xl hover:bg-white/30 transition-all cursor-pointer flex items-center gap-2 border border-white/30 backdrop-blur-sm"
                 >
                   <span className="material-symbols-outlined text-base">settings</span>
-                  Conductivité
-                </button>
+                  Conductivite
+                </motion.button>
 
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={goBack}
-                  className="px-5 py-3 bg-white text-blue-700 text-sm font-black rounded-xl hover:bg-blue-50 transition-all cursor-pointer flex items-center gap-2 shadow-sm"
+                  className="px-5 py-2.5 bg-white text-emerald-700 text-xs font-black rounded-xl hover:bg-emerald-50 transition-all cursor-pointer flex items-center gap-2 shadow-md"
                 >
-                  <span className="material-symbols-outlined text-lg">arrow_back</span>
-                  Retour aux choix médecin
-                </button>
+                  <span className="material-symbols-outlined text-base">arrow_back</span>
+                  Retour aux choix medecin
+                </motion.button>
               </div>
             </div>
           </motion.div>
@@ -674,13 +686,11 @@ function VerificationKitInner() {
 
 export default function VerificationKitPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      }
-    >
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
       <VerificationKitInner />
     </Suspense>
   );

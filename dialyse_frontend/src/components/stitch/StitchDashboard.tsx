@@ -10,7 +10,7 @@ const DUREE_SEANCE_MS = 4 * 60 * 60 * 1000;
 type StatutSeance   = 'en_attente' | 'en_cours' | 'terminé' | 'absent';
 type TraitementStat = 'actif' | 'suspendu' | 'terminé';
 type AlerteType     = 'retard' | 'bientot' | 'normal';
-type ModalType      = 'medecin' | 'dossier' | null;
+type ModalType      = 'dossier' | null;
 
 interface PatientSeance {
   id: number;
@@ -369,14 +369,9 @@ function SectionModal({ open, type, patient, onClose }: {
   if (!open || !patient || !type) return null;
 
   const config = {
-    medecin:     { label: 'Section Médecin',    icon: 'stethoscope',      from: 'from-blue-50',    to: 'to-blue-100',    iconBg: 'bg-blue-600'    },
     dossier:     { label: 'Dossier Patient',     icon: 'folder_open',      from: 'from-purple-50',  to: 'to-purple-100',  iconBg: 'bg-purple-600'  },
   }[type];
 
-  const medecinCards = [
-    { icon: 'vaccines',                 title: 'Vérification Kit',          desc: 'Ordonnance kit hémodialyse', btn: 'Ouvrir',   href: `/dialyses/verification-kit?patientId=${patient.patientId}&seanceNum=${patient.seanceNum}`,   color: 'blue' },
-    { icon: 'settings_input_component', title: 'Conductivité & Paramètres', desc: 'Paramètres dialysat et UF',  btn: 'Accéder', href: `/dialyses/conductivite-params?patientId=${patient.patientId}&seanceNum=${patient.seanceNum}`, color: 'blue' },
-  ];
   const dossierMeta = [
     { l: 'Patient',     v: `${patient.prenom} ${patient.nom}` },
     { l: 'Poste',       v: patient.poste },
@@ -393,7 +388,7 @@ function SectionModal({ open, type, patient, onClose }: {
     { icon: 'description', title: 'Documents',  desc: 'Ordonnances, CR',        btn: 'Accéder',   href: '#', color: 'purple' },
   ];
 
-  const renderCards = (cards: typeof medecinCards, accent: string) => (
+  const renderCards = (cards: typeof dossierCards, accent: string) => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       {cards.map(c => (
         <div key={c.title} className={`p-4 bg-${accent}-50 rounded-xl border border-${accent}-100 hover:shadow-md transition-all`}>
@@ -441,7 +436,6 @@ function SectionModal({ open, type, patient, onClose }: {
               </button>
             </div>
             <div className="p-5">
-              {type === 'medecin'     && renderCards(medecinCards, 'blue')}
               {type === 'dossier'     && (
                 <>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
@@ -810,9 +804,9 @@ export default function StitchDashboard() {
                         {/* Statut */}
                         <td className="px-4 py-3"><StatutBadge statut={p.statut} /></td>
 
-                        {/* Médecin */}
+                        {/* Médecin — redirection directe */}
                         <td className="px-4 py-3">
-                          <button onClick={() => openModal('medecin', p)}
+                          <button onClick={() => { window.location.href = `/dialyses/section-medecin?patientId=${p.patientId}&rendezVousId=${p.id}&seanceNum=${p.seanceNum}`; }}
                             className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 text-blue-700 text-[10px] font-semibold rounded-lg hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer whitespace-nowrap">
                             <span className="material-symbols-outlined text-[14px]">stethoscope</span>Médecin
                           </button>
