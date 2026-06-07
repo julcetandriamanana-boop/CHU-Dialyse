@@ -233,6 +233,30 @@ export async function envoyerOrdonnanceKit(payload: OrdonnancePayload): Promise<
       });
     } catch {}
 
+    // Enregistrer en base Dialyse (toujours, meme si pharmacie ne repond pas)
+    try {
+      const enregistrementRes = await fetch(`${DIALYSE_API}/prescription-kit-envoyee`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patient_id:              parseInt(payload.patientId),
+          rendez_vous_id:          payload.rendezVousId || null,
+          kit_id:                  payload.kitId,
+          kit_nom:                 payload.kitNom,
+          type_kit:                payload.typeKit,
+          ordonnance_pharmacie_id: ordonnanceData?.id || ordonnanceData?.ordonnance_id || null,
+          articles_count:          payload.articles.length,
+          emetteur_id:             payload.emetteurId,
+          emetteur_nom:            payload.emetteurNom,
+          emetteur_role:           payload.emetteurRole,
+          notes:                   payload.notes,
+        }),
+      });
+      console.log('Enregistrement Dialyse status:', enregistrementRes.status);
+    } catch (e) {
+      console.warn('Erreur enregistrement local kit envoye:', e);
+    }
+
     if (!ordonnanceRes.ok) {
       return {
         success: false,
@@ -299,4 +323,86 @@ export function calculerAge(dateNaissance?: string): number | null {
   const m = t.getMonth() - b.getMonth();
   if (m < 0 || (m === 0 && t.getDate() < b.getDate())) a--;
   return a;
+}
+
+// ═══════════════════════════════════════════════════
+// Suivi prescription kit envoyée
+// ═══════════════════════════════════════════════════
+
+export interface KitEnvoye {
+  id: number;
+  patient_id: number;
+  rendez_vous_id: number | null;
+  kit_id: string;
+  kit_nom: string;
+  type_kit: string;
+  ordonnance_pharmacie_id: string | null;
+  articles_count: number;
+  emetteur_id: number | null;
+  emetteur_nom: string | null;
+  emetteur_role: string | null;
+  statut: string;
+  date_envoi: string;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface PatientKitStatus {
+  count: number;
+  dernier: string;
+}
+
+/**
+ * Map patientId → { count, dernier date }
+ */
+export async function fetchPatientsKitStatus(): Promise<Record<number, PatientKitStatus>> {
+  try {
+    const res = await fetch(`${DIALYSE_API}/prescription-kit-envoyee/patients-status`);
+    if (!res.ok) return {};
+    return res.json();
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Liste des kits envoyés pour un patient
+ */
+export async function fetchKitsEnvoyesPatient(patientId: number): Promise<KitEnvoye[]> {
+  try {
+    const res = await fetch(`${DIALYSE_API}/prescription-kit-envoyee/patient/${patientId}`);
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Enregistrer un kit envoyé en base Dialyse
+ */
+export async function enregistrerKitEnvoye(data: {
+  patient_id: number;
+  rendez_vous_id?: number | null;
+  kit_id: string;
+  kit_nom: string;
+  type_kit: string;
+  ordonnance_pharmacie_id?: string | null;
+  articles_count: number;
+  emetteur_id?: number | null;
+  emetteur_nom?: string | null;
+  emetteur_role?: string | null;
+  notes?: string | null;
+}): Promise<KitEnvoye | null> {
+  try {
+    const res = await fetch(`${DIALYSE_API}/prescription-kit-envoyee`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
 }
