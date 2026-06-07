@@ -1,0 +1,302 @@
+'use client';
+
+/**
+ * Service client API Pharmacie CHU
+ * URL: https://chupharmacie.onrender.com/api
+ *
+ * Permet à Dialyse d'envoyer des prescriptions kit à la pharmacie
+ * et de récupérer les kits disponibles.
+ */
+
+const PHARMACIE_API = 'https://chupharmacie.onrender.com/api';
+const DIALYSE_API   = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+export const MY_SERVICE_ID = process.env.NEXT_PUBLIC_DIALYSE_SERVICE_ID || 'd604bde1-c9dd-4284-a690-0c5ed9be6a37';
+export const MY_CHU_ID     = process.env.NEXT_PUBLIC_DIALYSE_CHU_ID     || '1e5bbbb7-fa10-4d59-8848-2d0ce96a9394';
+
+// ═══════════════════════════════════════════════════
+// Types
+// ═══════════════════════════════════════════════════
+
+export interface PharmacieKitItem {
+  id: string;
+  designation: string;
+  quantiteDefaut: number;
+  unite: string;
+  kitId: string;
+}
+
+export interface PharmacieKit {
+  id: string;
+  nom: string;
+  service: string;
+  is_don: boolean;
+  created_at: string;
+  updated_at: string;
+  service_id: string | null;
+  items: PharmacieKitItem[];
+}
+
+export interface OrdonnanceArticle {
+  designation: string;
+  quantite: number;
+  unite: string;
+  statut_stock?: 'disponible' | 'stock_insuffisant' | 'rupture';
+}
+
+export interface OrdonnancePayload {
+  patientId: string;
+  patientNom: string;
+  patientPrenom: string;
+  patientSexe?: string;
+  patientAge?: number;
+  numeroDossier?: string;
+  rendezVousId?: number;
+  kitId: string;
+  kitNom: string;
+  typeKit: 'premiere' | 'suivante' | 'premier_soin';
+  serviceDemandeur: string;
+  emetteurId: number;
+  emetteurNom: string;
+  emetteurRole: string;
+  articles: OrdonnanceArticle[];
+  datePrescription: string;
+  notes?: string;
+}
+
+// ═══════════════════════════════════════════════════
+// API Pharmacie — Lecture des kits
+// ═══════════════════════════════════════════════════
+
+export async function fetchKitsPharmacie(): Promise<PharmacieKit[]> {
+  try {
+    const res = await fetch(`${PHARMACIE_API}/kits`);
+    if (!res.ok) return [];
+    return res.json();
+  } catch (e) {
+    console.error('Erreur fetch kits pharmacie:', e);
+    return [];
+  }
+}
+
+export async function fetchKitById(kitId: string): Promise<PharmacieKit | null> {
+  try {
+    const res = await fetch(`${PHARMACIE_API}/kits/${kitId}`);
+    if (!res.ok) return null;
+    return res.json();
+  } catch (e) {
+    console.error('Erreur fetch kit:', e);
+    return null;
+  }
+}
+
+export async function fetchKitItems(kitId: string): Promise<PharmacieKitItem[]> {
+  try {
+    const res = await fetch(`${PHARMACIE_API}/kits/${kitId}/items`);
+    if (!res.ok) return [];
+    return res.json();
+  } catch (e) {
+    console.error('Erreur fetch items kit:', e);
+    return [];
+  }
+}
+
+// Récupère les 2 kits principaux : 1ère séance et séances suivantes
+export async function fetchKitsHemodialyse(): Promise<{
+  premiere: PharmacieKit | null;
+  suivante: PharmacieKit | null;
+  premierSoin: PharmacieKit | null;
+}> {
+  const kits = await fetchKitsPharmacie();
+  const hemodialyse = kits.filter(k => k.service === 'HEMODIALYSE');
+
+  const premiere    = hemodialyse.find(k => k.nom.toLowerCase().includes('1ère') || k.nom.toLowerCase().includes('1ere')) || null;
+  const suivante    = hemodialyse.find(k => k.nom.toLowerCase().includes('prochaine') || k.nom.toLowerCase().includes('suivante')) || null;
+  const premierSoin = hemodialyse.find(k => k.nom.toLowerCase().includes('1er soin') || k.nom.toLowerCase().includes('ordonnance')) || null;
+
+  return { premiere, suivante, premierSoin };
+}
+
+// ═══════════════════════════════════════════════════
+// Envoi prescription kit vers pharmacie
+// ═══════════════════════════════════════════════════
+
+/**
+ * Envoie une ordonnance kit à la pharmacie via 2 actions:
+ * 1. POST /api/prescriptions/dialyse/{id}/ordonnance (création ordonnance)
+ * 2. POST /api/notifications/receive (notification pharmacie)
+ */
+export async function envoyerOrdonnanceKit(payload: OrdonnancePayload): Promise<{
+  success: boolean;
+  ordonnanceId?: string;
+  message: string;
+  details?: any;
+}> {
+  try {
+    // ═══════════════════════════════════════════════════
+    // 1. Créer l'ordonnance dans la pharmacie
+    // ═══════════════════════════════════════════════════
+    const ordonnanceBody = {
+      patient: {
+        id:       payload.patientId,
+        nom:      payload.patientNom,
+        prenom:   payload.patientPrenom,
+        sexe:     payload.patientSexe,
+        age:      payload.patientAge,
+        dossier:  payload.numeroDossier,
+      },
+      kit: {
+        id:   payload.kitId,
+        nom:  payload.kitNom,
+        type: payload.typeKit,
+      },
+      articles: payload.articles.map(a => ({
+        designation: a.designation,
+        quantite:    a.quantite,
+        unite:       a.unite,
+      })),
+      emetteur: {
+        id:   payload.emetteurId,
+        nom:  payload.emetteurNom,
+        role: payload.emetteurRole,
+      },
+      service_demandeur: payload.serviceDemandeur,
+      service_id:        MY_SERVICE_ID,
+      chu_id:            MY_CHU_ID,
+      date_prescription: payload.datePrescription,
+      notes:             payload.notes,
+      rendez_vous_id:    payload.rendezVousId,
+      statut:            'EN_ATTENTE_PREPARATION',
+    };
+
+    const ordonnanceRes = await fetch(
+      `${PHARMACIE_API}/prescriptions/dialyse/${payload.patientId}/ordonnance`,
+      {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(ordonnanceBody),
+      },
+    );
+
+    let ordonnanceData: any = null;
+    try { ordonnanceData = await ordonnanceRes.json(); } catch {}
+
+    // ═══════════════════════════════════════════════════
+    // 2. Envoyer notification à la pharmacie (signal)
+    // ═══════════════════════════════════════════════════
+    try {
+      await fetch(`${PHARMACIE_API}/notifications/receive`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type:              'PRESCRIPTION_KIT',
+          motif:             `Nouvelle ordonnance Kit Dialyse reçue - Patient: ${payload.patientPrenom} ${payload.patientNom} - Type: ${payload.kitNom}`,
+          urgence:           3,
+          sourceServiceId:   MY_SERVICE_ID,
+          sourceServiceName: 'Dialyse CHU Andrainjato',
+          targetServiceId:   '40c296da-d940-44d0-bcd8-9f0379ea5f04', // Service Pharmaceutique
+          targetServiceName: 'Service Pharmaceutique',
+          emitterId:         String(payload.emetteurId),
+          emitterName:       payload.emetteurNom,
+          patientId:         payload.patientId,
+          sentAt:            new Date().toISOString(),
+          channels:          ['WEB', 'SOUND'],
+          payload: {
+            ordonnance_id: ordonnanceData?.id || null,
+            kit_id:        payload.kitId,
+            kit_nom:       payload.kitNom,
+            patient_nom:   `${payload.patientPrenom} ${payload.patientNom}`,
+            articles:      payload.articles,
+          },
+        }),
+      });
+    } catch (notifErr) {
+      console.warn('Notification pharmacie non envoyée:', notifErr);
+    }
+
+    // ═══════════════════════════════════════════════════
+    // 3. Notification interne Dialyse (confirmation)
+    // ═══════════════════════════════════════════════════
+    try {
+      await fetch(`${DIALYSE_API}/notifications`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title:    'Ordonnance Kit envoyée',
+          message:  `Kit "${payload.kitNom}" envoyé à la pharmacie pour ${payload.patientPrenom} ${payload.patientNom}`,
+          type:     'success',
+          category: 'pharmacie',
+          icon:     'send',
+          link:     '/dialyses',
+          urgence:  2,
+        }),
+      });
+    } catch {}
+
+    if (!ordonnanceRes.ok) {
+      return {
+        success: false,
+        message: ordonnanceData?.message || `Erreur ${ordonnanceRes.status}`,
+        details: ordonnanceData,
+      };
+    }
+
+    return {
+      success:      true,
+      ordonnanceId: ordonnanceData?.id || ordonnanceData?.ordonnance_id,
+      message:      'Ordonnance Kit Dialyse envoyée avec succès à la Pharmacie',
+      details:      ordonnanceData,
+    };
+  } catch (err: any) {
+    console.error('Erreur envoi ordonnance:', err);
+    return {
+      success: false,
+      message: err?.message || 'Erreur réseau',
+    };
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// Récupérer ordonnances envoyées (historique)
+// ═══════════════════════════════════════════════════
+
+export async function fetchOrdonnancesPatient(patientId: string): Promise<any[]> {
+  try {
+    const res = await fetch(`${PHARMACIE_API}/prescriptions/dialyse/patient/${patientId}`);
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchPrescriptionsDialyse(): Promise<any[]> {
+  try {
+    const res = await fetch(`${PHARMACIE_API}/prescriptions/dialyse`);
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════════════
+
+export function getTypeKitFromKit(kit: PharmacieKit): 'premiere' | 'suivante' | 'premier_soin' {
+  const n = kit.nom.toLowerCase();
+  if (n.includes('1ère') || n.includes('1ere')) return 'premiere';
+  if (n.includes('soin') || n.includes('ordonnance')) return 'premier_soin';
+  return 'suivante';
+}
+
+export function calculerAge(dateNaissance?: string): number | null {
+  if (!dateNaissance) return null;
+  const t = new Date();
+  const b = new Date(dateNaissance);
+  let a = t.getFullYear() - b.getFullYear();
+  const m = t.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && t.getDate() < b.getDate())) a--;
+  return a;
+}
