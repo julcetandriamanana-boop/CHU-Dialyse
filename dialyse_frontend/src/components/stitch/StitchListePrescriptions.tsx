@@ -57,6 +57,16 @@ export default function StitchListePrescriptions() {
   const [prescCliniques, setPrescCliniques] = useState<PrescriptionClinique[]>([]);
   const [detailsKits, setDetailsKits]       = useState<Record<number, KitEnvoye[]>>({});
   const [openDetails, setOpenDetails]       = useState<number | null>(null);
+  const [activeTab, setActiveTab]           = useState<'a_traiter' | 'traites'>('a_traiter');
+  const [now, setNow]                       = useState(Date.now());
+
+  // Timer pour actualiser toutes les 10s (suivi du 1 min)
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 10000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const DELAI_DISPARITION_MS = 60 * 1000; // 1 minute
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -130,6 +140,24 @@ export default function StitchListePrescriptions() {
       );
     })
     .sort((a, b) => new Date(b.derniereDate).getTime() - new Date(a.derniereDate).getTime());
+
+
+  // Séparer patients: à traiter vs traités (kit envoyé > 1 min)
+  const patientsATraiter = patientsGroupes.filter(g => {
+    const kit = kitsStatus[g.patient.id];
+    if (!kit) return true; // Pas de kit = à traiter
+    const elapsed = now - new Date(kit.dernier).getTime();
+    return elapsed < DELAI_DISPARITION_MS; // Encore visible (< 1 min)
+  });
+
+  const patientsTraites = patientsGroupes.filter(g => {
+    const kit = kitsStatus[g.patient.id];
+    if (!kit) return false;
+    const elapsed = now - new Date(kit.dernier).getTime();
+    return elapsed >= DELAI_DISPARITION_MS; // Disparu (>= 1 min)
+  });
+
+  const listeAffichee = activeTab === "a_traiter" ? patientsATraiter : patientsTraites;
 
   const totalPatients      = patientsGroupes.length;
   const totalPrescriptions = prescriptions.length;
@@ -248,23 +276,54 @@ export default function StitchListePrescriptions() {
           </div>
         </motion.div>
 
+
+        {/* Onglets A traiter / Traites */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex items-center gap-2 mb-4"
+        >
+          <button
+            onClick={() => setActiveTab("a_traiter")}
+            className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer flex items-center gap-2 ${
+              activeTab === "a_traiter"
+                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-200"
+                : "bg-white border-2 border-slate-200 text-slate-600 hover:border-blue-300"
+            }`}
+          >
+            <span className="material-symbols-outlined text-base">pending_actions</span>
+            À traiter ({patientsATraiter.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("traites")}
+            className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer flex items-center gap-2 ${
+              activeTab === "traites"
+                ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-200"
+                : "bg-white border-2 border-slate-200 text-slate-600 hover:border-emerald-300"
+            }`}
+          >
+            <span className="material-symbols-outlined text-base">check_circle</span>
+            Traités aujourd'hui ({patientsTraites.length})
+          </button>
+        </motion.div>
+
         {/* Liste */}
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
             <p className="text-slate-500 font-semibold">Chargement des prescriptions validées...</p>
           </div>
-        ) : patientsGroupes.length === 0 ? (
+        ) : listeAffichee.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-12 text-center">
             <span className="material-symbols-outlined text-5xl text-slate-300 mb-4">inventory_2</span>
-            <h3 className="text-lg font-bold text-slate-500 mb-2">Aucune prescription validée</h3>
+            <h3 className="text-lg font-bold text-slate-500 mb-2">{activeTab === 'a_traiter' ? 'Aucune prescription à traiter' : 'Aucun patient traité aujourd\'hui'}</h3>
             <p className="text-xs text-slate-400">
               Les prescriptions validées par le service clinique apparaîtront ici.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
-            {patientsGroupes.map((groupe, index) => {
+            {listeAffichee.map((groupe, index) => {
               const { patient, prescriptions: pp, derniereDate } = groupe;
               const isExpanded     = expandedId === patient.id;
               const isOpenDetails  = openDetails === patient.id;
