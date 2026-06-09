@@ -469,6 +469,7 @@ export default function StitchDashboard() {
   const [modalOpen, setModalOpen]                     = useState<ModalType>(null);
   const [patientSelectionne, setPatientSelectionne]   = useState<PatientSeance | null>(null);
   const [confirmFin, setConfirmFin]                   = useState<PatientSeance | null>(null);
+  const [patientsHidden, setPatientsHidden]             = useState<Set<number>>(new Set());
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ── Chargement ──────────────────────────────
@@ -505,7 +506,10 @@ export default function StitchDashboard() {
       });
 
       list.sort((a, b) => a.debutTimestamp - b.debutTimestamp);
-      setPatients(list);
+
+      // Filtrer les patients cachés (après Prendre RDV / Clôturer / Suspendre)
+      const filtered = list.filter(p => !patientsHidden.has(p.id));
+      setPatients(filtered);
     } catch (err) {
       console.error(err);
       setPatients([]);
@@ -564,12 +568,16 @@ export default function StitchDashboard() {
   // Prendre RDV — redirige avec patientId
   const handlePrendreRdv = useCallback((p: PatientSeance) => {
     setConfirmFin(null);
+    // Cacher immediatement le patient du dashboard
+    setPatientsHidden(prev => new Set(prev).add(p.id));
     router.push(`/rendez-vous?patientId=${p.patientId}`);
   }, [router]);
 
   // Clôturer traitement
   const handleCloturer = useCallback(async (motif: string, notes: string) => {
     if (!confirmFin) return;
+    // Cacher immediatement le patient du dashboard
+    setPatientsHidden(prev => new Set(prev).add(confirmFin.id));
     await fetch(`${API_URL}/patients/${confirmFin.patientId}/cloturer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -582,6 +590,8 @@ export default function StitchDashboard() {
   // Suspendre traitement
   const handleSuspendre = useCallback(async (motif: string, notes: string) => {
     if (!confirmFin) return;
+    // Cacher immediatement le patient du dashboard
+    setPatientsHidden(prev => new Set(prev).add(confirmFin.id));
     await fetch(`${API_URL}/patients/${confirmFin.patientId}/suspendre`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
