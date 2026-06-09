@@ -115,6 +115,28 @@ function NewRDVForm({ popup, onClose, onCreated, preselectedPatientId }: {
   const [loadingSeance, setLoadingSeance]     = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
+  // Pre-selectionner le patient si patientId passe en URL
+  useEffect(() => {
+    if (!preselectedPatientId) return;
+    const loadPreselected = async () => {
+      try {
+        const res = await fetch(`${API_URL}/patients/${preselectedPatientId}`);
+        if (res.ok) {
+          const data = await res.json();
+          const p: PatientSuggestion = {
+            id: data.id,
+            nom: data.nom,
+            prenom: data.prenom,
+          };
+          setSearch(`${p.prenom} ${p.nom}`);
+          selectPatient(p);
+        }
+      } catch {}
+    };
+    loadPreselected();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preselectedPatientId]);
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) onClose();
