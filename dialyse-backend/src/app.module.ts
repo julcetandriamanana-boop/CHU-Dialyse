@@ -15,6 +15,8 @@ import { MedecinModule } from './medecin/medecin.module';
 import { ConstantesModule } from './constantes/constantes.module';
 import { SurveillanceModule } from './surveillance/surveillance.module';
 import { SoinsModule } from './soins/soins.module';
+import { PrescriptionKitEnvoyeeModule } from './prescription-kit-envoyee/prescription-kit-envoyee.module';
+import { InfirmierModule } from './infirmier/infirmier.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { SoinsModule } from './soins/soins.module';
     ConstantesModule,
     SurveillanceModule,
     SoinsModule,
+    PrescriptionKitEnvoyeeModule,
+    InfirmierModule,
   ],
   controllers: [AppController],
   providers:   [AppService],

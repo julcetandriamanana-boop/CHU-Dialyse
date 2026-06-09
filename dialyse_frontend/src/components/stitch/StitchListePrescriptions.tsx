@@ -1,9 +1,18 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import ModalPrescriptionKit from '@/src/components/dialyses/ModalPrescriptionKit';
+import {
+  fetchPatientsKitStatus,
+  fetchKitsEnvoyesPatient,
+  fetchPrescriptionsCliniques,
+  urgenceColors,
+  PatientKitStatus,
+  KitEnvoye,
+  PrescriptionClinique,
+} from '@/src/services/pharmacie.service';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -15,6 +24,8 @@ interface PrescriptionDB {
     prenom: string;
     telephone?: string;
     dateNaissance?: string;
+    numero_dossier?: string;
+    external_patient_id?: string;
   };
   medecin?: { nom: string };
   date_prescription: string;
@@ -32,35 +43,65 @@ interface PatientGroupe {
 
 export default function StitchListePrescriptions() {
   const router = useRouter();
-  const [prescriptions, setPrescriptions] = useState<PrescriptionDB[]>([]);
-  const [loading, setLoading]             = useState(true);
-  const [dateStart, setDateStart]         = useState('');
-  const [dateEnd, setDateEnd]             = useState('');
-  const [search, setSearch]               = useState('');
-  const [expandedId, setExpandedId]       = useState<number | null>(null);
-  const [modalPatient, setModalPatient]   = useState<PrescriptionDB['patient'] | null>(null);
+  const [prescriptions, setPrescriptions]   = useState<PrescriptionDB[]>([]);
+  const [loading, setLoading]               = useState(true);
+  const [dateStart, setDateStart]           = useState('');
+  const [dateEnd, setDateEnd]               = useState('');
+  const [search, setSearch]                 = useState('');
+  const [expandedId, setExpandedId]         = useState<number | null>(null);
+  const [modalPatient, setModalPatient]     = useState<PrescriptionDB['patient'] | null>(null);
+  const [modalRdvId, setModalRdvId]         = useState<number | undefined>(undefined);
 
-  useEffect(() => {
-    loadPrescriptions();
-  }, [dateStart, dateEnd]);
+  // Statut kits envoyés par patient
+  const [kitsStatus, setKitsStatus]         = useState<Record<number, PatientKitStatus>>({});
+  const [prescCliniques, setPrescCliniques] = useState<PrescriptionClinique[]>([]);
+  const [detailsKits, setDetailsKits]       = useState<Record<number, KitEnvoye[]>>({});
+  const [openDetails, setOpenDetails]       = useState<number | null>(null);
 
-  const loadPrescriptions = async () => {
+  const loadAll = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (dateStart) params.append('startDate', dateStart);
       if (dateEnd) params.append('endDate', dateEnd);
-      const url = `${API_URL}/prescriptions/validees?${params}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if (Array.isArray(data)) setPrescriptions(data);
-    } catch (err) {
-      console.error('Erreur:', err);
-    }
+      const [resPresc, status, cliniques] = await Promise.all([
+        fetch(`${API_URL}/prescriptions/validees?${params}`).then(r => r.json()).catch(() => []),
+        fetchPatientsKitStatus(),
+        fetchPrescriptionsCliniques(),
+      ]);
+      if (Array.isArray(resPresc)) setPrescriptions(resPresc);
+      setKitsStatus(status);
+      setPrescCliniques(cliniques);
+    } catch (err) { console.error(err); }
     setLoading(false);
+  }, [dateStart, dateEnd]);
+
+  useEffect(() => { loadAll(); }, [loadAll]);
+
+  const loadDetailsPatient = async (patientId: number) => {
+    if (detailsKits[patientId]) return;
+    const data = await fetchKitsEnvoyesPatient(patientId);
+    setDetailsKits(prev => ({ ...prev, [patientId]: data }));
   };
 
-  // Grouper les prescriptions par patient
+  const handleVoirDetails = async (patientId: number) => {
+    if (openDetails === patientId) {
+      setOpenDetails(null);
+    } else {
+      await loadDetailsPatient(patientId);
+      setOpenDetails(patientId);
+    }
+  };
+
+  const handleModalClose = async () => {
+    setModalPatient(null);
+    setModalRdvId(undefined);
+    // Recharger les statuts après fermeture (au cas où kit envoyé)
+    const status = await fetchPatientsKitStatus();
+    setKitsStatus(status);
+  };
+
+  // Grouper prescriptions par patient
   const patientsGroupes: PatientGroupe[] = prescriptions
     .filter(p => p.patient)
     .reduce((acc: PatientGroupe[], presc) => {
@@ -92,12 +133,31 @@ export default function StitchListePrescriptions() {
 
   const totalPatients      = patientsGroupes.length;
   const totalPrescriptions = prescriptions.length;
+  const totalKitsEnvoyes   = Object.keys(kitsStatus).length;
+
+  // Trouve la prescription clinique pour un patient (via numero_dossier)
+  const findPrescriptionClinique = (numeroDossier?: string, externalId?: string): PrescriptionClinique | null => {
+    // Matcher par external_patient_id OU par numero_dossier
+    let matchs = prescCliniques.filter(p =>
+      (externalId && p.patientId === externalId) ||
+      (numeroDossier && p.patientId === numeroDossier)
+    );
+    if (matchs.length === 0) return null;
+    // Retourner la plus récente
+    return matchs.sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )[0];
+  };
+
+  const formatDateEnvoi = (d: string) => {
+    const date = new Date(d);
+    return `${date.toLocaleDateString('fr-FR')} à ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-indigo-50/30">
       <div className="pt-6 pb-20 md:pb-8 px-4 md:px-6 lg:px-8 max-w-[1600px] mx-auto">
 
-        {/* Breadcrumb */}
         <motion.nav initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
           className="flex items-center gap-2 text-xs text-slate-400 font-medium mb-4">
           <span>Vitalis Core</span>
@@ -130,6 +190,10 @@ export default function StitchListePrescriptions() {
               <p className="text-[10px] text-blue-100 font-semibold uppercase">Prescriptions</p>
               <p className="text-xl font-black text-white">{totalPrescriptions}</p>
             </div>
+            <div className="bg-emerald-400/30 backdrop-blur-sm rounded-xl px-4 py-2 border border-emerald-300/40">
+              <p className="text-[10px] text-emerald-100 font-semibold uppercase">Kits Envoyés</p>
+              <p className="text-xl font-black text-white">{totalKitsEnvoyes}</p>
+            </div>
           </div>
         </motion.div>
 
@@ -143,7 +207,7 @@ export default function StitchListePrescriptions() {
           <div className="flex-1">
             <p className="text-sm font-black text-emerald-800">Workflow validé</p>
             <p className="text-xs text-emerald-600 mt-0.5">
-              Service Clinique → Prescription validée → RDV validé → <strong>Service Dialyse</strong>
+              Service Clinique → Prescription validée → RDV validé → <strong>Service Dialyse</strong> → Pharmacie
             </p>
           </div>
         </motion.div>
@@ -169,33 +233,22 @@ export default function StitchListePrescriptions() {
             <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
               <span className="material-symbols-outlined text-sm">date_range</span>Dates :
             </span>
-            <input
-              type="date"
-              value={dateStart}
-              onChange={e => setDateStart(e.target.value)}
-              className="bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2 text-xs focus:border-blue-500 focus:bg-white outline-none cursor-pointer font-semibold"
-            />
+            <input type="date" value={dateStart} onChange={e => setDateStart(e.target.value)}
+              className="bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2 text-xs focus:border-blue-500 focus:bg-white outline-none cursor-pointer font-semibold" />
             <span className="text-slate-400 text-xs">→</span>
-            <input
-              type="date"
-              value={dateEnd}
-              onChange={e => setDateEnd(e.target.value)}
-              className="bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2 text-xs focus:border-blue-500 focus:bg-white outline-none cursor-pointer font-semibold"
-            />
+            <input type="date" value={dateEnd} onChange={e => setDateEnd(e.target.value)}
+              className="bg-slate-50 border-2 border-slate-200 rounded-xl px-3 py-2 text-xs focus:border-blue-500 focus:bg-white outline-none cursor-pointer font-semibold" />
             {(dateStart || dateEnd) && (
-              <motion.button
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
+              <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }}
                 onClick={() => { setDateStart(''); setDateEnd(''); }}
-                className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 cursor-pointer"
-              >
+                className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 cursor-pointer">
                 <span className="material-symbols-outlined text-sm">close</span>
               </motion.button>
             )}
           </div>
         </motion.div>
 
-        {/* Liste patients */}
+        {/* Liste */}
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -213,7 +266,13 @@ export default function StitchListePrescriptions() {
           <div className="space-y-3">
             {patientsGroupes.map((groupe, index) => {
               const { patient, prescriptions: pp, derniereDate } = groupe;
-              const isExpanded = expandedId === patient.id;
+              const isExpanded     = expandedId === patient.id;
+              const isOpenDetails  = openDetails === patient.id;
+              const kitInfo        = kitsStatus[patient.id];
+              const clinique     = findPrescriptionClinique(patient.numero_dossier, patient.external_patient_id);
+              const urgColors    = clinique ? urgenceColors(clinique.urgence) : null;
+              const kitEnvoye      = !!kitInfo;
+              const detailsList    = detailsKits[patient.id] || [];
 
               return (
                 <motion.div
@@ -221,18 +280,21 @@ export default function StitchListePrescriptions() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.04 }}
-                  className="bg-white rounded-2xl border border-emerald-200/60 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                  className={`bg-white rounded-2xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow ${
+                    clinique && urgColors ? `${urgColors.border}/50 border-l-4` : kitEnvoye ? 'border-emerald-300/70 bg-gradient-to-r from-emerald-50/40 to-white' : 'border-emerald-200/60'
+                  }`}
                 >
-                  {/* Ligne patient */}
                   <div className="p-5 flex items-center gap-4">
-                    {/* Avatar */}
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-emerald-200">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0 shadow-md ${
+                      kitEnvoye
+                        ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200'
+                        : 'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-blue-200'
+                    }`}>
                       <span className="text-base font-black">
                         {patient.prenom.charAt(0)}{patient.nom.charAt(0)}
                       </span>
                     </div>
 
-                    {/* Infos */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">
@@ -241,6 +303,33 @@ export default function StitchListePrescriptions() {
                         <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
                           RDV OK
                         </span>
+                        {/* Badge urgence clinique */}
+                        {clinique && urgColors && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className={`text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1 ${urgColors.bg} ${urgColors.text}`}
+                          >
+                            <span className="material-symbols-outlined text-[10px]">warning</span>
+                            {urgColors.label}
+                          </motion.span>
+                        )}
+                        {/* Badge type dialyse */}
+                        {clinique?.typeDialyse && (
+                          <span className="text-[10px] font-bold bg-cyan-100 text-cyan-700 px-2 py-0.5 rounded-full border border-cyan-200">
+                            {clinique.typeDialyse}
+                          </span>
+                        )}
+                        {kitEnvoye && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="text-[10px] font-black bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-2 py-0.5 rounded-full shadow-md shadow-emerald-200 flex items-center gap-1"
+                          >
+                            <span className="material-symbols-outlined text-[12px]">local_pharmacy</span>
+                            KIT ENVOYÉ ({kitInfo.count})
+                          </motion.span>
+                        )}
                         <span className="text-[10px] text-slate-400">#{patient.id}</span>
                       </div>
                       <p className="font-black text-sm text-slate-800">
@@ -249,9 +338,32 @@ export default function StitchListePrescriptions() {
                       <p className="text-[10px] text-slate-400">
                         {pp.length} prescription(s) · Dernière : {new Date(derniereDate).toLocaleDateString('fr-FR')}
                       </p>
+                      {/* Infos cliniques */}
+                      {clinique?.alertes && (
+                        <p className="text-[10px] text-red-600 font-bold mt-0.5 flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[10px]">emergency</span>
+                          Alerte : {clinique.alertes}
+                        </p>
+                      )}
+                      {clinique?.renseignements && (
+                        <p className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[10px]">description</span>
+                          {clinique.renseignements}
+                        </p>
+                      )}
+                      {clinique?.remarques && (
+                        <p className="text-[10px] text-slate-400 italic mt-0.5">
+                          "{clinique.remarques}"
+                        </p>
+                      )}
+                      {kitEnvoye && (
+                        <p className="text-[10px] text-emerald-600 font-bold mt-0.5 flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[10px]">schedule</span>
+                          Envoyé le {formatDateEnvoi(kitInfo.dernier)}
+                        </p>
+                      )}
                     </div>
 
-                    {/* Actions */}
                     <div className="flex items-center gap-2 shrink-0">
                       <motion.button
                         whileHover={{ scale: 1.05 }}
@@ -262,42 +374,116 @@ export default function StitchListePrescriptions() {
                             ? 'bg-blue-100 text-blue-600'
                             : 'bg-slate-100 text-slate-500 hover:bg-blue-50 hover:text-blue-600'
                         }`}
-                        title="Voir détails"
+                        title="Prescriptions"
                       >
                         <span className="material-symbols-outlined text-lg">
                           {isExpanded ? 'visibility_off' : 'visibility'}
                         </span>
                       </motion.button>
 
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setModalPatient(patient)}
-                        className="px-4 py-2 bg-gradient-to-r from-violet-600 to-pink-600 text-white rounded-xl text-[11px] font-black hover:shadow-lg shadow-md shadow-violet-200 transition-all cursor-pointer flex items-center gap-1.5"
-                      >
-                        <span className="material-symbols-outlined text-sm">prescriptions</span>
-                        Prescription Kit
-                      </motion.button>
+                      {kitEnvoye ? (
+                        // Bouton "Voir Détails" (lecture seule)
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleVoirDetails(patient.id)}
+                          className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-[11px] font-black hover:shadow-lg shadow-md shadow-emerald-200 transition-all cursor-pointer flex items-center gap-1.5"
+                        >
+                          <span className="material-symbols-outlined text-sm">
+                            {isOpenDetails ? 'expand_less' : 'visibility'}
+                          </span>
+                          Voir Détails
+                        </motion.button>
+                      ) : (
+                        // Bouton "Prescription Kit"
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => { setModalPatient(patient); setModalRdvId(undefined); }}
+                          className="px-4 py-2 bg-gradient-to-r from-violet-600 to-pink-600 text-white rounded-xl text-[11px] font-black hover:shadow-lg shadow-md shadow-violet-200 transition-all cursor-pointer flex items-center gap-1.5"
+                        >
+                          <span className="material-symbols-outlined text-sm">prescriptions</span>
+                          Prescription Kit
+                        </motion.button>
+                      )}
                     </div>
                   </div>
 
-                  {/* Détails dépliés */}
+                  {/* Détails kits envoyés */}
+                  <AnimatePresence>
+                    {isOpenDetails && kitEnvoye && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="border-t-2 border-emerald-200 bg-gradient-to-r from-emerald-50/50 to-teal-50/30"
+                      >
+                        <div className="p-5">
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-xs font-black text-emerald-800 uppercase tracking-wider flex items-center gap-2">
+                              <span className="material-symbols-outlined text-base">local_pharmacy</span>
+                              Historique kits envoyés ({detailsList.length})
+                            </p>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => { setModalPatient(patient); setModalRdvId(undefined); }}
+                              className="px-3 py-1.5 bg-white border-2 border-violet-300 text-violet-700 rounded-lg text-[10px] font-black hover:bg-violet-50 cursor-pointer transition-all flex items-center gap-1"
+                            >
+                              <span className="material-symbols-outlined text-sm">add</span>
+                              Nouveau Kit
+                            </motion.button>
+                          </div>
+                          <div className="space-y-2">
+                            {detailsList.map(k => (
+                              <div key={k.id} className="bg-white rounded-xl p-3 border border-emerald-100 flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                                  k.type_kit === 'premiere' ? 'bg-blue-100 text-blue-600' :
+                                  k.type_kit === 'suivante' ? 'bg-emerald-100 text-emerald-600' :
+                                  'bg-amber-100 text-amber-600'
+                                }`}>
+                                  <span className="material-symbols-outlined text-base">
+                                    {k.type_kit === 'premiere' ? 'vaccines' :
+                                     k.type_kit === 'suivante' ? 'autorenew' : 'medical_services'}
+                                  </span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-black text-slate-800 truncate">{k.kit_nom}</p>
+                                  <p className="text-[10px] text-slate-500 mt-0.5">
+                                    {k.articles_count} articles · Par {k.emetteur_nom || 'Anonyme'}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-[10px] font-bold text-emerald-700">
+                                    {formatDateEnvoi(k.date_envoi)}
+                                  </p>
+                                  <p className="text-[9px] text-slate-400 font-semibold uppercase">{k.statut}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Détails prescriptions */}
                   <AnimatePresence>
                     {isExpanded && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="border-t-2 border-emerald-100 bg-gradient-to-r from-emerald-50/30 to-teal-50/30"
+                        className="border-t-2 border-blue-100 bg-gradient-to-r from-blue-50/30 to-indigo-50/30"
                       >
                         <div className="p-5">
-                          <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider mb-3">
+                          <p className="text-[10px] font-black text-blue-700 uppercase tracking-wider mb-3">
                             📋 Prescriptions validées ({pp.length})
                           </p>
                           <div className="overflow-x-auto">
                             <table className="w-full text-xs">
                               <thead>
-                                <tr className="border-b border-emerald-200 text-slate-500">
+                                <tr className="border-b border-blue-200 text-slate-500">
                                   <th className="text-left py-2 px-2 font-bold">Date</th>
                                   <th className="text-left py-2 px-2 font-bold">Médicament</th>
                                   <th className="text-left py-2 px-2 font-bold">Dosage</th>
@@ -307,9 +493,9 @@ export default function StitchListePrescriptions() {
                               </thead>
                               <tbody>
                                 {pp.map((p, i) => (
-                                  <tr key={i} className="border-b border-emerald-50 hover:bg-emerald-50/40">
+                                  <tr key={i} className="border-b border-blue-50 hover:bg-blue-50/40">
                                     <td className="py-2 px-2">{new Date(p.date_prescription).toLocaleDateString('fr-FR')}</td>
-                                    <td className="py-2 px-2 font-bold text-emerald-700">{p.medicament}</td>
+                                    <td className="py-2 px-2 font-bold text-blue-700">{p.medicament}</td>
                                     <td className="py-2 px-2">{p.dosage}</td>
                                     <td className="py-2 px-2">{p.frequence}</td>
                                     <td className="py-2 px-2">
@@ -337,7 +523,8 @@ export default function StitchListePrescriptions() {
       <ModalPrescriptionKit
         open={!!modalPatient}
         patient={modalPatient}
-        onClose={() => setModalPatient(null)}
+        rendezVousId={modalRdvId}
+        onClose={handleModalClose}
       />
     </div>
   );

@@ -406,3 +406,95 @@ export async function enregistrerKitEnvoye(data: {
     return null;
   }
 }
+
+
+// ═══════════════════════════════════════════════════
+// Prescriptions cliniques (depuis Pharmacie)
+// ═══════════════════════════════════════════════════
+
+export interface PrescriptionClinique {
+  id: string;
+  patientId: string;        // numero_dossier ex: IP-2026-00001
+  prescripteurId: string;
+  urgence: string;          // 'Très Urgent' | 'Urgent' | 'Normal' | 'Programmé'
+  alertes: string;
+  renseignements: string;
+  typeDialyse: string;
+  remarques: string;
+  statut: string;           // CREEE / VALIDEE / etc.
+  statutSync: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Récupère toutes les prescriptions cliniques depuis la pharmacie
+ */
+export async function fetchPrescriptionsCliniques(): Promise<PrescriptionClinique[]> {
+  try {
+    const res = await fetch(`${PHARMACIE_API}/prescriptions/dialyse`);
+    if (!res.ok) return [];
+    return res.json();
+  } catch (e) {
+    console.error('Erreur fetch prescriptions cliniques:', e);
+    return [];
+  }
+}
+
+/**
+ * Récupère les prescriptions cliniques pour un patient (par numero_dossier)
+ */
+export async function fetchPrescriptionsCliniquesPatient(numeroDossier: string): Promise<PrescriptionClinique[]> {
+  try {
+    const res = await fetch(`${PHARMACIE_API}/prescriptions/dialyse/patient/${numeroDossier}`);
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Normalise le niveau d'urgence
+ */
+export function normaliserUrgence(urgence: string): 'tres_urgent' | 'urgent' | 'normal' | 'programme' {
+  const u = (urgence || '').toLowerCase().trim();
+  if (u.includes('très') || u.includes('tres') || u === 'tu' || u === 'critique') return 'tres_urgent';
+  if (u.includes('urgent') || u === 'u') return 'urgent';
+  if (u.includes('programm') || u === 'p') return 'programme';
+  return 'normal';
+}
+
+/**
+ * Couleurs urgence pour affichage
+ */
+export function urgenceColors(urgence: string): { bg: string; text: string; border: string; label: string } {
+  const niveau = normaliserUrgence(urgence);
+  const map = {
+    tres_urgent: {
+      bg: 'bg-gradient-to-r from-red-500 to-rose-600',
+      text: 'text-white',
+      border: 'border-red-600',
+      label: 'TRÈS URGENT',
+    },
+    urgent: {
+      bg: 'bg-gradient-to-r from-orange-500 to-amber-600',
+      text: 'text-white',
+      border: 'border-orange-600',
+      label: 'URGENT',
+    },
+    normal: {
+      bg: 'bg-gradient-to-r from-emerald-500 to-teal-600',
+      text: 'text-white',
+      border: 'border-emerald-600',
+      label: 'NORMAL',
+    },
+    programme: {
+      bg: 'bg-gradient-to-r from-blue-500 to-indigo-600',
+      text: 'text-white',
+      border: 'border-blue-600',
+      label: 'PROGRAMMÉ',
+    },
+  };
+  return map[niveau];
+}

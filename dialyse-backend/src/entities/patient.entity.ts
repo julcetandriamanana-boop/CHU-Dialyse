@@ -50,6 +50,12 @@ export class Patient {
   @Column({ type: 'text', nullable: true })
   notes: string | null;
 
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  numero_dossier: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  external_patient_id: string | null;
+
   @Column({ type: 'varchar', length: 20, default: 'actif', nullable: true })
   traitement_statut: string | null;
 
