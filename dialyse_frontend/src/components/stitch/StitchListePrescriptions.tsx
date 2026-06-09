@@ -54,6 +54,7 @@ export default function StitchListePrescriptions() {
 
   // Statut kits envoyés par patient
   const [kitsStatus, setKitsStatus]         = useState<Record<number, PatientKitStatus>>({});
+  const [rdvFuturs, setRdvFuturs]           = useState<any[]>([]);
   const [prescCliniques, setPrescCliniques] = useState<PrescriptionClinique[]>([]);
   const [detailsKits, setDetailsKits]       = useState<Record<number, KitEnvoye[]>>({});
   const [openDetails, setOpenDetails]       = useState<number | null>(null);
@@ -74,14 +75,20 @@ export default function StitchListePrescriptions() {
       const params = new URLSearchParams();
       if (dateStart) params.append('startDate', dateStart);
       if (dateEnd) params.append('endDate', dateEnd);
-      const [resPresc, status, cliniques] = await Promise.all([
+      const [resPresc, status, cliniques, rdvData] = await Promise.all([
         fetch(`${API_URL}/prescriptions/validees?${params}`).then(r => r.json()).catch(() => []),
         fetchPatientsKitStatus(),
         fetchPrescriptionsCliniques(),
+        fetch(`${API_URL}/rendezvous`).then(r => r.json()).catch(() => []),
       ]);
       if (Array.isArray(resPresc)) setPrescriptions(resPresc);
       setKitsStatus(status);
       setPrescCliniques(cliniques);
+      if (Array.isArray(rdvData)) {
+        const now = new Date();
+        const futurs = rdvData.filter((r: any) => r.patient && new Date(r.date_heure) >= now && (r.statut === "planifié" || r.statut === "confirmé"));
+        setRdvFuturs(futurs);
+      }
     } catch (err) { console.error(err); }
     setLoading(false);
   }, [dateStart, dateEnd]);
@@ -142,15 +149,45 @@ export default function StitchListePrescriptions() {
     .sort((a, b) => new Date(b.derniereDate).getTime() - new Date(a.derniereDate).getTime());
 
 
+
+  // Ajouter patients qui ont un RDV futur mais pas encore dans la liste
+  const patientsAvecRdv = rdvFuturs.reduce((acc: PatientGroupe[], rdv: any) => {
+    const patientId = rdv.patient?.id;
+    if (!patientId) return acc;
+    // Verifier si le patient est deja dans patientsGroupes
+    const dejaPresent = patientsGroupes.find(g => g.patient.id === patientId);
+    if (dejaPresent) return acc;
+    // Verifier si deja ajoute dans acc
+    const dejaAcc = acc.find(g => g.patient.id === patientId);
+    if (dejaAcc) return acc;
+    acc.push({
+      patient: {
+        id: rdv.patient.id,
+        nom: rdv.patient.nom,
+        prenom: rdv.patient.prenom,
+        telephone: rdv.patient.telephone,
+        dateNaissance: rdv.patient.dateNaissance,
+        numero_dossier: rdv.patient.numero_dossier,
+        external_patient_id: rdv.patient.external_patient_id,
+      },
+      prescriptions: [],
+      derniereDate: rdv.date_heure,
+    });
+    return acc;
+  }, []);
+
+  // Combiner prescriptions + RDV
+  const patientsCombines = [...patientsGroupes, ...patientsAvecRdv];
+
   // Séparer patients: à traiter vs traités (kit envoyé > 1 min)
-  const patientsATraiter = patientsGroupes.filter(g => {
+  const patientsATraiter = patientsCombines.filter(g => {
     const kit = kitsStatus[g.patient.id];
     if (!kit) return true; // Pas de kit = à traiter
     const elapsed = now - new Date(kit.dernier).getTime();
     return elapsed < DELAI_DISPARITION_MS; // Encore visible (< 1 min)
   });
 
-  const patientsTraites = patientsGroupes.filter(g => {
+  const patientsTraites = patientsCombines.filter(g => {
     const kit = kitsStatus[g.patient.id];
     if (!kit) return false;
     const elapsed = now - new Date(kit.dernier).getTime();
@@ -331,6 +368,8 @@ export default function StitchListePrescriptions() {
               const clinique     = findPrescriptionClinique(patient.numero_dossier, patient.external_patient_id);
               const urgColors    = clinique ? urgenceColors(clinique.urgence) : null;
               const kitEnvoye      = !!kitInfo;
+              const hasRdvFutur  = rdvFuturs.some((r: any) => r.patient?.id === patient.id);
+              const nbPrescs     = pp.length;
               const detailsList    = detailsKits[patient.id] || [];
 
               return (
@@ -387,6 +426,16 @@ export default function StitchListePrescriptions() {
                           >
                             <span className="material-symbols-outlined text-[12px]">local_pharmacy</span>
                             KIT ENVOYÉ ({kitInfo.count})
+                          </motion.span>
+                        )}
+                        {hasRdvFutur && !kitEnvoye && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="text-[10px] font-black bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full shadow-md shadow-cyan-200 flex items-center gap-1"
+                          >
+                            <span className="material-symbols-outlined text-[10px]">event_available</span>
+                            NOUVEAU RDV
                           </motion.span>
                         )}
                         <span className="text-[10px] text-slate-400">#{patient.id}</span>

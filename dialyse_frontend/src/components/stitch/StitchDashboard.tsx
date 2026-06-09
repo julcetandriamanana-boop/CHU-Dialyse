@@ -469,7 +469,26 @@ export default function StitchDashboard() {
   const [modalOpen, setModalOpen]                     = useState<ModalType>(null);
   const [patientSelectionne, setPatientSelectionne]   = useState<PatientSeance | null>(null);
   const [confirmFin, setConfirmFin]                   = useState<PatientSeance | null>(null);
-  const [patientsHidden, setPatientsHidden]             = useState<Set<number>>(new Set());
+  const [patientsHidden, setPatientsHidden] = useState<Set<number>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const stored = localStorage.getItem('chu_patients_hidden_' + today);
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
+  });
+
+  // Persister patientsHidden dans localStorage (valable seulement aujourd'hui)
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    localStorage.setItem('chu_patients_hidden_' + today, JSON.stringify([...patientsHidden]));
+    // Nettoyer les anciens jours
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith('chu_patients_hidden_') && !k.endsWith(today)) {
+        localStorage.removeItem(k);
+      }
+    });
+  }, [patientsHidden]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ── Chargement ──────────────────────────────
