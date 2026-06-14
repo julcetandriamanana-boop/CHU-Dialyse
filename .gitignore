@@ -41,3 +41,4 @@ coverage/
 # NestJS
 nest-cli.json
 eslint.config.mjs
+dialyse-backend/backups/

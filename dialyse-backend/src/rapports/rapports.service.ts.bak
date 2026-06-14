@@ -1,0 +1,158 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, Between } from 'typeorm';
+import { Rapport } from '../entities/rapport.entity';
+import { Patient } from '../entities/patient.entity';
+import { Prescription } from '../entities/prescription.entity';
+import { RendezVous } from '../entities/rendez-vous.entity';
+import { PrescriptionKitEnvoyee } from '../entities/prescription-kit-envoyee.entity';
+import { Notification } from '../entities/notification.entity';
+
+@Injectable()
+export class RapportsService {
+  constructor(
+    @InjectRepository(Rapport)                private rapportRepo: Repository<Rapport>,
+    @InjectRepository(Patient)                private patientRepo: Repository<Patient>,
+    @InjectRepository(Prescription)           private prescRepo: Repository<Prescription>,
+    @InjectRepository(RendezVous)             private rdvRepo: Repository<RendezVous>,
+    @InjectRepository(PrescriptionKitEnvoyee) private kitRepo: Repository<PrescriptionKitEnvoyee>,
+    @InjectRepository(Notification)           private notifRepo: Repository<Notification>,
+  ) {}
+
+  async findAll(): Promise<Rapport[]> {
+    return this.rapportRepo.find({ order: { created_at: 'DESC' } });
+  }
+
+  async findById(id: number): Promise<Rapport | null> {
+    return this.rapportRepo.findOne({ where: { id } });
+  }
+
+  async getStatsGlobales(dateDebut?: string, dateFin?: string): Promise<any> {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const demain = new Date(today.getTime() + 86400000);
+
+    const debutSemaine = new Date(today);
+    debutSemaine.setDate(today.getDate() - today.getDay() + 1);
+
+    const debutMois = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Filtre intervalle personnalise
+    const filtreDebut = dateDebut ? new Date(dateDebut) : null;
+    const filtreFin   = dateFin ? new Date(dateFin) : null;
+
+    const [
+      totalPatients,
+      totalPrescriptions,
+      totalRdv,
+      totalKitsEnvoyes,
+      patientsActifs,
+      rdvAujourdhui,
+      kitsAujourdhui,
+      prescSemaine,
+      rdvSemaine,
+      kitsMois,
+      rdvMois,
+      allPatients,
+    ] = await Promise.all([
+      this.patientRepo.count(),
+      this.prescRepo.count(),
+      this.rdvRepo.count(),
+      this.kitRepo.count(),
+      this.patientRepo.count({ where: { traitement_statut: 'actif' } }),
+      this.rdvRepo.count({ where: { date_heure: Between(today, demain) } }),
+      this.kitRepo.count({ where: { date_envoi: Between(today, demain) } }),
+      this.prescRepo.count({ where: { date_prescription: Between(debutSemaine, demain) } }),
+      this.rdvRepo.count({ where: { date_heure: Between(debutSemaine, demain) } }),
+      this.kitRepo.count({ where: { date_envoi: Between(debutMois, demain) } }),
+      this.rdvRepo.count({ where: { date_heure: Between(debutMois, demain) } }),
+      this.patientRepo.find({ select: ['id', 'dateNaissance'] }),
+    ]);
+
+    // Stats par age
+    const ageStats = { '0-18': 0, '19-30': 0, '31-45': 0, '46-60': 0, '61-75': 0, '76+': 0 };
+    const nowDate = new Date();
+    for (const p of allPatients) {
+      if (!p.dateNaissance) continue;
+      const birth = new Date(p.dateNaissance);
+      let age = nowDate.getFullYear() - birth.getFullYear();
+      const m = nowDate.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && nowDate.getDate() < birth.getDate())) age--;
+
+      if (age <= 18)      ageStats['0-18']++;
+      else if (age <= 30) ageStats['19-30']++;
+      else if (age <= 45) ageStats['31-45']++;
+      else if (age <= 60) ageStats['46-60']++;
+      else if (age <= 75) ageStats['61-75']++;
+      else                ageStats['76+']++;
+    }
+
+    // Stats intervalle personnalise
+    let intervalle = null;
+    if (filtreDebut && filtreFin) {
+      const finJour = new Date(filtreFin.getTime() + 86400000);
+      const [prescIntervalle, rdvIntervalle, kitsIntervalle] = await Promise.all([
+        this.prescRepo.count({ where: { date_prescription: Between(filtreDebut, finJour) } }),
+        this.rdvRepo.count({ where: { date_heure: Between(filtreDebut, finJour) } }),
+        this.kitRepo.count({ where: { date_envoi: Between(filtreDebut, finJour) } }),
+      ]);
+      intervalle = {
+        debut: dateDebut,
+        fin: dateFin,
+        prescriptions: prescIntervalle,
+        rendezVous: rdvIntervalle,
+        kitsEnvoyes: kitsIntervalle,
+      };
+    }
+
+    return {
+      global: {
+        patients:       totalPatients,
+        patientsActifs,
+        prescriptions:  totalPrescriptions,
+        rendezVous:     totalRdv,
+        kitsEnvoyes:    totalKitsEnvoyes,
+      },
+      aujourdhui: {
+        rendezVous:  rdvAujourdhui,
+        kitsEnvoyes: kitsAujourdhui,
+      },
+      semaine: {
+        prescriptions: prescSemaine,
+        rendezVous:    rdvSemaine,
+      },
+      mois: {
+        kitsEnvoyes: kitsMois,
+        rendezVous:  rdvMois,
+      },
+      parAge: ageStats,
+      intervalle,
+      genereLe: new Date().toISOString(),
+    };
+  }
+
+  async genererRapport(auteur?: string, periode?: string): Promise<Rapport> {
+    const stats = await this.getStatsGlobales();
+    const now   = new Date();
+
+    const periodeLabel = periode || 'mensuel';
+    const mois = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+    const rapport = this.rapportRepo.create({
+      titre:      `Rapport ${periodeLabel} - ${mois}`,
+      type:       'statistique',
+      periode:    periodeLabel,
+      date_debut: new Date(now.getFullYear(), now.getMonth(), 1),
+      date_fin:   now,
+      auteur:     auteur || 'Systeme',
+      statut:     'genere',
+      donnees:    stats,
+    });
+
+    return this.rapportRepo.save(rapport);
+  }
+
+  async supprimer(id: number): Promise<void> {
+    await this.rapportRepo.delete(id);
+  }
+}

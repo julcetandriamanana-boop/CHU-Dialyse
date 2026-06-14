@@ -124,6 +124,7 @@ function SurveillanceInner() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [toast, setToast]           = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
   const [infirmier, setInfirmier] = useState<InfirmierProfil | null>(null);
+  const [constantes, setConstantes] = useState<any>(null);
 
   const showToast = (msg: string, type: 'success' | 'error') => {
     setToast({ msg, type });
@@ -140,6 +141,13 @@ function SurveillanceInner() {
       if (rdvId) {
         const rRes = await fetch(`${API_URL}/rendezvous/${rdvId}`);
         if (rRes.ok) setRdv(await rRes.json());
+
+        // Charger constantes existantes
+        const cRes = await fetch(`${API_URL}/constantes/seance/${rdvId}`);
+        if (cRes.ok) {
+          const cData = await cRes.json();
+          if (cData) setConstantes(cData);
+        }
 
         const sRes = await fetch(`${API_URL}/surveillance/seance/${rdvId}`);
         if (sRes.ok) {
@@ -328,6 +336,71 @@ function SurveillanceInner() {
           <span className="text-sm font-bold text-amber-800">
             Aucun patient lié — revenez depuis le tableau de bord
           </span>
+        </motion.div>
+      )}
+
+      {/* ✅ Bandeau constantes vitales en lecture */}
+      {constantes && (
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08, type: 'spring', stiffness: 200 }}
+          className="bg-gradient-to-r from-amber-50 via-orange-50 to-rose-50 border-2 border-amber-200 rounded-2xl shadow-lg shadow-amber-100/40 p-4"
+        >
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-amber-600 text-lg">monitor_heart</span>
+                <span className="text-[10px] font-black text-amber-700 uppercase tracking-wider">Constantes (lecture)</span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {constantes.ta_avant && (
+                  <div className="bg-white rounded-lg px-2.5 py-1 border border-amber-200 shadow-sm">
+                    <span className="text-[9px] text-amber-500 font-bold">TA</span>
+                    <span className="ml-1 text-xs font-black text-amber-800">{constantes.ta_avant}</span>
+                  </div>
+                )}
+                {constantes.fc_avant && (
+                  <div className="bg-white rounded-lg px-2.5 py-1 border border-rose-200 shadow-sm">
+                    <span className="text-[9px] text-rose-500 font-bold">Pouls</span>
+                    <span className="ml-1 text-xs font-black text-rose-800">{constantes.fc_avant}</span>
+                  </div>
+                )}
+                {constantes.o2_avant && (
+                  <div className="bg-white rounded-lg px-2.5 py-1 border border-blue-200 shadow-sm">
+                    <span className="text-[9px] text-blue-500 font-bold">SpO₂</span>
+                    <span className="ml-1 text-xs font-black text-blue-800">{constantes.o2_avant}%</span>
+                  </div>
+                )}
+                {constantes.temp_avant && (
+                  <div className="bg-white rounded-lg px-2.5 py-1 border border-orange-200 shadow-sm">
+                    <span className="text-[9px] text-orange-500 font-bold">Temp</span>
+                    <span className="ml-1 text-xs font-black text-orange-800">{constantes.temp_avant}°C</span>
+                  </div>
+                )}
+                {constantes.poids_avant && (
+                  <div className="bg-white rounded-lg px-2.5 py-1 border border-emerald-200 shadow-sm">
+                    <span className="text-[9px] text-emerald-500 font-bold">Poids</span>
+                    <span className="ml-1 text-xs font-black text-emerald-800">{constantes.poids_avant} kg</span>
+                  </div>
+                )}
+              </div>
+              {constantes.infirmier_nom && (
+                <span className="text-[10px] text-slate-500 italic">
+                  Saisies par : <strong className="text-slate-700">{constantes.infirmier_nom}</strong>
+                </span>
+              )}
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => { window.location.href = `/dialyses/constantes?patientId=${patientId || ''}&rendezVousId=${rdvId || ''}&seanceNum=${seanceNum}`; }}
+              className="flex items-center gap-1 px-3 py-1.5 bg-white text-amber-700 text-[11px] font-bold rounded-lg border border-amber-300 hover:bg-amber-50 hover:border-amber-500 transition-all cursor-pointer shadow-sm"
+            >
+              <span className="material-symbols-outlined text-sm">edit</span>
+              Modifier
+            </motion.button>
+          </div>
         </motion.div>
       )}
 

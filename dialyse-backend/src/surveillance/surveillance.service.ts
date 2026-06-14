@@ -28,6 +28,25 @@ export class SurveillanceService {
     return s;
   }
 
+  private mapLigne(l: any, idx: number, surveillanceId: number) {
+    return {
+      surveillance_seance_id: surveillanceId,
+      ordre: idx,
+      heure:               l.heure,
+      ta:                  l.ta,
+      pouls:               l.pouls,
+      debit_sang:          l.debit_sang,
+      pression_veineuse:   l.pression_veineuse,
+      pression_arterielle: l.pression_arterielle,
+      uf_affiche:          l.uf_affiche,
+      uf_obtenue:          l.uf_obtenue,
+      ptm:                 l.ptm,
+      incidents_cliniques: l.incidents_cliniques,
+      dialyseur_retourne:  l.dialyseur_retourne ?? false,
+      heure_retournement:  l.heure_retournement || null,
+    };
+  }
+
   async create(data: any): Promise<SurveillanceSeance> {
     const entity = this.repo.create({
       rendez_vous_id:          data.rendez_vous_id,
@@ -45,24 +64,9 @@ export class SurveillanceService {
     });
     const saved = await this.repo.save(entity);
 
-    // Créer les lignes si fournies
     if (Array.isArray(data.lignes)) {
       for (let i = 0; i < data.lignes.length; i++) {
-        const l = data.lignes[i];
-        await this.ligneRepo.save(this.ligneRepo.create({
-          surveillance_seance_id: saved.id,
-          ordre: i,
-          heure:               l.heure,
-          ta:                  l.ta,
-          pouls:               l.pouls,
-          debit_sang:          l.debit_sang,
-          pression_veineuse:   l.pression_veineuse,
-          pression_arterielle: l.pression_arterielle,
-          uf_affiche:          l.uf_affiche,
-          uf_obtenue:          l.uf_obtenue,
-          ptm:                 l.ptm,
-          incidents_cliniques: l.incidents_cliniques,
-        }));
+        await this.ligneRepo.save(this.ligneRepo.create(this.mapLigne(data.lignes[i], i, saved.id)));
       }
     }
 
@@ -90,25 +94,10 @@ export class SurveillanceService {
       await this.repo.update(id, updateData);
     }
 
-    // Remplacer les lignes si fournies
     if (Array.isArray(data.lignes)) {
       await this.ligneRepo.delete({ surveillance_seance_id: id });
       for (let i = 0; i < data.lignes.length; i++) {
-        const l = data.lignes[i];
-        await this.ligneRepo.save(this.ligneRepo.create({
-          surveillance_seance_id: id,
-          ordre: i,
-          heure:               l.heure,
-          ta:                  l.ta,
-          pouls:               l.pouls,
-          debit_sang:          l.debit_sang,
-          pression_veineuse:   l.pression_veineuse,
-          pression_arterielle: l.pression_arterielle,
-          uf_affiche:          l.uf_affiche,
-          uf_obtenue:          l.uf_obtenue,
-          ptm:                 l.ptm,
-          incidents_cliniques: l.incidents_cliniques,
-        }));
+        await this.ligneRepo.save(this.ligneRepo.create(this.mapLigne(data.lignes[i], i, id)));
       }
     }
 

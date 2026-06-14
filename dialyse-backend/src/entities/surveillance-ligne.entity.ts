@@ -29,4 +29,11 @@ export class SurveillanceLigne {
   @Column({ type: 'varchar', length: 30, nullable: true })  uf_obtenue: string;
   @Column({ type: 'varchar', length: 30, nullable: true })  ptm: string;
   @Column({ type: 'text', nullable: true })                 incidents_cliniques: string;
+
+  // ✅ Nouveaux champs
+  @Column({ type: 'boolean', default: false, nullable: true })
+  dialyseur_retourne: boolean;
+
+  @Column({ type: 'varchar', length: 30, nullable: true })
+  heure_retournement: string;
 }
