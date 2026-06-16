@@ -1,5 +1,5 @@
 'use client';
-import { formatDate, formatDateTime, todayMadagascar } from '@/src/utils/date.utils';
+import { formatDate, formatDateTime, todayMadagascar, toInputDate } from '@/src/utils/date.utils';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useCallback } from 'react';
@@ -180,26 +180,46 @@ export default function StitchListePrescriptions() {
   // Combiner prescriptions + RDV
   const patientsCombines = [...patientsGroupes, ...patientsAvecRdv];
 
-  // Séparer patients: à traiter vs traités (kit envoyé > 1 min)
+  // Séparer patients: à traiter vs traités aujourd'hui (logique 1 min + journée Madagascar)
+  const today = todayMadagascar();
+
   const patientsATraiter = patientsCombines.filter(g => {
     const kit = kitsStatus[g.patient.id];
-    if (!kit) return true; // Pas de kit = à traiter
+    if (!kit || !kit.dernier) return true; // Pas de kit = à traiter
+
+    const kitDate = toInputDate(kit.dernier);
     const elapsed = now - new Date(kit.dernier).getTime();
-    return elapsed < DELAI_DISPARITION_MS; // Encore visible (< 1 min)
+
+    // Si kit d'un autre jour → ne compte pas comme "traité aujourd'hui"
+    if (kitDate !== today) return true;
+
+    // Kit envoyé aujourd'hui mais il y a moins d'1 min → encore visible dans "À traiter"
+    return elapsed < DELAI_DISPARITION_MS;
   });
 
   const patientsTraites = patientsCombines.filter(g => {
     const kit = kitsStatus[g.patient.id];
-    if (!kit) return false;
+    if (!kit || !kit.dernier) return false;
+
+    const kitDate = toInputDate(kit.dernier);
     const elapsed = now - new Date(kit.dernier).getTime();
-    return elapsed >= DELAI_DISPARITION_MS; // Disparu (>= 1 min)
+
+    // Doit être aujourd'hui uniquement
+    if (kitDate !== today) return false;
+
+    // Après 1 minute → passe dans "Traités aujourd'hui"
+    return elapsed >= DELAI_DISPARITION_MS;
   });
 
   const listeAffichee = activeTab === "a_traiter" ? patientsATraiter : patientsTraites;
 
-  const totalPatients      = patientsGroupes.length;
-  const totalPrescriptions = prescriptions.length;
-  const totalKitsEnvoyes   = Object.keys(kitsStatus).length;
+  // Cartes cohérentes avec la logique de la journée
+  const totalPatients = patientsATraiter.length + patientsTraites.length;
+  const totalPrescriptions = [...patientsATraiter, ...patientsTraites]
+    .reduce((acc, g) => acc + (g.prescriptions?.length || 0), 0);
+  const totalKitsEnvoyes = Object.values(kitsStatus).filter((kit: any) =>
+    kit?.dernier && toInputDate(kit.dernier) === today
+  ).length;
 
   // Trouve la prescription clinique pour un patient (via numero_dossier)
   const findPrescriptionClinique = (numeroDossier?: string, externalId?: string): PrescriptionClinique | null => {
