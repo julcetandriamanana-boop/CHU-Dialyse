@@ -1,0 +1,64 @@
+{
+  "generatedAt": "2026-06-12T17:02:53.222Z",
+  "mode": "apply",
+  "totalRows": 37,
+  "totalChanges": 7,
+  "changes": [
+    {
+      "id": 1,
+      "date_heure": "2026-05-23T06:00:00.000Z",
+      "statut": {
+        "from": "confirm�",
+        "to": "confirmé"
+      }
+    },
+    {
+      "id": 2,
+      "date_heure": "2026-05-23T08:00:00.000Z",
+      "statut": {
+        "from": "confirm�",
+        "to": "confirmé"
+      }
+    },
+    {
+      "id": 3,
+      "date_heure": "2026-05-23T11:00:00.000Z",
+      "statut": {
+        "from": "planifi�",
+        "to": "planifié"
+      }
+    },
+    {
+      "id": 9,
+      "date_heure": "2026-05-26T04:30:00.000Z",
+      "statut": {
+        "from": "confirm�",
+        "to": "confirmé"
+      }
+    },
+    {
+      "id": 10,
+      "date_heure": "2026-05-26T05:00:00.000Z",
+      "statut": {
+        "from": "confirm�",
+        "to": "confirmé"
+      }
+    },
+    {
+      "id": 11,
+      "date_heure": "2026-05-26T05:30:00.000Z",
+      "statut": {
+        "from": "planifi�",
+        "to": "planifié"
+      }
+    },
+    {
+      "id": 18,
+      "date_heure": "2026-06-01T05:00:00.000Z",
+      "statut": {
+        "from": "planifi�",
+        "to": "planifié"
+      }
+    }
+  ]
+}
