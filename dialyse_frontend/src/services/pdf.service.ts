@@ -517,3 +517,111 @@ export function exportPdfPerformance(kpi: any): void {
   addFooter(doc, 1, 1);
   doc.save(`rapport-performance-${new Date().toISOString().split('T')[0]}.pdf`);
 }
+
+// ─── EXPORT PDF HISTORIQUE PATIENT ────────────────────────────
+
+export function exportPdfHistoriquePatient(historique: any): void {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const patient = historique.patient;
+  const nom = `${patient?.nom || ''} ${patient?.prenom || ''}`.trim();
+
+  let y = addHeader(doc, `Historique Complet - ${nom}`, 'Service Dialyse CHU');
+
+  // ── Identité Patient ──────────────────────────────────────────
+  y = addSectionTitle(doc, 'Identité Patient', y);
+
+  const age = patient?.dateNaissance
+    ? `${new Date().getFullYear() - new Date(patient.dateNaissance).getFullYear()} ans`
+    : '-';
+
+  y = addKPIGrid(doc, [
+    { label: 'Nom complet',    value: nom },
+    { label: 'Âge',           value: age },
+    { label: 'N° Dossier',    value: patient?.numero_dossier || '-' },
+    { label: 'Statut traitement', value: patient?.traitement_statut || '-' },
+  ], y);
+
+  // Statut archivage
+  if (patient?.is_archived) {
+    y = checkPageBreak(doc, y, 25);
+    doc.setFillColor(254, 242, 242);
+    doc.roundedRect(10, y, doc.internal.pageSize.getWidth() - 20, 22, 2, 2, 'F');
+    doc.setDrawColor(...COLORS.danger as [number, number, number]);
+    doc.setLineWidth(0.5);
+    doc.line(10, y, 10, y + 22);
+
+    doc.setTextColor(...COLORS.danger as [number, number, number]);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PATIENT ARCHIVÉ', 14, y + 7);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...COLORS.medium as [number, number, number]);
+    const archivedAt = patient?.archived_at
+      ? new Date(patient.archived_at).toLocaleString('fr-FR')
+      : '-';
+    doc.text(`Date: ${archivedAt}  |  Par: ${patient?.archived_by || '-'}  |  Motif: ${patient?.archive_motif || '-'}`, 14, y + 14);
+    y += 28;
+  }
+
+  // ── Résumé Activité ───────────────────────────────────────────
+  y = checkPageBreak(doc, y, 40);
+  y = addSectionTitle(doc, 'Résumé Activité', y);
+  y = addKPIGrid(doc, [
+    { label: 'RDV',           value: historique.resume?.rendezvous    || 0 },
+    { label: 'Prescriptions', value: historique.resume?.prescriptions || 0 },
+    { label: 'Kits',          value: historique.resume?.kits          || 0 },
+    { label: 'Séances',       value: historique.resume?.seances       || 0 },
+    { label: 'Soins',         value: historique.resume?.soins         || 0 },
+    { label: 'Surveillance',  value: historique.resume?.surveillance  || 0 },
+  ], y);
+
+  // ── Timeline Chronologique ────────────────────────────────────
+  y = checkPageBreak(doc, y, 30);
+  y = addSectionTitle(doc, `Chronologie (${Math.min((historique.timeline || []).length, 50)} événements)`, y);
+
+  const timeline: any[] = (historique.timeline || []).slice(0, 50);
+
+  if (timeline.length === 0) {
+    doc.setTextColor(...COLORS.light as [number, number, number]);
+    doc.setFontSize(8);
+    doc.text('Aucun événement enregistré', 14, y + 5);
+    y += 12;
+  } else {
+    // Tableau timeline
+    const rows = timeline.map((event: any) => {
+      const dateStr = event.date && new Date(event.date).getFullYear() > 1970
+        ? new Date(event.date).toLocaleDateString('fr-FR', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+          })
+        : 'Date inconnue';
+
+      const typeLabel: Record<string, string> = {
+        archivage:    'Archivage',
+        restauration: 'Restauration',
+        rendezvous:   'RDV',
+        prescription: 'Prescription',
+        kit:          'Kit',
+        seance:       'Séance',
+        soins:        'Soins',
+        surveillance: 'Surveillance',
+        demande_avis: "Demande d'avis",
+        creation:     'Création',
+      };
+
+      return [
+        dateStr,
+        typeLabel[event.type] || event.type,
+        String(event.titre || '').substring(0, 40),
+        String(event.details || '').substring(0, 50),
+      ];
+    });
+
+    y = addTable(doc, ['Date', 'Type', 'Événement', 'Détails'], rows, y);
+  }
+
+  addFooter(doc, 1, 1);
+  doc.save(`historique-${nom.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+}

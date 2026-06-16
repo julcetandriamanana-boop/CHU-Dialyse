@@ -61,10 +61,19 @@ export async function deleteNotification(id: number): Promise<void> {
 }
 
 export async function pollExternalNotifications(): Promise<number> {
-  const res = await fetch(`${API_URL}/notifications/poll-external`);
-  if (!res.ok) return 0;
-  const data = await res.json();
-  return data.synced || 0;
+  try {
+    const res = await fetch(`${API_URL}/notifications/poll-external`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+    });
+    if (!res.ok) return 0;
+    const data = await res.json();
+    return Number(data?.synced || 0);
+  } catch (error) {
+    console.warn('[notification.service] pollExternalNotifications failed:', error);
+    return 0;
+  }
 }
 
 // ── Sons selon urgence ─────────────────────────

@@ -6,6 +6,7 @@ import {
   ArchiveAPI, ArchiveItem, ArchiveStats, HistoriquePatient,
   PatientSimple, ModuleArchive, MODULE_CONFIG, TIMELINE_CONFIG,
 } from '@/src/services/archive.service';
+import { exportPdfHistoriquePatient } from '@/src/services/pdf.service';
 
 // ─── Types locaux ─────────────────────────────────────────────
 type TabId = 'tous' | ModuleArchive | 'historique';
@@ -822,6 +823,24 @@ function VueHistorique({ patients, selectedId, setSelectedId, historique, onArch
                 Archiver ce patient
               </motion.button>
             )}
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => exportPdfHistoriquePatient(historique)}
+              className="px-4 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl text-xs font-black shadow-md cursor-pointer flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
+              Exporter PDF
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => window.print()}
+              className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-black shadow-md cursor-pointer flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-sm">print</span>
+              Imprimer
+            </motion.button>
           </div>
 
           {/* Timeline */}

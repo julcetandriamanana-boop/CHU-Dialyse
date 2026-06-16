@@ -9,9 +9,11 @@ import { SeanceHemodialyse }      from '../entities/seance-hemodialyse.entity';
 import { SoinsSeance }            from '../entities/soins-seance.entity';
 import { SurveillanceSeance }     from '../entities/surveillance-seance.entity';
 import { DemandeAvis }            from '../entities/demande-avis.entity';
+import { Notification }           from '../entities/notification.entity';
 
-import { ArchiveController } from './archive.controller';
-import { ArchiveService }    from './archive.service';
+import { NotificationsModule }   from '../notifications/notifications.module';
+import { ArchiveController }     from './archive.controller';
+import { ArchiveService }        from './archive.service';
 
 @Module({
   imports: [
@@ -24,7 +26,9 @@ import { ArchiveService }    from './archive.service';
       SoinsSeance,
       SurveillanceSeance,
       DemandeAvis,
+      Notification,
     ]),
+    NotificationsModule,
   ],
   controllers: [ArchiveController],
   providers:   [ArchiveService],

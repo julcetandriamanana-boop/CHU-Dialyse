@@ -12,6 +12,7 @@ import { SurveillanceSeance }     from '../entities/surveillance-seance.entity';
 import { DemandeAvis }            from '../entities/demande-avis.entity';
 
 import { ArchiveActionDto }  from './dto/archive-action.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 import { ArchiveQueryDto }   from './dto/archive-query.dto';
 
 // ─── Types ────────────────────────────────────────────────────
@@ -88,7 +89,50 @@ export class ArchiveService {
     @InjectRepository(SoinsSeance)            private soinsRepo:      Repository<SoinsSeance>,
     @InjectRepository(SurveillanceSeance)     private survRepo:       Repository<SurveillanceSeance>,
     @InjectRepository(DemandeAvis)            private demandeRepo:    Repository<DemandeAvis>,
+    private notifService:                     NotificationsService,
   ) {}
+
+  // ─── NOTIFICATIONS ARCHIVAGE ──────────────────────────────────
+
+  private async envoyerNotifArchivage(
+    module: ModuleArchive,
+    id: number,
+    label: string,
+    motif: string,
+    archivedBy: string,
+  ): Promise<void> {
+    try {
+      await this.notifService.create({
+        title:    `🗄️ Archivage - ${module}`,
+        message:  `${label} archivé · Motif: ${motif} · Par: ${archivedBy}`,
+        type:     'warning',
+        category: 'ARCHIVE',
+        icon:     'archive',
+        is_read:  false,
+      });
+    } catch (e) {
+      console.warn('[ArchiveService] Notification archivage échouée:', e?.message);
+    }
+  }
+
+  private async envoyerNotifRestauration(
+    module: ModuleArchive,
+    id: number,
+    label: string,
+  ): Promise<void> {
+    try {
+      await this.notifService.create({
+        title:    `✅ Restauration - ${module}`,
+        message:  `${label} restauré avec succès`,
+        type:     'success',
+        category: 'ARCHIVE',
+        icon:     'restore',
+        is_read:  false,
+      });
+    } catch (e) {
+      console.warn('[ArchiveService] Notification restauration échouée:', e?.message);
+    }
+  }
 
   // ─── UTILITAIRES PRIVÉS ───────────────────────────────────────
 
@@ -289,6 +333,10 @@ export class ArchiveService {
       cascade = await this.archiverCascadePatient(id, dto);
     }
 
+    // ✅ Notification archivage
+    const labelItem = this.buildLabel(module, item);
+    await this.envoyerNotifArchivage(module, id, labelItem, dto.motif, dto.archived_by);
+
     return {
       ok: true,
       message: `${module} #${id} archivé avec succès`,
@@ -360,6 +408,10 @@ export class ArchiveService {
     if (module === 'patients') {
       cascade = await this.restaurerCascadePatient(id);
     }
+
+    // ✅ Notification restauration
+    const labelItemRestored = this.buildLabel(module, item);
+    await this.envoyerNotifRestauration(module, id, labelItemRestored);
 
     return {
       ok: true,
