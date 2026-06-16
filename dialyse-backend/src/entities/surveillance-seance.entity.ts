@@ -3,8 +3,8 @@ import {
   ManyToOne, OneToMany, JoinColumn,
   CreateDateColumn, UpdateDateColumn,
 } from 'typeorm';
-import { Patient } from './patient.entity';
-import { RendezVous } from './rendez-vous.entity';
+import { Patient }           from './patient.entity';
+import { RendezVous }        from './rendez-vous.entity';
 import { SurveillanceLigne } from './surveillance-ligne.entity';
 
 @Entity({ name: 'surveillance_seance' })
@@ -26,23 +26,23 @@ export class SurveillanceSeance {
   @Column({ type: 'int', nullable: true })
   patient_id: number;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })  orifice_catheter: string;
-  @Column({ type: 'varchar', length: 50, nullable: true })   kt_v: string;
-  @Column({ type: 'varchar', length: 50, nullable: true })   volume_sang_traite: string;
-  @Column({ type: 'varchar', length: 50, nullable: true })   delta_vs: string;
-  @Column({ type: 'varchar', length: 50, nullable: true })   pru: string;
+  @Column({ type: 'varchar', length: 100, nullable: true }) orifice_catheter: string;
+  @Column({ type: 'varchar', length: 50,  nullable: true }) kt_v: string;
+  @Column({ type: 'varchar', length: 50,  nullable: true }) volume_sang_traite: string;
+  @Column({ type: 'varchar', length: 50,  nullable: true }) delta_vs: string;
+  @Column({ type: 'varchar', length: 50,  nullable: true }) pru: string;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
-  recirculation: string; // BONNE / MOYENNE / MAUVAISE
+  recirculation: string;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
   temps_compression_veine: string;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
-  piege_bulle: string; // propre / caillot
+  piege_bulle: string;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
-  dealeur: string; // propre / caillot
+  dealeur: string;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   infirmier_nom: string;
@@ -55,4 +55,17 @@ export class SurveillanceSeance {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  // ✅ Champs Archive
+  @Column({ type: 'boolean', default: false })
+  is_archived: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  archived_at: Date | null;
+
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  archived_by: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  archive_motif: string | null;
 }

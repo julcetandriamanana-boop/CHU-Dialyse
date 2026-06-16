@@ -2,7 +2,7 @@ import {
   Entity, Column, PrimaryGeneratedColumn,
   ManyToOne, JoinColumn, CreateDateColumn,
 } from 'typeorm';
-import { Patient } from './patient.entity';
+import { Patient }    from './patient.entity';
 import { RendezVous } from './rendez-vous.entity';
 
 @Entity({ name: 'prescription_kit_envoyee' })
@@ -59,4 +59,17 @@ export class PrescriptionKitEnvoyee {
 
   @CreateDateColumn()
   created_at: Date;
+
+  // ✅ Champs Archive
+  @Column({ type: 'boolean', default: false })
+  is_archived: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  archived_at: Date | null;
+
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  archived_by: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  archive_motif: string | null;
 }

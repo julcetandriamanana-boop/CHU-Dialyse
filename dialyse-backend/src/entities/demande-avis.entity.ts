@@ -1,4 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity, Column, PrimaryGeneratedColumn,
+  ManyToOne, JoinColumn,
+  CreateDateColumn,
+} from 'typeorm';
 import { Patient } from './patient.entity';
 import { Medecin } from './medecin.entity';
 
@@ -27,4 +31,20 @@ export class DemandeAvis {
 
   @Column({ type: 'varchar', length: 20, default: 'moyenne' })
   priorite: string;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  // ✅ Champs Archive
+  @Column({ type: 'boolean', default: false })
+  is_archived: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  archived_at: Date | null;
+
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  archived_by: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  archive_motif: string | null;
 }

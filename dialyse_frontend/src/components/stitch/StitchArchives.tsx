@@ -1,408 +1,877 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  ArchiveAPI, ArchiveItem, ArchiveStats, HistoriquePatient,
+  PatientSimple, ModuleArchive, MODULE_CONFIG, TIMELINE_CONFIG,
+} from '@/src/services/archive.service';
 
-const ARCHIVES = [
-  { id: 'ARC-001', mois: 'Mai 2026', annee: '2026', moisNum: 5, dossiers: 142, seances: 380, patients: 78, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Andrianjato', dateDebut: '2026-05-01', dateFin: '2026-05-31',
-    patientsList: ['Elena Ross', 'Marcus Jensen', 'Hélène Bernard', 'Sophie Martin', 'Pierre Durant', 'Anne Laurent', 'Luc Bernard', 'Claire Dubois'] },
-  { id: 'ARC-002', mois: 'Avril 2026', annee: '2026', moisNum: 4, dossiers: 156, seances: 420, patients: 85, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Rakoto', dateDebut: '2026-04-01', dateFin: '2026-04-30',
-    patientsList: ['Elena Ross', 'Marcus Jensen', 'Hélène Bernard', 'Robert N.', 'Marie T.', 'Jean F.', 'Julie K.', 'Paul M.', 'Sandra W.'] },
-  { id: 'ARC-003', mois: 'Mars 2026', annee: '2026', moisNum: 3, dossiers: 128, seances: 350, patients: 72, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Andrianjato', dateDebut: '2026-03-01', dateFin: '2026-03-31',
-    patientsList: ['Elena Ross', 'Hélène Bernard', 'Sophie Martin', 'Pierre Durant'] },
-  { id: 'ARC-004', mois: 'Février 2026', annee: '2026', moisNum: 2, dossiers: 165, seances: 445, patients: 90, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Rabary', dateDebut: '2026-02-01', dateFin: '2026-02-28',
-    patientsList: ['Marcus Jensen', 'Luc Bernard', 'Claire Dubois', 'Anne Laurent'] },
-  { id: 'ARC-005', mois: 'Janvier 2026', annee: '2026', moisNum: 1, dossiers: 138, seances: 370, patients: 75, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Andrianjato', dateDebut: '2026-01-01', dateFin: '2026-01-31',
-    patientsList: ['Elena Ross', 'Hélène Bernard', 'Robert N.', 'Marie T.'] },
-  { id: 'ARC-006', mois: 'Décembre 2025', annee: '2025', moisNum: 12, dossiers: 145, seances: 390, patients: 80, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Rakoto', dateDebut: '2025-12-01', dateFin: '2025-12-31',
-    patientsList: ['Jean F.', 'Julie K.', 'Paul M.', 'Sandra W.'] },
-  { id: 'ARC-007', mois: 'Novembre 2025', annee: '2025', moisNum: 11, dossiers: 152, seances: 410, patients: 83, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Andrianjato', dateDebut: '2025-11-01', dateFin: '2025-11-30',
-    patientsList: ['Elena Ross', 'Marcus Jensen', 'Sophie Martin'] },
-  { id: 'ARC-008', mois: 'Octobre 2025', annee: '2025', moisNum: 10, dossiers: 133, seances: 360, patients: 70, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Rabary', dateDebut: '2025-10-01', dateFin: '2025-10-31',
-    patientsList: ['Pierre Durant', 'Anne Laurent', 'Luc Bernard'] },
-  { id: 'ARC-009', mois: 'Septembre 2025', annee: '2025', moisNum: 9, dossiers: 148, seances: 400, patients: 82, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Andrianjato', dateDebut: '2025-09-01', dateFin: '2025-09-30',
-    patientsList: ['Elena Ross', 'Hélène Bernard', 'Claire Dubois', 'Robert N.'] },
-  { id: 'ARC-010', mois: 'Août 2025', annee: '2025', moisNum: 8, dossiers: 140, seances: 385, patients: 77, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Rakoto', dateDebut: '2025-08-01', dateFin: '2025-08-31',
-    patientsList: ['Marcus Jensen', 'Marie T.', 'Jean F.'] },
-  { id: 'ARC-011', mois: 'Juillet 2025', annee: '2025', moisNum: 7, dossiers: 135, seances: 375, patients: 73, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Andrianjato', dateDebut: '2025-07-01', dateFin: '2025-07-31',
-    patientsList: ['Julie K.', 'Paul M.', 'Sandra W.'] },
-  { id: 'ARC-012', mois: 'Juin 2025', annee: '2025', moisNum: 6, dossiers: 155, seances: 430, patients: 88, type: 'Mensuel', statut: 'Complet', service: 'Néphrologie', responsable: 'Dr. Rabary', dateDebut: '2025-06-01', dateFin: '2025-06-30',
-    patientsList: ['Elena Ross', 'Sophie Martin', 'Pierre Durant', 'Anne Laurent'] },
-];
+// ─── Types locaux ─────────────────────────────────────────────
+type TabId = 'tous' | ModuleArchive | 'historique';
 
-export default function StitchArchives() {
-  const [search, setSearch] = useState('');
-  const [selectedArchive, setSelectedArchive] = useState<string | null>(null);
-  const [filterYear, setFilterYear] = useState('all');
-  const [dateStart, setDateStart] = useState('');
-  const [dateEnd, setDateEnd] = useState('');
-  const [notification, setNotification] = useState<string | null>(null);
+interface ModalArchive {
+  type:   'archiver' | 'restaurer';
+  module: ModuleArchive;
+  id:     number;
+  label:  string;
+}
 
-  const showNotification = (message: string) => {
-    setNotification(message);
-    setTimeout(() => setNotification(null), 3000);
-  };
+// ─── Composants réutilisables ─────────────────────────────────
 
-  const filteredArchives = useMemo(() => {
-    let result = ARCHIVES;
+function Toast({ message, type = 'success' }: { message: string; type?: 'success' | 'error' }) {
+  const cfg = type === 'success'
+    ? { bg: 'from-emerald-500 to-teal-600', icon: 'check_circle', shadow: 'shadow-emerald-200' }
+    : { bg: 'from-red-500 to-rose-600',     icon: 'error',         shadow: 'shadow-red-200'    };
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 60, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0,  scale: 1   }}
+      exit={{    opacity: 0, y: 60, scale: 0.8 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      className={`fixed bottom-6 right-6 z-50 px-5 py-3 bg-gradient-to-r ${cfg.bg} text-white rounded-2xl shadow-2xl ${cfg.shadow} text-sm font-bold flex items-center gap-2`}
+    >
+      <span className="material-symbols-outlined text-lg">{cfg.icon}</span>
+      {message}
+    </motion.div>
+  );
+}
 
-    if (filterYear !== 'all') {
-      result = result.filter(a => a.annee === filterYear);
-    }
+function ModuleBadge({ module }: { module: ModuleArchive }) {
+  const cfg = MODULE_CONFIG[module];
+  return (
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${cfg.badge} border-current/20`}>
+      <span className="material-symbols-outlined text-sm">{cfg.icon}</span>
+      {cfg.label}
+    </span>
+  );
+}
 
-    if (dateStart) {
-      result = result.filter(a => a.dateFin >= dateStart);
-    }
-    if (dateEnd) {
-      result = result.filter(a => a.dateDebut <= dateEnd);
-    }
+function StatCard({ label, value, icon, gradient, shadow }: {
+  label: string; value: number; icon: string; gradient: string; shadow: string;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0,  scale: 1   }}
+      whileHover={{ y: -3, scale: 1.02 }}
+      className="bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20"
+    >
+      <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-md ${shadow} mb-2`}>
+        <span className="material-symbols-outlined text-white text-base">{icon}</span>
+      </div>
+      <p className="text-2xl font-black text-white">{value}</p>
+      <p className="text-[10px] text-white/70 font-semibold uppercase mt-0.5">{label}</p>
+    </motion.div>
+  );
+}
 
-    // Recherche dans TOUS les champs + patients
-    if (search.trim()) {
-      const q = search.toLowerCase().trim();
-      result = result.filter(a => {
-        const matchMain = (
-          a.mois.toLowerCase().includes(q) ||
-          a.annee.includes(q) ||
-          String(a.dossiers).includes(q) ||
-          String(a.seances).includes(q) ||
-          String(a.patients).includes(q) ||
-          a.type.toLowerCase().includes(q) ||
-          a.statut.toLowerCase().includes(q) ||
-          a.service.toLowerCase().includes(q) ||
-          a.responsable.toLowerCase().includes(q) ||
-          a.id.toLowerCase().includes(q) ||
-          (q.startsWith('>') && !isNaN(parseInt(q.slice(1))) && a.seances > parseInt(q.slice(1))) ||
-          (q.startsWith('<') && !isNaN(parseInt(q.slice(1))) && a.seances < parseInt(q.slice(1)))
-        );
-        // Recherche dans la liste des patients
-        const matchPatients = a.patientsList.some(p => p.toLowerCase().includes(q));
-        return matchMain || matchPatients;
-      });
-    }
+function EmptyState({ icon, title, subtitle }: { icon: string; title: string; subtitle?: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="py-16 text-center text-slate-400"
+    >
+      <span className="material-symbols-outlined text-6xl mb-3 block opacity-30">{icon}</span>
+      <p className="font-bold text-lg text-slate-600">{title}</p>
+      {subtitle && <p className="text-xs mt-1">{subtitle}</p>}
+    </motion.div>
+  );
+}
 
-    return result;
-  }, [search, filterYear, dateStart, dateEnd]);
 
-  const years = ['all', ...new Set(ARCHIVES.map(a => a.annee))];
+// ─── Modal Confirmation ───────────────────────────────────────
 
-  const statsFiltered = {
-    dossiers: filteredArchives.reduce((s, a) => s + a.dossiers, 0),
-    seances: filteredArchives.reduce((s, a) => s + a.seances, 0),
-    patients: filteredArchives.reduce((s, a) => s + a.patients, 0),
-  };
-
-  const statsGlobal = {
-    totalDossiers: ARCHIVES.reduce((s, a) => s + a.dossiers, 0),
-    totalSeances: ARCHIVES.reduce((s, a) => s + a.seances, 0),
-    totalPatients: ARCHIVES.reduce((s, a) => s + a.patients, 0),
-    nbMois: ARCHIVES.length,
-  };
-
-  const handleDownload = (archive: typeof ARCHIVES[0]) => {
-    const dataStr = JSON.stringify(archive, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `archive_${archive.mois.replace(/\s+/g, '_')}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showNotification(`📥 Archive ${archive.mois} téléchargée !`);
-  };
-
-  const handleExportAll = () => {
-    const dataStr = JSON.stringify(filteredArchives, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `archives_${filterYear !== 'all' ? filterYear : 'tout'}_${new Date().toISOString().slice(0,10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showNotification(`📥 ${filteredArchives.length} archives exportées !`);
-  };
-
-  // Patients mis en évidence dans la recherche
-  const highlightedPatients = useMemo(() => {
-    if (!search.trim()) return [];
-    const q = search.toLowerCase().trim();
-    const allPatients = new Set<string>();
-    filteredArchives.forEach(a => a.patientsList.forEach(p => {
-      if (p.toLowerCase().includes(q)) allPatients.add(p);
-    }));
-    return Array.from(allPatients);
-  }, [search, filteredArchives]);
+function ModalConfirmation({ modal, onConfirm, onCancel, loading }: {
+  modal:     ModalArchive;
+  onConfirm: (motif: string, archivedBy: string) => void;
+  onCancel:  () => void;
+  loading:   boolean;
+}) {
+  const [motif, setMotif]           = useState('');
+  const [archivedBy, setArchivedBy] = useState('');
+  const isArchiver = modal.type === 'archiver';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-      <div className="pt-6 pb-20 md:pb-8 px-4 md:px-6 lg:px-8 max-w-[1600px] mx-auto">
-        
-        <AnimatePresence>
-          {notification && (
-            <motion.div initial={{ opacity: 0, y: -50, x: '-50%' }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} className="fixed top-4 left-1/2 z-50 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-6 py-3 rounded-2xl shadow-xl font-bold text-sm flex items-center gap-2">
-              <span className="material-symbols-outlined">check_circle</span>
-              {notification}
-            </motion.div>
-          )}
-        </AnimatePresence>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      onClick={onCancel}
+    >
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0, y: 20 }}
+        animate={{ scale: 1,   opacity: 1, y: 0  }}
+        exit={{    scale: 0.8, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+        className="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-md"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Icône */}
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
+          isArchiver
+            ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-lg shadow-red-200'
+            : 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-200'
+        }`}>
+          <span className="material-symbols-outlined text-white text-2xl">
+            {isArchiver ? 'archive' : 'restore'}
+          </span>
+        </div>
 
-        <motion.nav initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2 text-xs text-slate-400 font-medium mb-4">
-          <span>Espace Clinique</span>
-          <span className="material-symbols-outlined text-sm">chevron_right</span>
-          <span className="text-slate-600 font-bold">Archives</span>
-        </motion.nav>
+        <h2 className="text-xl font-black text-slate-800 text-center mb-1">
+          {isArchiver ? 'Archiver cet élément ?' : 'Restaurer cet élément ?'}
+        </h2>
+        <p className="text-sm text-slate-500 text-center mb-5 font-semibold">{modal.label}</p>
 
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col lg:flex-row gap-6 mb-6">
-          <div className="flex-1">
-            <h1 className="text-2xl md:text-3xl font-black text-slate-800 font-manrope">Archives</h1>
-            <p className="text-slate-500 text-sm mt-1">
-              {filteredArchives.length} résultat{filteredArchives.length !== 1 ? 's' : ''} 
-              {(dateStart || dateEnd) && <span className="text-blue-600 font-semibold"> du {dateStart || '...'} au {dateEnd || '...'}</span>}
-              {search && <span className="text-blue-600 font-semibold"> pour &quot;{search}&quot;</span>}
-              {highlightedPatients.length > 0 && (
-                <span className="text-emerald-600 font-semibold"> · {highlightedPatients.length} patient{highlightedPatients.length > 1 ? 's' : ''} trouvé{highlightedPatients.length > 1 ? 's' : ''}</span>
-              )}
-            </p>
-          </div>
-          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleExportAll} className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 shadow-sm cursor-pointer flex items-center gap-2">
-            <span className="material-symbols-outlined text-lg">download</span>
-            Exporter ({filteredArchives.length})
-          </motion.button>
-        </motion.div>
+        {isArchiver && (
+          <>
+            {modal.module === 'patients' && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
+                <p className="text-xs font-bold text-amber-700 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm">warning</span>
+                  Archivage en cascade : RDV, prescriptions, kits, séances et soins associés seront aussi archivés.
+                </p>
+              </div>
+            )}
 
-        {/* Stats globales */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          {[
-            { label: 'Total Dossiers', value: statsGlobal.totalDossiers.toLocaleString(), icon: 'folder', color: 'from-blue-500 to-blue-600' },
-            { label: 'Total Séances', value: statsGlobal.totalSeances.toLocaleString(), icon: 'monitor_heart', color: 'from-emerald-500 to-emerald-600' },
-            { label: 'Patients Suivis', value: statsGlobal.totalPatients, icon: 'groups', color: 'from-purple-500 to-purple-600' },
-            { label: 'Mois Archivés', value: statsGlobal.nbMois, icon: 'calendar_month', color: 'from-amber-500 to-amber-600' },
-          ].map((stat, i) => (
-            <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} whileHover={{ y: -4 }} className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5 flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-white shadow-lg`}>
-                <span className="material-symbols-outlined text-xl">{stat.icon}</span>
+            <div className="space-y-3 mb-5">
+              <div>
+                <label className="text-xs font-black text-slate-700 uppercase block mb-1">
+                  Motif d'archivage *
+                </label>
+                <textarea
+                  value={motif}
+                  onChange={e => setMotif(e.target.value)}
+                  placeholder="Ex: Fin de protocole dialyse..."
+                  rows={3}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
+                />
               </div>
               <div>
-                <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{stat.label}</p>
-                <p className="text-2xl font-black text-slate-800">{stat.value}</p>
+                <label className="text-xs font-black text-slate-700 uppercase block mb-1">
+                  Archivé par *
+                </label>
+                <input
+                  value={archivedBy}
+                  onChange={e => setArchivedBy(e.target.value)}
+                  placeholder="Ex: Dr. Andrianjato..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-400"
+                />
               </div>
-            </motion.div>
-          ))}
-        </motion.div>
+            </div>
+          </>
+        )}
 
-        {/* Patients trouvés (si recherche par patient) */}
-        <AnimatePresence>
-          {highlightedPatients.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
-              <p className="text-xs font-bold text-emerald-700 mb-2 flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">person_search</span>
-                Patients trouvés dans les archives :
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {highlightedPatients.map(patient => (
-                  <motion.span
-                    key={patient}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="px-3 py-1.5 bg-white border border-emerald-200 rounded-full text-[10px] font-bold text-emerald-700 shadow-sm"
-                  >
-                    {patient}
-                    <span className="ml-1 text-emerald-400">
-                      ({filteredArchives.filter(a => a.patientsList.includes(patient)).length} mois)
-                    </span>
-                  </motion.span>
-                ))}
-              </div>
-            </motion.div>
+        {!isArchiver && modal.module === 'patients' && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-5">
+            <p className="text-xs font-bold text-emerald-700 flex items-center gap-1">
+              <span className="material-symbols-outlined text-sm">info</span>
+              Restauration en cascade : les données archivées avec ce patient seront aussi restaurées.
+            </p>
+          </div>
+        )}
+
+        <div className="flex gap-3">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onCancel}
+            className="flex-1 px-4 py-3 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all cursor-pointer"
+          >
+            Annuler
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            disabled={isArchiver && (!motif.trim() || !archivedBy.trim()) || loading}
+            onClick={() => onConfirm(motif, archivedBy)}
+            className={`flex-1 px-4 py-3 text-white rounded-xl text-sm font-black shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+              isArchiver
+                ? 'bg-gradient-to-r from-red-600 to-rose-600 shadow-red-200'
+                : 'bg-gradient-to-r from-emerald-600 to-teal-600 shadow-emerald-200'
+            }`}
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                En cours...
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-1">
+                <span className="material-symbols-outlined text-sm">
+                  {isArchiver ? 'archive' : 'restore'}
+                </span>
+                {isArchiver ? 'Confirmer archivage' : 'Confirmer restauration'}
+              </span>
+            )}
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── Composant Principal ──────────────────────────────────────
+
+export default function StitchArchives() {
+  const [activeTab, setActiveTab]   = useState<TabId>('tous');
+  const [loading, setLoading]       = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [toast, setToast]           = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [modal, setModal]           = useState<ModalArchive | null>(null);
+
+  // Data
+  const [stats, setStats]           = useState<ArchiveStats | null>(null);
+  const [archives, setArchives]     = useState<{ data: ArchiveItem[]; total: number; totalPages: number }>({ data: [], total: 0, totalPages: 0 });
+  const [patients, setPatients]     = useState<PatientSimple[]>([]);
+  const [historique, setHistorique] = useState<HistoriquePatient | null>(null);
+  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
+
+  // Filtres
+  const [search, setSearch]         = useState('');
+  const [dateDebut, setDateDebut]   = useState('');
+  const [dateFin, setDateFin]       = useState('');
+  const [page, setPage]             = useState(1);
+  const [limit, setLimit]           = useState(20);
+
+  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  }, []);
+
+  // Chargement initial
+  useEffect(() => {
+    const init = async () => {
+      setLoading(true);
+      try {
+        const [s, p] = await Promise.all([
+          ArchiveAPI.getStats().catch(() => null),
+          ArchiveAPI.getPatients().catch(() => []),
+        ]);
+        setStats(s);
+        setPatients(p);
+        if (p.length > 0) setSelectedPatientId(p[0].id);
+      } catch (e) { console.error(e); }
+      setLoading(false);
+    };
+    init();
+  }, []);
+
+  // Chargement archives selon onglet
+  const loadArchives = useCallback(async () => {
+    if (activeTab === 'historique') return;
+    try {
+      const q = { search: search || undefined, dateDebut: dateDebut || undefined, dateFin: dateFin || undefined, page, limit };
+      const res = activeTab === 'tous'
+        ? await ArchiveAPI.listerTout(q)
+        : await ArchiveAPI.listerParModule(activeTab as ModuleArchive, q);
+      setArchives({ data: res.data, total: res.total, totalPages: res.totalPages });
+    } catch (e) {
+      console.error(e);
+      showToast('Erreur chargement archives', 'error');
+    }
+  }, [activeTab, search, dateDebut, dateFin, page, limit, showToast]);
+
+  useEffect(() => {
+    if (!loading) loadArchives();
+  }, [loading, loadArchives]);
+
+  // Chargement historique
+  useEffect(() => {
+    if (activeTab !== 'historique' || !selectedPatientId) return;
+    const load = async () => {
+      try {
+        const h = await ArchiveAPI.getHistorique(selectedPatientId);
+        setHistorique(h);
+      } catch (e) {
+        console.error(e);
+        showToast('Erreur chargement historique', 'error');
+      }
+    };
+    load();
+  }, [activeTab, selectedPatientId, showToast]);
+
+  // Actions archiver/restaurer
+  const handleConfirmAction = useCallback(async (motif: string, archivedBy: string) => {
+    if (!modal) return;
+    setActionLoading(true);
+    try {
+      let res: any;
+      if (modal.type === 'archiver') {
+        res = await ArchiveAPI.archiver(modal.module, modal.id, motif, archivedBy);
+      } else {
+        res = await ArchiveAPI.restaurer(modal.module, modal.id);
+      }
+      showToast(res.message);
+      setModal(null);
+      // Rafraîchir stats + liste
+      const [s] = await Promise.all([
+        ArchiveAPI.getStats().catch(() => stats),
+        loadArchives(),
+      ]);
+      setStats(s);
+    } catch (e: any) {
+      showToast(e?.message || 'Erreur', 'error');
+    }
+    setActionLoading(false);
+  }, [modal, stats, loadArchives, showToast]);
+
+  const tabs = useMemo(() => [
+    { id: 'tous'         as TabId, label: 'Tous',          icon: 'folder_open',     count: stats?.total || 0 },
+    { id: 'patients'     as TabId, label: 'Patients',       icon: 'person',          count: stats?.par_module?.patients || 0 },
+    { id: 'rendezvous'   as TabId, label: 'RDV',            icon: 'event',           count: stats?.par_module?.rendezvous || 0 },
+    { id: 'prescriptions'as TabId, label: 'Prescriptions',  icon: 'prescriptions',   count: stats?.par_module?.prescriptions || 0 },
+    { id: 'kits'         as TabId, label: 'Kits',           icon: 'inventory_2',     count: stats?.par_module?.kits || 0 },
+    { id: 'seances'      as TabId, label: 'Séances',        icon: 'vaccine',         count: stats?.par_module?.seances || 0 },
+    { id: 'soins'        as TabId, label: 'Soins',          icon: 'healing',         count: stats?.par_module?.soins || 0 },
+    { id: 'surveillance' as TabId, label: 'Surveillance',   icon: 'monitor_heart',   count: stats?.par_module?.surveillance || 0 },
+    { id: 'demandes-avis'as TabId, label: 'Demandes',       icon: 'question_answer', count: stats?.par_module?.['demandes-avis'] || 0 },
+    { id: 'historique'   as TabId, label: 'Historique',     icon: 'history',         count: null },
+  ], [stats]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sm font-bold text-slate-600">Chargement des archives...</p>
+        </div>
+      </div>
+    );
+  }
+
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 p-6 space-y-5 max-w-7xl mx-auto">
+
+      {/* ── Header ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+        className="bg-gradient-to-r from-slate-700 via-slate-800 to-indigo-900 rounded-2xl shadow-xl p-5"
+      >
+        <div className="flex items-center justify-between flex-wrap gap-4 mb-5">
+          <div className="text-white">
+            <h1 className="text-xl md:text-2xl font-black flex items-center gap-2">
+              <span className="material-symbols-outlined text-3xl">archive</span>
+              Archives Médicales
+            </h1>
+            <p className="text-xs md:text-sm text-slate-300 mt-1 font-semibold">
+              Service Hémodialyse - CHU Andrainjato · Soft Delete Médical
+            </p>
+          </div>
+          {stats?.derniere_archive && (
+            <div className="bg-white/10 rounded-xl px-4 py-2 text-white text-xs font-bold">
+              <span className="material-symbols-outlined text-sm mr-1">schedule</span>
+              Dernière archive: {new Date(stats.derniere_archive).toLocaleDateString('fr-FR')}
+            </div>
           )}
-        </AnimatePresence>
+        </div>
 
-        {/* Filtres */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5 mb-6 space-y-4">
-          
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="relative flex-1 max-w-sm">
+        {/* KPI Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+          <StatCard label="Total"        value={stats?.total || 0}                           icon="folder_open"     gradient="from-slate-500 to-slate-700"   shadow="shadow-slate-300" />
+          <StatCard label="Patients"     value={stats?.par_module?.patients || 0}            icon="person"          gradient="from-blue-500 to-indigo-600"   shadow="shadow-blue-200" />
+          <StatCard label="RDV"          value={stats?.par_module?.rendezvous || 0}          icon="event"           gradient="from-emerald-500 to-teal-600"  shadow="shadow-emerald-200" />
+          <StatCard label="Prescriptions"value={stats?.par_module?.prescriptions || 0}       icon="prescriptions"   gradient="from-violet-500 to-purple-600" shadow="shadow-violet-200" />
+          <StatCard label="Kits"         value={stats?.par_module?.kits || 0}                icon="inventory_2"     gradient="from-pink-500 to-rose-600"     shadow="shadow-pink-200" />
+          <StatCard label="Séances"      value={stats?.par_module?.seances || 0}             icon="vaccine"         gradient="from-amber-500 to-orange-600"  shadow="shadow-amber-200" />
+          <StatCard label="Soins"        value={stats?.par_module?.soins || 0}               icon="healing"         gradient="from-cyan-500 to-blue-600"     shadow="shadow-cyan-200" />
+          <StatCard label="Surveillance" value={stats?.par_module?.surveillance || 0}        icon="monitor_heart"   gradient="from-red-500 to-rose-600"      shadow="shadow-red-200" />
+        </div>
+      </motion.div>
+
+      {/* ── Tabs ── */}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-2 overflow-x-auto"
+      >
+        <div className="flex gap-1 min-w-max">
+          {tabs.map((tab, i) => (
+            <motion.button
+              key={tab.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 + i * 0.04 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => { setActiveTab(tab.id); setPage(1); }}
+              className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'bg-gradient-to-r from-slate-700 to-indigo-800 text-white shadow-md'
+                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">{tab.icon}</span>
+              {tab.label}
+              {tab.count !== null && (
+                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                  activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  {tab.count}
+                </span>
+              )}
+            </motion.button>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* ── Filtres (pas sur historique) ── */}
+      {activeTab !== 'historique' && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-4 space-y-3"
+        >
+          <div className="flex flex-wrap gap-3">
+            <div className="flex-1 min-w-48 relative">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
               <input
-                type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher par mois, année, dossiers, séances, patient, responsable..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                placeholder="Rechercher par nom, motif, archivé par..."
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
               />
-              {search && (
-                <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }} onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 cursor-pointer">
-                  <span className="material-symbols-outlined text-sm">close</span>
-                </motion.button>
-              )}
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">Année :</span>
-              {years.map(year => (
-                <motion.button key={year} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setFilterYear(year)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${filterYear === year ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-200'}`}>
-                  {year === 'all' ? 'Toutes' : year}
-                </motion.button>
-              ))}
-            </div>
-          </div>
-
-          {/* Intervalle de dates */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
-              <span className="material-symbols-outlined text-sm">date_range</span>
-              Intervalle :
-            </span>
-            <div className="flex items-center gap-2">
-              <input type="date" value={dateStart} onChange={(e) => setDateStart(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer" />
-              <span className="text-slate-400 text-xs font-bold">→</span>
-              <input type="date" value={dateEnd} onChange={(e) => setDateEnd(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer" />
-              {(dateStart || dateEnd) && (
-                <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }} onClick={() => { setDateStart(''); setDateEnd(''); }} className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 cursor-pointer">
-                  <span className="material-symbols-outlined text-sm">close</span>
-                </motion.button>
-              )}
-            </div>
-            {(dateStart || dateEnd) && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 bg-blue-50 rounded-xl px-3 py-1.5">
-                <span className="text-[10px] font-bold text-blue-700">{statsFiltered.dossiers} dossiers · {statsFiltered.seances} séances · {statsFiltered.patients} patients</span>
-              </motion.div>
+            <input
+              type="date"
+              value={dateDebut}
+              onChange={e => { setDateDebut(e.target.value); setPage(1); }}
+              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+            <input
+              type="date"
+              value={dateFin}
+              onChange={e => { setDateFin(e.target.value); setPage(1); }}
+              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+            {(search || dateDebut || dateFin) && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { setSearch(''); setDateDebut(''); setDateFin(''); setPage(1); }}
+                className="px-3 py-2.5 bg-red-50 text-red-500 rounded-xl text-xs font-bold hover:bg-red-100 transition-all cursor-pointer flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">close</span>
+                Réinit.
+              </motion.button>
             )}
           </div>
 
-          {/* Tags rapides */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-bold text-slate-400">Rapide :</span>
-            {['Elena Ross', 'Marcus Jensen', 'Hélène Bernard', 'Mensuel', 'Dr. Andrianjato', '>400'].map(tag => (
-              <motion.button key={tag} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setSearch(search === tag ? '' : tag)} className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${search === tag ? 'bg-blue-100 text-blue-700 ring-2 ring-blue-400' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
-                {tag}
+          {/* Pagination taille */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-500 uppercase">Afficher :</span>
+            {[10, 20, 25, 50].map(n => (
+              <motion.button
+                key={n}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { setLimit(n); setPage(1); }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  limit === n
+                    ? 'bg-gradient-to-r from-slate-700 to-indigo-800 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {n}
               </motion.button>
             ))}
+            <span className="text-xs text-slate-400 font-semibold">par page</span>
           </div>
         </motion.div>
+      )}
 
-        {/* Liste des archives */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px]">
-              <thead>
-                <tr className="text-slate-400 text-[11px] font-bold uppercase tracking-wider border-b border-slate-100">
-                  <th className="text-left py-4 pl-6">Période</th>
-                  <th className="text-center py-4">Dossiers</th>
-                  <th className="text-center py-4">Séances</th>
-                  <th className="text-center py-4">Patients</th>
-                  <th className="text-center py-4">Responsable</th>
-                  <th className="text-center py-4">Intervalle</th>
-                  <th className="text-center py-4">Statut</th>
-                  <th className="text-right py-4 pr-6">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {filteredArchives.length === 0 ? (
-                  <tr><td colSpan={8} className="text-center py-12 text-slate-400">
-                    <span className="material-symbols-outlined text-4xl mb-2 block">search_off</span>
-                    Aucun résultat trouvé
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { setSearch(''); setDateStart(''); setDateEnd(''); setFilterYear('all'); }} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold cursor-pointer block mx-auto">
-                      Réinitialiser les filtres
-                    </motion.button>
-                  </td></tr>
-                ) : (
-                  filteredArchives.map((archive, index) => (
-                    <motion.tr key={archive.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.03 }} whileHover={{ backgroundColor: '#f8fafc' }} className="group cursor-pointer transition-colors" onClick={() => setSelectedArchive(selectedArchive === archive.id ? null : archive.id)}>
-                      <td className="py-4 pl-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center group-hover:from-blue-100 group-hover:to-blue-200 transition-all">
-                            <span className="material-symbols-outlined text-slate-500 group-hover:text-blue-600 transition-colors">calendar_month</span>
-                          </div>
-                          <div>
-                            <p className="font-bold text-sm text-slate-800">{archive.mois}</p>
-                            <p className="text-[10px] text-slate-400">{archive.type} · {archive.service}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 text-center"><span className="text-sm font-bold text-blue-600">{archive.dossiers}</span></td>
-                      <td className="py-4 text-center"><span className="text-sm font-bold text-emerald-600">{archive.seances}</span></td>
-                      <td className="py-4 text-center">
-                        <span className="text-sm font-bold text-purple-600">{archive.patients}</span>
-                        <p className="text-[9px] text-slate-400 truncate max-w-[120px]">{archive.patientsList.slice(0, 3).join(', ')}{archive.patientsList.length > 3 ? '...' : ''}</p>
-                      </td>
-                      <td className="py-4 text-center"><span className="text-xs text-slate-600">{archive.responsable}</span></td>
-                      <td className="py-4 text-center"><span className="text-[10px] text-slate-500">{new Date(archive.dateDebut).toLocaleDateString('fr-FR')} → {new Date(archive.dateFin).toLocaleDateString('fr-FR')}</span></td>
-                      <td className="py-4 text-center"><span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">{archive.statut}</span></td>
-                      <td className="py-4 pr-6 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); setSelectedArchive(selectedArchive === archive.id ? null : archive.id); }} className="p-2 hover:bg-blue-50 rounded-lg cursor-pointer">
-                            <span className="material-symbols-outlined text-blue-500 text-lg">{selectedArchive === archive.id ? 'visibility_off' : 'visibility'}</span>
-                          </motion.button>
-                          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); handleDownload(archive); }} className="p-2 hover:bg-emerald-50 rounded-lg cursor-pointer">
-                            <span className="material-symbols-outlined text-emerald-500 text-lg">download</span>
-                          </motion.button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+      {/* ── Contenu principal ── */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.2 }}
+        >
+          {activeTab === 'historique' ? (
+            <VueHistorique
+              patients={patients}
+              selectedId={selectedPatientId}
+              setSelectedId={setSelectedPatientId}
+              historique={historique}
+              onArchiver={(module, id, label) => setModal({ type: 'archiver', module, id, label })}
+              onRestaurer={(module, id, label) => setModal({ type: 'restaurer', module, id, label })}
+            />
+          ) : (
+            <VueArchives
+              archives={archives.data}
+              total={archives.total}
+              totalPages={archives.totalPages}
+              page={page}
+              limit={limit}
+              onPageChange={setPage}
+              onArchiver={(module, id, label) => setModal({ type: 'archiver', module, id, label })}
+              onRestaurer={(module, id, label) => setModal({ type: 'restaurer', module, id, label })}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* ── Modal ── */}
+      <AnimatePresence>
+        {modal && (
+          <ModalConfirmation
+            modal={modal}
+            onConfirm={handleConfirmAction}
+            onCancel={() => setModal(null)}
+            loading={actionLoading}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Toast ── */}
+      <AnimatePresence>
+        {toast && <Toast message={toast.message} type={toast.type} />}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+
+// ─── Vue Archives (liste + pagination) ────────────────────────
+
+function VueArchives({ archives, total, totalPages, page, limit, onPageChange, onArchiver, onRestaurer }: {
+  archives:     ArchiveItem[];
+  total:        number;
+  totalPages:   number;
+  page:         number;
+  limit:        number;
+  onPageChange: (p: number) => void;
+  onArchiver:   (module: ModuleArchive, id: number, label: string) => void;
+  onRestaurer:  (module: ModuleArchive, id: number, label: string) => void;
+}) {
+  if (archives.length === 0) {
+    return <EmptyState icon="archive" title="Aucune archive trouvée" subtitle="Modifiez les filtres ou archivez des éléments" />;
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Résumé */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-xs font-bold text-slate-500">
+          Affichant <span className="text-slate-800">{(page - 1) * limit + 1}-{Math.min(page * limit, total)}</span> sur <span className="text-slate-800">{total}</span> archives
+        </p>
+      </div>
+
+      {/* Liste */}
+      <div className="space-y-3">
+        {archives.map((item, i) => {
+          const cfg = MODULE_CONFIG[item.module];
+          return (
+            <motion.div
+              key={`${item.module}-${item.id}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.04 }}
+              whileHover={{ y: -2 }}
+              className={`bg-white rounded-2xl border shadow-sm hover:shadow-md transition-all overflow-hidden ${cfg.border}`}
+            >
+              <div className="p-4 flex items-start gap-4">
+                {/* Icône module */}
+                <div className={`w-11 h-11 rounded-xl ${cfg.bg} ${cfg.border} border flex items-center justify-center shrink-0 mt-0.5`}>
+                  <span className={`material-symbols-outlined text-lg ${cfg.color}`}>{cfg.icon}</span>
+                </div>
+
+                {/* Contenu */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <div>
+                      <p className="text-sm font-black text-slate-800 truncate">{item.label}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
+                    </div>
+                    <ModuleBadge module={item.module} />
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 mt-2 text-xs text-slate-500">
+                    {item.archived_at && (
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">calendar_today</span>
+                        {new Date(item.archived_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                    {item.archived_by && (
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">person</span>
+                        {item.archived_by}
+                      </span>
+                    )}
+                    {item.archive_motif && (
+                      <span className="flex items-center gap-1 italic">
+                        <span className="material-symbols-outlined text-sm">chat_bubble</span>
+                        {item.archive_motif}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 shrink-0">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => onRestaurer(item.module, item.id, item.label)}
+                    className="px-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-xs font-black shadow-sm shadow-emerald-200 hover:shadow-md cursor-pointer flex items-center gap-1"
+                    title="Restaurer"
+                  >
+                    <span className="material-symbols-outlined text-sm">restore</span>
+                    <span className="hidden sm:inline">Restaurer</span>
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex items-center justify-center gap-2 pt-2"
+        >
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            disabled={page <= 1}
+            onClick={() => onPageChange(page - 1)}
+            className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-lg">chevron_left</span>
+          </motion.button>
+
+          {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+            let p: number;
+            if (totalPages <= 7) p = i + 1;
+            else if (page <= 4) p = i + 1;
+            else if (page >= totalPages - 3) p = totalPages - 6 + i;
+            else p = page - 3 + i;
+            return (
+              <motion.button
+                key={p}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => onPageChange(p)}
+                className={`w-9 h-9 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                  p === page
+                    ? 'bg-gradient-to-r from-slate-700 to-indigo-800 text-white shadow-md'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {p}
+              </motion.button>
+            );
+          })}
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            disabled={page >= totalPages}
+            onClick={() => onPageChange(page + 1)}
+            className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-lg">chevron_right</span>
+          </motion.button>
+
+          <span className="text-xs text-slate-400 font-bold ml-2">
+            Page {page}/{totalPages}
+          </span>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+// ─── Vue Historique Patient ────────────────────────────────────
+
+function VueHistorique({ patients, selectedId, setSelectedId, historique, onArchiver, onRestaurer }: {
+  patients:      PatientSimple[];
+  selectedId:    number | null;
+  setSelectedId: (id: number) => void;
+  historique:    HistoriquePatient | null;
+  onArchiver:    (module: ModuleArchive, id: number, label: string) => void;
+  onRestaurer:   (module: ModuleArchive, id: number, label: string) => void;
+}) {
+  return (
+    <div className="space-y-5">
+      {/* Sélection patient */}
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-4">
+        <label className="text-xs font-black text-slate-700 uppercase block mb-2">
+          Sélectionner un patient
+        </label>
+        <select
+          value={selectedId || ''}
+          onChange={e => setSelectedId(Number(e.target.value))}
+          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          {patients.map(p => (
+            <option key={p.id} value={p.id}>
+              {p.nom} {p.prenom}{p.is_archived ? ' 🗄️ (archivé)' : ''}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {!historique ? (
+        <EmptyState icon="history" title="Chargement de l'historique..." />
+      ) : (
+        <>
+          {/* Identité patient */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`rounded-2xl shadow-lg p-4 text-white ${
+              historique.patient.is_archived
+                ? 'bg-gradient-to-r from-slate-600 to-slate-800'
+                : 'bg-gradient-to-r from-indigo-500 to-purple-600'
+            }`}
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-3xl">person</span>
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-black">{historique.patient.nom} {historique.patient.prenom}</h2>
+                <p className="text-xs text-white/80 font-semibold">
+                  {historique.patient.dateNaissance
+                    ? `${new Date().getFullYear() - new Date(historique.patient.dateNaissance).getFullYear()} ans`
+                    : '-'
+                  }
+                  {historique.patient.numero_dossier ? ` · Dossier: ${historique.patient.numero_dossier}` : ''}
+                  {' · Statut: '}{historique.patient.traitement_statut || '-'}
+                </p>
+              </div>
+              {historique.patient.is_archived && (
+                <div className="bg-red-500/80 rounded-xl px-3 py-1.5">
+                  <span className="text-xs font-black flex items-center gap-1">
+                    <span className="material-symbols-outlined text-sm">archive</span>
+                    Archivé
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {historique.patient.is_archived && (
+              <div className="bg-white/10 rounded-xl p-3 text-xs font-semibold space-y-1">
+                <p>📅 Archivé le: {historique.patient.archived_at ? new Date(historique.patient.archived_at).toLocaleString('fr-FR') : '-'}</p>
+                <p>👤 Par: {historique.patient.archived_by || '-'}</p>
+                <p>💬 Motif: {historique.patient.archive_motif || '-'}</p>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Résumé activité */}
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+            {[
+              { l: 'RDV',           v: historique.resume.rendezvous,    icon: 'event',           g: 'from-blue-500 to-indigo-600'   },
+              { l: 'Prescriptions', v: historique.resume.prescriptions,  icon: 'prescriptions',   g: 'from-violet-500 to-purple-600' },
+              { l: 'Kits',          v: historique.resume.kits,           icon: 'inventory_2',     g: 'from-pink-500 to-rose-600'     },
+              { l: 'Séances',       v: historique.resume.seances,        icon: 'vaccine',         g: 'from-amber-500 to-orange-600'  },
+              { l: 'Soins',         v: historique.resume.soins,          icon: 'healing',         g: 'from-cyan-500 to-blue-600'     },
+              { l: 'Surveillance',  v: historique.resume.surveillance,   icon: 'monitor_heart',   g: 'from-red-500 to-rose-600'      },
+            ].map((item, i) => (
+              <motion.div
+                key={item.l}
+                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0,  scale: 1   }}
+                transition={{ delay: i * 0.05 }}
+                className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-3 text-center"
+              >
+                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${item.g} flex items-center justify-center mx-auto mb-2`}>
+                  <span className="material-symbols-outlined text-white text-sm">{item.icon}</span>
+                </div>
+                <p className="text-xl font-black text-slate-800">{item.v}</p>
+                <p className="text-[9px] text-slate-400 font-bold uppercase">{item.l}</p>
+              </motion.div>
+            ))}
           </div>
 
-          {/* Détails expandable avec liste des patients */}
-          <AnimatePresence>
-            {selectedArchive && (() => {
-              const archive = ARCHIVES.find(a => a.id === selectedArchive);
-              if (!archive) return null;
-              return (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="border-t-2 border-blue-100">
-                  <div className="p-6 bg-gradient-to-r from-blue-50/50 to-white">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-black text-slate-800">{archive.mois} - Détails</h3>
-                      <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setSelectedArchive(null)} className="p-1 text-slate-400 hover:text-red-500 cursor-pointer">
-                        <span className="material-symbols-outlined">close</span>
-                      </motion.button>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                      {Object.entries({ Dossiers: archive.dossiers, Séances: archive.seances, Patients: archive.patients, Responsable: archive.responsable, Type: archive.type, Service: archive.service, Statut: archive.statut, 'Date début': new Date(archive.dateDebut).toLocaleDateString('fr-FR'), 'Date fin': new Date(archive.dateFin).toLocaleDateString('fr-FR') }).map(([key, value]) => (
-                        <div key={key} className="bg-white rounded-xl p-3 border border-slate-100">
-                          <p className="text-[10px] text-slate-400 uppercase">{key}</p>
-                          <p className="text-sm font-bold text-slate-700">{value}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-100 p-4">
-                      <p className="text-xs font-bold text-slate-700 mb-2">👥 Patients suivis ({archive.patientsList.length})</p>
-                      <div className="flex flex-wrap gap-2">
-                        {archive.patientsList.map(patient => (
-                          <span key={patient} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border ${search && patient.toLowerCase().includes(search.toLowerCase()) ? 'bg-emerald-100 text-emerald-700 border-emerald-300 ring-2 ring-emerald-400' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
-                            {patient}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })()}
-          </AnimatePresence>
+          {/* Actions patient */}
+          <div className="flex gap-3 flex-wrap">
+            {historique.patient.is_archived ? (
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => onRestaurer('patients', historique.patient.id, `${historique.patient.nom} ${historique.patient.prenom}`)}
+                className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-xs font-black shadow-md cursor-pointer flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-sm">restore</span>
+                Restaurer ce patient
+              </motion.button>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => onArchiver('patients', historique.patient.id, `${historique.patient.nom} ${historique.patient.prenom}`)}
+                className="px-4 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl text-xs font-black shadow-md cursor-pointer flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-sm">archive</span>
+                Archiver ce patient
+              </motion.button>
+            )}
+          </div>
 
-          {/* Pagination */}
-          <div className="p-4 flex items-center justify-between border-t border-slate-100">
-            <span className="text-[10px] text-slate-400">{filteredArchives.length} résultat{filteredArchives.length !== 1 ? 's' : ''}</span>
-            <div className="flex items-center gap-2">
-              <motion.button whileHover={{ x: -3 }} className="w-8 h-8 rounded-lg bg-white text-slate-400 hover:bg-slate-50 border border-slate-200 flex items-center justify-center cursor-pointer">
-                <span className="material-symbols-outlined text-sm">chevron_left</span>
-              </motion.button>
-              {[1, 2].map(page => (
-                <motion.button key={page} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${page === 1 ? 'bg-blue-600 text-white' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}>
-                  {page}
-                </motion.button>
-              ))}
-              <motion.button whileHover={{ x: 3 }} className="w-8 h-8 rounded-lg bg-white text-slate-400 hover:bg-slate-50 border border-slate-200 flex items-center justify-center cursor-pointer">
-                <span className="material-symbols-outlined text-sm">chevron_right</span>
-              </motion.button>
+          {/* Timeline */}
+          <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5">
+            <h3 className="text-sm font-black text-slate-800 mb-5 flex items-center gap-2">
+              <span className="material-symbols-outlined text-indigo-500">timeline</span>
+              Chronologie complète ({historique.timeline.length} événements)
+            </h3>
+
+            <div className="relative">
+              {/* Ligne verticale */}
+              <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-slate-200 to-transparent" />
+
+              <div className="space-y-4">
+                {historique.timeline.map((event, i) => {
+                  const cfg = TIMELINE_CONFIG[event.type] || TIMELINE_CONFIG['creation'];
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.03 }}
+                      className="flex gap-4 relative"
+                    >
+                      {/* Dot */}
+                      <div className={`w-10 h-10 rounded-full ${cfg.bg} ${cfg.border} border-2 flex items-center justify-center shrink-0 z-10`}>
+                        <span className={`material-symbols-outlined text-sm ${cfg.couleur}`}>{cfg.icon}</span>
+                      </div>
+
+                      {/* Contenu */}
+                      <div className={`flex-1 ${cfg.bg} ${cfg.border} border rounded-xl p-3 mb-1`}>
+                        <div className="flex items-start justify-between gap-2 flex-wrap">
+                          <p className={`text-sm font-black ${cfg.couleur}`}>{event.titre}</p>
+                          <span className="text-[10px] text-slate-400 font-semibold whitespace-nowrap">
+                            {event.date && new Date(event.date).getFullYear() > 1970
+                              ? new Date(event.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                              : 'Date inconnue'
+                            }
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-600 mt-1 font-medium">{event.details}</p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </motion.div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

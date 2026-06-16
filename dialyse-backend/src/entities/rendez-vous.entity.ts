@@ -5,8 +5,8 @@ import {
 import { Patient } from './patient.entity';
 import { Medecin } from './medecin.entity';
 
-export type StatutRdv     = 'planifié' | 'confirmé' | 'annulé';
-export type StatutSeance  = 'en_attente' | 'en_cours' | 'terminé' | 'absent';
+export type StatutRdv    = 'planifié' | 'confirmé' | 'annulé';
+export type StatutSeance = 'en_attente' | 'en_cours' | 'terminé' | 'absent';
 
 @Entity({ name: 'rendez_vous' })
 export class RendezVous {
@@ -39,7 +39,6 @@ export class RendezVous {
   @Column({ type: 'text', nullable: true })
   soso_kevitra_malalaka: string;
 
-  // ✅ Nouveaux champs séance
   @Column({ type: 'varchar', length: 20, default: 'en_attente', nullable: true })
   statut_seance: string;
 
@@ -48,4 +47,17 @@ export class RendezVous {
 
   @Column({ type: 'timestamp', nullable: true })
   heure_fin_reelle: Date;
+
+  // ✅ Champs Archive
+  @Column({ type: 'boolean', default: false })
+  is_archived: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  archived_at: Date | null;
+
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  archived_by: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  archive_motif: string | null;
 }

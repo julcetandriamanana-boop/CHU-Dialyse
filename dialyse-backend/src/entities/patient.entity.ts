@@ -75,6 +75,19 @@ export class Patient {
   @Column({ type: 'uuid', nullable: true, default: 'd604bde1-c9dd-4284-a690-0c5ed9be6a37' })
   service_id: string | null;
 
+  // ✅ Champs Archive
+  @Column({ type: 'boolean', default: false })
+  is_archived: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  archived_at: Date | null;
+
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  archived_by: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  archive_motif: string | null;
+
   @OneToMany(() => Prescription, (p) => p.patient)
   prescriptions: Prescription[];
 

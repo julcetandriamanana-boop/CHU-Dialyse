@@ -1,4 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity, Column, PrimaryGeneratedColumn,
+  ManyToOne, JoinColumn,
+  CreateDateColumn, UpdateDateColumn,
+} from 'typeorm';
 import { Patient } from './patient.entity';
 
 @Entity({ name: 'seance_hemodialyse' })
@@ -27,4 +31,23 @@ export class SeanceHemodialyse {
 
   @Column({ type: 'text', nullable: true })
   observations: string;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
+
+  // ✅ Champs Archive
+  @Column({ type: 'boolean', default: false })
+  is_archived: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  archived_at: Date | null;
+
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  archived_by: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  archive_motif: string | null;
 }
