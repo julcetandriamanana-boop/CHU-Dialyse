@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { RapportsAPI, FiltreDate, RapportSauvegarde } from '@/src/services/rapports.service';
 import { PatientAPI } from '@/src/services/api.service';
 import { getCurrentUser, canDeleteRapports, canModifyRapports } from '@/src/stores/auth.store';
+import { exportPdfActiviteDialyse, exportPdfMedicalPatient, exportPdfPrescriptions, exportPdfKits, exportPdfRdvFlux, exportPdfSurveillance, exportPdfPerformance } from '@/src/services/pdf.service';
 
 // ─── Types ────────────────────────────────────────────────────
 type Tab = 'global' | 'activite' | 'medical' | 'prescriptions' | 'kits' | 'rdv' | 'surveillance' | 'performance';
@@ -357,13 +358,13 @@ export default function StitchRapports() {
           transition={{ duration: 0.2 }}
         >
           {activeTab === 'global' && <TabGlobal stats={statsGlobal} rapports={rapportsSauvegardes} onPrint={handlePrintReport} onDelete={handleDeleteReport} expanded={expandedRapport} setExpanded={setExpandedRapport} canDelete={canDelete} canModify={canModify} />}
-          {activeTab === 'activite' && <TabActivite data={dataActivite} />}
-          {activeTab === 'medical' && <TabMedical data={dataMedical} patients={patients} selectedId={selectedPatientId} setSelectedId={setSelectedPatientId} />}
-          {activeTab === 'prescriptions' && <TabPrescriptions data={dataPrescriptions} />}
-          {activeTab === 'kits' && <TabKits data={dataKits} />}
-          {activeTab === 'rdv' && <TabRdv data={dataRdv} />}
-          {activeTab === 'surveillance' && <TabSurveillance data={dataSurveillance} />}
-          {activeTab === 'performance' && <TabPerformance data={dataPerformance} />}
+          {activeTab === 'activite' && <TabActivite data={dataActivite} onPdf={() => dataActivite && exportPdfActiviteDialyse(dataActivite.kpi)} />}
+          {activeTab === 'medical' && <TabMedical data={dataMedical} patients={patients} selectedId={selectedPatientId} setSelectedId={setSelectedPatientId} onPdf={() => dataMedical && exportPdfMedicalPatient(dataMedical.kpi)} />}
+          {activeTab === 'prescriptions' && <TabPrescriptions data={dataPrescriptions} onPdf={() => dataPrescriptions && exportPdfPrescriptions(dataPrescriptions.kpi)} />}
+          {activeTab === 'kits' && <TabKits data={dataKits} onPdf={() => dataKits && exportPdfKits(dataKits.kpi)} />}
+          {activeTab === 'rdv' && <TabRdv data={dataRdv} onPdf={() => dataRdv && exportPdfRdvFlux(dataRdv.kpi)} />}
+          {activeTab === 'surveillance' && <TabSurveillance data={dataSurveillance} onPdf={() => dataSurveillance && exportPdfSurveillance(dataSurveillance.kpi)} />}
+          {activeTab === 'performance' && <TabPerformance data={dataPerformance} onPdf={() => dataPerformance && exportPdfPerformance(dataPerformance.kpi)} />}
         </motion.div>
       </AnimatePresence>
 
@@ -543,12 +544,60 @@ function TabGlobal({ stats, rapports, onPrint, onDelete, expanded, setExpanded, 
 
 // ─── Onglet 2 : Activité Dialyse ──────────────────────────────
 
-function TabActivite({ data }: any) {
+
+// ─── Bouton Export PDF réutilisable ───────────────────────────
+
+function BoutonPDF({ onClick, label = 'Exporter PDF' }: { onClick: () => void; label?: string }) {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.03, y: -2 }}
+      whileTap={{ scale: 0.97 }}
+      onClick={onClick}
+      className="px-4 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl text-xs font-black shadow-md shadow-red-200 hover:shadow-lg cursor-pointer flex items-center gap-2 transition-all"
+    >
+      <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
+      {label}
+    </motion.button>
+  );
+}
+
+// ─── Barre actions commune (Print + PDF) ──────────────────────
+
+function BarreActions({ onPrint, onPdf }: { onPrint: () => void; onPdf: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4 }}
+      className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-4 flex items-center justify-between flex-wrap gap-3"
+    >
+      <div className="flex items-center gap-2 text-slate-500">
+        <span className="material-symbols-outlined text-base text-indigo-500">info</span>
+        <p className="text-xs font-semibold">Données en temps réel depuis le serveur CHU</p>
+      </div>
+      <div className="flex gap-2">
+        <motion.button
+          whileHover={{ scale: 1.03, y: -2 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={onPrint}
+          className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-black shadow-md shadow-blue-200 hover:shadow-lg cursor-pointer flex items-center gap-2"
+        >
+          <span className="material-symbols-outlined text-sm">print</span>
+          Imprimer
+        </motion.button>
+        <BoutonPDF onClick={onPdf} />
+      </div>
+    </motion.div>
+  );
+}
+
+function TabActivite({ data, onPdf }: any) {
   if (!data) return <EmptyState icon="monitoring" title="Chargement activité dialyse..." />;
   const kpi = data.kpi;
 
   return (
     <div className="space-y-5">
+      <BarreActions onPrint={() => window.print()} onPdf={onPdf || (() => {})} />
       <SectionTitle icon="medical_services">Séances d'hémodialyse</SectionTitle>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KPICard label="Total" value={kpi.seances?.total || 0} icon="vaccine" gradient="from-blue-500 to-indigo-600" shadow="shadow-blue-200" />
@@ -604,10 +653,9 @@ function TabActivite({ data }: any) {
 
 // ─── Onglet 3 : Médical Patient ───────────────────────────────
 
-function TabMedical({ data, patients, selectedId, setSelectedId }: any) {
+function TabMedical({ data, patients, selectedId, setSelectedId, onPdf }: any) {
   if (!data) return <EmptyState icon="health_and_safety" title="Sélectionnez un patient" subtitle="Choisissez un patient dans la liste ci-dessous" />;
   const kpi = data.kpi;
-
   const niveauColors: Record<string, string> = {
     faible: 'bg-emerald-100 text-emerald-700 border-emerald-300',
     modere: 'bg-amber-100 text-amber-700 border-amber-300',
@@ -617,6 +665,7 @@ function TabMedical({ data, patients, selectedId, setSelectedId }: any) {
 
   return (
     <div className="space-y-5">
+      <BarreActions onPrint={() => window.print()} onPdf={onPdf || (() => {})} />
       <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-4">
         <label className="text-xs font-black text-indigo-700 uppercase mb-2 block">Sélection patient</label>
         <select
@@ -684,12 +733,13 @@ function TabMedical({ data, patients, selectedId, setSelectedId }: any) {
 
 // ─── Onglet 4 : Prescriptions ─────────────────────────────────
 
-function TabPrescriptions({ data }: any) {
+function TabPrescriptions({ data, onPdf }: any) {
   if (!data) return <EmptyState icon="prescriptions" title="Chargement prescriptions..." />;
   const kpi = data.kpi;
 
   return (
     <div className="space-y-5">
+      <BarreActions onPrint={() => window.print()} onPdf={onPdf || (() => {})} />
       <SectionTitle icon="analytics">Global</SectionTitle>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KPICard label="Total" value={kpi.global?.total || 0} icon="prescriptions" gradient="from-blue-500 to-indigo-600" shadow="shadow-blue-200" />
@@ -753,12 +803,13 @@ function TabPrescriptions({ data }: any) {
 
 // ─── Onglet 5 : Kits & Consommation ───────────────────────────
 
-function TabKits({ data }: any) {
+function TabKits({ data, onPdf }: any) {
   if (!data) return <EmptyState icon="inventory_2" title="Chargement kits..." />;
   const kpi = data.kpi;
 
   return (
     <div className="space-y-5">
+      <BarreActions onPrint={() => window.print()} onPdf={onPdf || (() => {})} />
       <SectionTitle icon="inventory">Global</SectionTitle>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <KPICard label="Kits" value={kpi.global?.total_kits || 0} icon="inventory_2" gradient="from-blue-500 to-indigo-600" shadow="shadow-blue-200" />
@@ -819,12 +870,13 @@ function TabKits({ data }: any) {
 
 // ─── Onglet 6 : RDV & Flux ────────────────────────────────────
 
-function TabRdv({ data }: any) {
+function TabRdv({ data, onPdf }: any) {
   if (!data) return <EmptyState icon="event" title="Chargement RDV..." />;
   const kpi = data.kpi;
 
   return (
     <div className="space-y-5">
+      <BarreActions onPrint={() => window.print()} onPdf={onPdf || (() => {})} />
       <SectionTitle icon="insights">Global</SectionTitle>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <KPICard label="Total RDV" value={kpi.global?.total_rdv || 0} icon="event" gradient="from-blue-500 to-indigo-600" shadow="shadow-blue-200" delay={0} />
@@ -876,12 +928,13 @@ function TabRdv({ data }: any) {
 
 // ─── Onglet 7 : Surveillance Critique ─────────────────────────
 
-function TabSurveillance({ data }: any) {
+function TabSurveillance({ data, onPdf }: any) {
   if (!data) return <EmptyState icon="emergency" title="Chargement surveillance..." />;
   const kpi = data.kpi;
 
   return (
     <div className="space-y-5">
+      <BarreActions onPrint={() => window.print()} onPdf={onPdf || (() => {})} />
       <SectionTitle icon="monitoring">Global</SectionTitle>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KPICard label="Surveillances" value={kpi.global?.total_surveillances || 0} icon="stethoscope" gradient="from-blue-500 to-indigo-600" shadow="shadow-blue-200" />
@@ -945,12 +998,13 @@ function TabSurveillance({ data }: any) {
 
 // ─── Onglet 8 : Performance Personnel ─────────────────────────
 
-function TabPerformance({ data }: any) {
+function TabPerformance({ data, onPdf }: any) {
   if (!data) return <EmptyState icon="leaderboard" title="Chargement performance..." />;
   const kpi = data.kpi;
 
   return (
     <div className="space-y-5">
+      <BarreActions onPrint={() => window.print()} onPdf={onPdf || (() => {})} />
       <SectionTitle icon="analytics">Global</SectionTitle>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <KPICard label="Taux validation" value={`${kpi.global?.taux_validation_soins_global_pct || 0}%`} icon="task_alt" gradient="from-emerald-500 to-teal-600" shadow="shadow-emerald-200" />
