@@ -3,26 +3,8 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-
-const menus = [
-  {
-    section: "Principal",
-    items: [
-      { label: "Tableau de bord", href: "/dashboard", icon: "dashboard", badge: null, badgeType: null },
-      { label: "Notifications",   href: "/notifications", icon: "notifications", badge: 3, badgeType: "red" },
-    ],
-  },
-  {
-    section: "Médical",
-    items: [
-      { label: "Rendez-vous",      href: "/rendez-vous",    icon: "event",           badge: 7,  badgeType: "blue"   },
-      { label: "Dialyses",         href: "/dialyses",       icon: "monitor_heart",   badge: 5,  badgeType: "amber"  },
-      { label: "Demandes d'avis",  href: "/demandes-avis",  icon: "clinical_notes",  badge: 2,  badgeType: "purple" },
-      { label: "Rapports",         href: "/rapports",       icon: "lab_profile",     badge: 1,  badgeType: "green"  },
-      { label: "Archive",          href: "/archive",        icon: "archive",         badge: null, badgeType: null   },
-    ],
-  },
-];
+import { useSidebarCounts } from "@/src/hooks/useSidebarCounts";
+import MadagascarClock from "@/src/components/shared/MadagascarClock";
 
 const badgeStyles: Record<string, string> = {
   red:    "bg-red-500 text-white",
@@ -30,10 +12,11 @@ const badgeStyles: Record<string, string> = {
   blue:   "bg-blue-400 text-white",
   green:  "bg-emerald-400 text-emerald-900",
   purple: "bg-purple-400 text-white",
+  slate:  "bg-slate-400 text-white",
 };
 
 const sidebarVariants: Variants = {
-  open:   { x: 0,      transition: { type: "spring", stiffness: 300, damping: 30 } },
+  open:   { x: 0,       transition: { type: "spring", stiffness: 300, damping: 30 } },
   closed: { x: "-100%", transition: { type: "spring", stiffness: 300, damping: 30 } },
 };
 
@@ -49,18 +32,13 @@ const itemVariants: Variants = {
 function ChuLogo() {
   return (
     <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" className="w-9 h-9">
-      {/* Silhouette Madagascar */}
       <path
         d="M38 8 Q30 18 28 30 Q25 44 28 56 Q31 66 38 70 Q44 74 49 67 Q55 57 54 44 Q56 31 51 19 Q46 8 40 7 Z"
         fill="white" fillOpacity="0.15" stroke="white" strokeOpacity="0.3" strokeWidth="1"
       />
-      {/* C */}
       <text x="5"  y="54" fontSize="38" fontWeight="900" fill="#1565c0" fontFamily="Arial Black, sans-serif">C</text>
-      {/* H */}
       <text x="24" y="54" fontSize="38" fontWeight="900" fill="#e53935" fontFamily="Arial Black, sans-serif">H</text>
-      {/* U */}
       <text x="48" y="54" fontSize="38" fontWeight="900" fill="#1565c0" fontFamily="Arial Black, sans-serif">U</text>
-      {/* Barre orange */}
       <line x1="39" y1="14" x2="43" y2="64" stroke="#ff6f00" strokeWidth="3.5" strokeLinecap="round"/>
     </svg>
   );
@@ -69,7 +47,29 @@ function ChuLogo() {
 /* ─── Contenu interne de la sidebar ───────────────────────────────── */
 function SidebarContent({ onLinkClick }: { onLinkClick: () => void }) {
   const pathname = usePathname();
-  let itemIndex = 0;
+  const counts   = useSidebarCounts(30000);
+  let itemIndex  = 0;
+
+  // Menus avec badges dynamiques basés sur les vrais compteurs
+  const menus = [
+    {
+      section: "Principal",
+      items: [
+        { label: "Tableau de bord", href: "/dashboard",     icon: "dashboard",     badge: null,                          badgeType: null    },
+        { label: "Notifications",   href: "/notifications", icon: "notifications", badge: counts.notifications || null,  badgeType: counts.notifications > 0 ? "red" : null },
+      ],
+    },
+    {
+      section: "Médical",
+      items: [
+        { label: "Rendez-vous",      href: "/rendez-vous",   icon: "event",           badge: counts.rendezvous || null,   badgeType: counts.rendezvous > 0 ? "blue" : null     },
+        { label: "Dialyses",         href: "/dialyses",      icon: "monitor_heart",   badge: counts.dialyses || null,     badgeType: counts.dialyses > 0 ? "amber" : null      },
+        { label: "Demandes d'avis",  href: "/demandes-avis", icon: "clinical_notes",  badge: counts.demandesAvis || null, badgeType: counts.demandesAvis > 0 ? "purple" : null  },
+        { label: "Rapports",         href: "/rapports",      icon: "lab_profile",     badge: counts.rapports || null,     badgeType: counts.rapports > 0 ? "green" : null       },
+        { label: "Archive",          href: "/archive",       icon: "archive",         badge: counts.archives || null,     badgeType: counts.archives > 0 ? "slate" : null       },
+      ],
+    },
+  ];
 
   return (
     <div className="flex flex-col h-full">
@@ -151,13 +151,15 @@ function SidebarContent({ onLinkClick }: { onLinkClick: () => void }) {
                       {menu.icon}
                     </span>
                     <span className="relative z-10 flex-1">{menu.label}</span>
-                    {menu.badge !== null && menu.badgeType && (
+                    {menu.badge !== null && menu.badge > 0 && menu.badgeType && (
                       <motion.span
+                        key={`badge-${menu.label}-${menu.badge}`}
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 15 }}
                         className={`relative z-10 text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${badgeStyles[menu.badgeType]}`}
                       >
-                        {menu.badge}
+                        {menu.badge > 99 ? '99+' : menu.badge}
                       </motion.span>
                     )}
                   </motion.a>
@@ -169,7 +171,18 @@ function SidebarContent({ onLinkClick }: { onLinkClick: () => void }) {
       </nav>
 
       {/* ── Footer ── */}
-      <div className="px-4 py-3 border-t border-white/10">
+      <div className="px-4 py-3 border-t border-white/10 space-y-2">
+        {/* Horloge Madagascar temps réel */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-white/40 text-sm">schedule</span>
+            <span className="text-[9px] text-white/40 font-semibold uppercase">Madagascar</span>
+          </div>
+          <MadagascarClock
+            showSeconds={true}
+            className="text-[11px] text-white/60 font-black tabular-nums"
+          />
+        </div>
         <div className="flex items-center gap-2">
           <motion.span
             animate={{ scale: [1, 1.4, 1] }}
@@ -177,7 +190,7 @@ function SidebarContent({ onLinkClick }: { onLinkClick: () => void }) {
             className="w-2 h-2 bg-emerald-400 rounded-full flex-shrink-0"
           />
           <p className="text-[9px] text-white/40 font-medium">Système connecté</p>
-          <p className="text-[9px] text-white/25 ml-auto">v2.5.0</p>
+          <p className="text-[9px] text-white/25 ml-auto">v2.6.0</p>
         </div>
       </div>
     </div>

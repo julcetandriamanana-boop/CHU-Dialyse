@@ -15,6 +15,8 @@ import {
   urgenceColor,
   urgenceLabel,
 } from '@/src/services/notification.service';
+import { useNotificationsStore } from '@/src/stores/notifications.store';
+import { timeAgoMadagascar } from '@/src/utils/date.utils';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -26,13 +28,7 @@ const typeIcons: Record<string, string> = {
 };
 
 function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1)  return 'À l\'instant';
-  if (m < 60) return `${m}m`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h`;
-  return `${Math.floor(h / 24)}j`;
+  return timeAgoMadagascar(dateStr);
 }
 
 export default function NotificationBell() {
@@ -46,6 +42,11 @@ export default function NotificationBell() {
   const prevCountRef  = useRef(0);
   const dropdownRef   = useRef<HTMLDivElement>(null);
   const audioReadyRef = useRef(false);
+
+  // ✅ Store Zustand — synchronisation sidebar
+  const storeSetCount  = useNotificationsStore(s => s.setUnreadCount);
+  const storeDecrement = useNotificationsStore(s => s.decrement);
+  const storeReset     = useNotificationsStore(s => s.reset);
 
   // Synchroniser audioReadyRef avec audioReady
   useEffect(() => {
@@ -79,6 +80,8 @@ export default function NotificationBell() {
       setNotifications(data.slice(0, 10));
       setUnreadCount(count);
       prevCountRef.current = count;
+      // ✅ Sync store Zustand
+      storeSetCount(count);
     } catch {}
   }, []);
 
@@ -189,6 +192,7 @@ export default function NotificationBell() {
   const handleClick = async (notif: NotificationDB) => {
     if (!notif.is_read) {
       await markAsRead(notif.id);
+      storeDecrement(1); // ✅ Diminue le badge sidebar immédiatement
       setUnreadCount(c => Math.max(0, c - 1));
       setNotifications(prev =>
         prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n)
@@ -200,6 +204,7 @@ export default function NotificationBell() {
 
   const handleMarkAllRead = async () => {
     await markAllAsRead();
+    storeReset(); // ✅ Remet à 0 le badge sidebar immédiatement
     setUnreadCount(0);
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
   };

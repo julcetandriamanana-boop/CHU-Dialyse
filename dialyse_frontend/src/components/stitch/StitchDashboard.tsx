@@ -1,4 +1,5 @@
 'use client';
+import { todayMadagascar } from '@/src/utils/date.utils';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -472,7 +473,7 @@ export default function StitchDashboard() {
   const [patientsHidden, setPatientsHidden] = useState<Set<number>>(() => {
     if (typeof window === 'undefined') return new Set();
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = todayMadagascar();
       const stored = localStorage.getItem('chu_patients_hidden_' + today);
       return stored ? new Set(JSON.parse(stored)) : new Set();
     } catch { return new Set(); }
@@ -480,7 +481,7 @@ export default function StitchDashboard() {
 
   // Persister patientsHidden dans localStorage (valable seulement aujourd'hui)
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayMadagascar();
     localStorage.setItem('chu_patients_hidden_' + today, JSON.stringify([...patientsHidden]));
     // Nettoyer les anciens jours
     Object.keys(localStorage).forEach(k => {

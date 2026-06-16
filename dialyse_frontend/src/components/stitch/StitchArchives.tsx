@@ -7,6 +7,7 @@ import {
   PatientSimple, ModuleArchive, MODULE_CONFIG, TIMELINE_CONFIG,
 } from '@/src/services/archive.service';
 import { exportPdfHistoriquePatient } from '@/src/services/pdf.service';
+import { formatDate, formatDateTime, formatDateMedium, calculerAge } from '@/src/utils/date.utils';
 
 // ─── Types locaux ─────────────────────────────────────────────
 type TabId = 'tous' | ModuleArchive | 'historique';
@@ -367,7 +368,7 @@ export default function StitchArchives() {
           {stats?.derniere_archive && (
             <div className="bg-white/10 rounded-xl px-4 py-2 text-white text-xs font-bold">
               <span className="material-symbols-outlined text-sm mr-1">schedule</span>
-              Dernière archive: {new Date(stats.derniere_archive).toLocaleDateString('fr-FR')}
+              Dernière archive: {formatDate(stats.derniere_archive)}
             </div>
           )}
         </div>
@@ -600,7 +601,7 @@ function VueArchives({ archives, total, totalPages, page, limit, onPageChange, o
                     {item.archived_at && (
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-sm">calendar_today</span>
-                        {new Date(item.archived_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {formatDateMedium(item.archived_at)}
                       </span>
                     )}
                     {item.archived_by && (
@@ -748,7 +749,7 @@ function VueHistorique({ patients, selectedId, setSelectedId, historique, onArch
                 <h2 className="text-xl font-black">{historique.patient.nom} {historique.patient.prenom}</h2>
                 <p className="text-xs text-white/80 font-semibold">
                   {historique.patient.dateNaissance
-                    ? `${new Date().getFullYear() - new Date(historique.patient.dateNaissance).getFullYear()} ans`
+                    ? calculerAge(historique.patient.dateNaissance)
                     : '-'
                   }
                   {historique.patient.numero_dossier ? ` · Dossier: ${historique.patient.numero_dossier}` : ''}
@@ -767,7 +768,7 @@ function VueHistorique({ patients, selectedId, setSelectedId, historique, onArch
 
             {historique.patient.is_archived && (
               <div className="bg-white/10 rounded-xl p-3 text-xs font-semibold space-y-1">
-                <p>📅 Archivé le: {historique.patient.archived_at ? new Date(historique.patient.archived_at).toLocaleString('fr-FR') : '-'}</p>
+                <p>📅 Archivé le: {historique.patient.archived_at ? formatDateTime(historique.patient.archived_at) : '-'}</p>
                 <p>👤 Par: {historique.patient.archived_by || '-'}</p>
                 <p>💬 Motif: {historique.patient.archive_motif || '-'}</p>
               </div>
@@ -876,7 +877,7 @@ function VueHistorique({ patients, selectedId, setSelectedId, historique, onArch
                           <p className={`text-sm font-black ${cfg.couleur}`}>{event.titre}</p>
                           <span className="text-[10px] text-slate-400 font-semibold whitespace-nowrap">
                             {event.date && new Date(event.date).getFullYear() > 1970
-                              ? new Date(event.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                              ? formatDateMedium(event.date)
                               : 'Date inconnue'
                             }
                           </span>

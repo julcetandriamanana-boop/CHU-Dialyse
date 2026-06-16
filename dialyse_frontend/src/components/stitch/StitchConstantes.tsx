@@ -1,4 +1,5 @@
 'use client';
+import { formatDate } from '@/src/utils/date.utils';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useCallback, Suspense } from 'react';
@@ -191,7 +192,7 @@ function ConstantesInner() {
   const formatHeureRdv = () => {
     if (!rdv?.date_heure) return '';
     const d = new Date(rdv.date_heure);
-    const date = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const date = formatDate(d);
     const h = d.getHours();
     return `${date} - ${h < 12 ? 'Matin' : 'Après-midi'}`;
   };

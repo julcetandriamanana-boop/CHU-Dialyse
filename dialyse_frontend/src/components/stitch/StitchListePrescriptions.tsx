@@ -1,4 +1,5 @@
 'use client';
+import { formatDate, formatDateTime, todayMadagascar } from '@/src/utils/date.utils';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useCallback } from 'react';
@@ -216,7 +217,7 @@ export default function StitchListePrescriptions() {
 
   const formatDateEnvoi = (d: string) => {
     const date = new Date(d);
-    return `${date.toLocaleDateString('fr-FR')} à ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+    return `${formatDate(date)} à ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
   };
 
   return (
@@ -444,7 +445,7 @@ export default function StitchListePrescriptions() {
                         {patient.prenom} {patient.nom}
                       </p>
                       <p className="text-[10px] text-slate-400">
-                        {pp.length} prescription(s) · Dernière : {new Date(derniereDate).toLocaleDateString('fr-FR')}
+                        {pp.length} prescription(s) · Dernière : {formatDate(derniereDate)}
                       </p>
                       {/* Infos cliniques */}
                       {clinique?.alertes && (
@@ -602,7 +603,7 @@ export default function StitchListePrescriptions() {
                               <tbody>
                                 {pp.map((p, i) => (
                                   <tr key={i} className="border-b border-blue-50 hover:bg-blue-50/40">
-                                    <td className="py-2 px-2">{new Date(p.date_prescription).toLocaleDateString('fr-FR')}</td>
+                                    <td className="py-2 px-2">{formatDate(p.date_prescription)}</td>
                                     <td className="py-2 px-2 font-bold text-blue-700">{p.medicament}</td>
                                     <td className="py-2 px-2">{p.dosage}</td>
                                     <td className="py-2 px-2">{p.frequence}</td>

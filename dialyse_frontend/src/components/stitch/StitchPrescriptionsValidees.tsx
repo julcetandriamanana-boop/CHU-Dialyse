@@ -1,4 +1,5 @@
 'use client';
+import { formatDate, calculerAge } from '@/src/utils/date.utils';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
@@ -214,11 +215,11 @@ export default function StitchPrescriptionsValidees() {
                             { l: 'Nom complet', v: `${patient.prenom} ${patient.nom}` },
                             { l: 'ID', v: `#${patient.id}` },
                             { l: 'Âge', v: age(patient.dateNaissance) },
-                            { l: 'Né(e) le', v: patient.dateNaissance ? new Date(patient.dateNaissance).toLocaleDateString('fr-FR') : '-' },
+                            { l: 'Né(e) le', v: patient.dateNaissance ? formatDate(patient.dateNaissance) : '-' },
                             { l: 'Téléphone', v: patient.telephone || '-' },
                             { l: 'Notes', v: patient.notes || '-' },
                             { l: 'Prescriptions', v: `${pp.length} validée(s)` },
-                            { l: 'Dernière', v: pp[0] ? new Date(pp[0].date_prescription).toLocaleDateString('fr-FR') : '-' },
+                            { l: 'Dernière', v: pp[0] ? formatDate(pp[0].date_prescription) : '-' },
                           ].map(i => (
                             <div key={i.l} className="bg-white rounded-xl p-3 border border-blue-100">
                               <p className="text-[10px] text-blue-400 uppercase font-bold">{i.l}</p>
