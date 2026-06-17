@@ -374,37 +374,48 @@ function SectionModal({ open, type, patient, onClose }: {
   }[type];
 
   const dossierMeta = [
-    { l: 'Patient',     v: `${patient.prenom} ${patient.nom}` },
-    { l: 'Poste',       v: patient.poste },
-    { l: 'Début',       v: patient.debut },
-    { l: 'Progression', v: `${patient.progression}%` },
-    { l: 'Statut',      v: patient.statut },
-    { l: 'Traitement',  v: patient.traitementStatut },
-    { l: 'Séance',      v: `N°${patient.seanceNum}` },
-    { l: 'ID',          v: `#${patient.patientId}` },
+    { l: 'Patient',       v: `${patient.prenom} ${patient.nom}` },
+    { l: 'Poste',         v: patient.poste },
+    { l: 'Debut',         v: patient.debut },
+    { l: 'Progression',   v: `${patient.progression}%` },
+    { l: 'Statut seance', v: patient.statut },
+    { l: 'Traitement',    v: patient.traitementStatut },
+    { l: 'Seance N',      v: `${patient.seanceNum}` },
+    { l: 'ID Patient',    v: `#${patient.patientId}` },
   ];
   const dossierCards = [
-    { icon: 'history',     title: 'Historique', desc: 'Historique des séances', btn: 'Voir',      href: '#', color: 'purple' },
-    { icon: 'biotech',     title: 'Examens',    desc: 'Résultats biologiques',  btn: 'Consulter', href: '#', color: 'purple' },
-    { icon: 'description', title: 'Documents',  desc: 'Ordonnances, CR',        btn: 'Accéder',   href: '#', color: 'purple' },
-  ];
+    { icon: 'monitor_heart', title: 'Surveillance',  desc: 'Suivi seance',           btn: 'Ouvrir',    href: `/dialyses/surveillance?patientId=${patient.patientId}&rendezVousId=${patient.id}` },
+    { icon: 'prescriptions', title: 'Prescriptions', desc: 'Prescriptions validees', btn: 'Voir',      href: '/dialyses' },
+    { icon: 'healing',       title: 'Soins',         desc: 'Soins vasculaires',      btn: 'Acceder',   href: `/dialyses/soins?patientId=${patient.patientId}&rendezVousId=${patient.id}` },
+    { icon: 'vital_signs',   title: 'Constantes',    desc: 'Constantes pre et post', btn: 'Voir',      href: `/dialyses/constantes?patientId=${patient.patientId}&rendezVousId=${patient.id}` },
+    { icon: 'history',       title: 'Historique',    desc: 'Chronologie complete',   btn: 'Consulter', href: '/archive' },
+  ]
 
-  const renderCards = (cards: typeof dossierCards, accent: string) => (
+  const renderCards = (cards: typeof dossierCards) => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-      {cards.map(c => (
-        <div key={c.title} className={`p-4 bg-${accent}-50 rounded-xl border border-${accent}-100 hover:shadow-md transition-all`}>
-          <span className={`material-symbols-outlined text-${accent}-600 text-2xl mb-2`}>{c.icon}</span>
-          <p className={`text-sm font-bold text-${accent}-800 mb-1`}>{c.title}</p>
-          <p className={`text-xs text-${accent}-500 mb-3`}>{c.desc}</p>
-          <button onClick={() => { if (c.href !== '#') window.location.href = c.href; }}
-            className={`w-full py-1.5 bg-${accent}-600 text-white text-xs font-bold rounded-lg hover:bg-${accent}-700 cursor-pointer transition-colors`}>
+      {cards.map((c, i) => (
+        <motion.div
+          key={c.title}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.05 }}
+          whileHover={{ y: -3, scale: 1.02 }}
+          className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100 hover:shadow-lg hover:border-purple-300 transition-all cursor-pointer"
+          onClick={() => { if (c.href && c.href !== '#') window.location.href = c.href; }}
+        >
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-md shadow-purple-200 mb-3">
+            <span className="material-symbols-outlined text-white text-lg">{c.icon}</span>
+          </div>
+          <p className="text-sm font-black text-purple-800 mb-1">{c.title}</p>
+          <p className="text-xs text-purple-500 mb-3">{c.desc}</p>
+          <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold rounded-lg shadow-sm">
+            <span className="material-symbols-outlined text-sm">arrow_forward</span>
             {c.btn}
-          </button>
-        </div>
+          </span>
+        </motion.div>
       ))}
     </div>
   );
-
   return (
     <AnimatePresence>
       {open && (
@@ -447,7 +458,7 @@ function SectionModal({ open, type, patient, onClose }: {
                       </div>
                     ))}
                   </div>
-                  {renderCards(dossierCards, 'purple')}
+                  {renderCards(dossierCards)}
                 </>
               )}
             </div>
