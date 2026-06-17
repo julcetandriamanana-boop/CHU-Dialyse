@@ -20,6 +20,33 @@ import { timeAgoMadagascar } from '@/src/utils/date.utils';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+// ─── Helper : extraire infos patient depuis notification ──────
+function getPatientFromNotif(notif: NotificationDB): string | null {
+  // 1. Champ structuré patient_ref_id
+  if (notif.patient_ref_id) return `Patient #${notif.patient_ref_id}`;
+  // 2. emitter_name (nom de l'émetteur)
+  if (notif.emitter_name) return notif.emitter_name;
+  // 3. Extraire depuis le message (pattern : "pour Prénom Nom")
+  const matchPour = notif.message?.match(/pour\s+([A-ZÀ-ÖØ-öø-ÿ][a-zà-öø-ÿ]+(?:\s+[A-ZÀ-ÖØ-öø-ÿ][a-zà-öø-ÿ]+)+)/);
+  if (matchPour) return matchPour[1];
+  // 4. Extraire pattern "— Prénom Nom"
+  const matchTiret = notif.message?.match(/—\s+([A-ZÀ-ÖØ-öø-ÿ][a-zà-öø-ÿ]+(?:\s+[A-ZÀ-ÖØ-öø-ÿ][a-zà-öø-ÿ]+)+)/);
+  if (matchTiret) return matchTiret[1];
+  return null;
+}
+
+function getCategoryLabel(notif: NotificationDB): string {
+  const map: Record<string, string> = {
+    'avis_inter_service': "Demande d'avis",
+    'ordonnance':         'Prescription',
+    'rendez_vous':        'Rendez-vous',
+    'stock_critique':     'Stock',
+    'ARCHIVE':            'Archive',
+    'seance':             'Séance',
+  };
+  return map[notif.category] || notif.category || '';
+}
+
 const typeIcons: Record<string, string> = {
   success: 'check_circle',
   error:   'emergency',
@@ -355,7 +382,16 @@ export default function NotificationBell() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-1">
-                        <p className="text-xs font-bold text-slate-800 truncate">{notif.title}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-slate-800 truncate">{notif.title}</p>
+                          {/* ✅ Affichage patient si détecté */}
+                          {getPatientFromNotif(notif) && (
+                            <p className="text-[10px] font-bold text-indigo-600 flex items-center gap-0.5 mt-0.5">
+                              <span className="material-symbols-outlined text-[11px]">person</span>
+                              {getPatientFromNotif(notif)}
+                            </p>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1 shrink-0">
                           {!notif.is_read && <span className="w-2 h-2 bg-blue-500 rounded-full" />}
                           <button
@@ -369,8 +405,14 @@ export default function NotificationBell() {
 
                       <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">{notif.message}</p>
 
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <p className="text-[9px] text-slate-400">{timeAgo(notif.created_at)}</p>
+                        {/* ✅ Catégorie */}
+                        {notif.category && (
+                          <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                            {getCategoryLabel(notif)}
+                          </span>
+                        )}
                         {notif.source === 'externe' && notif.urgence && notif.urgence >= 2 && (
                           <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full border ${urgenceColor(notif.urgence)}`}>
                             {urgenceLabel(notif.urgence)}
@@ -380,9 +422,6 @@ export default function NotificationBell() {
                           <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
                             EXTERNE
                           </span>
-                        )}
-                        {notif.emitter_name && (
-                          <span className="text-[9px] text-slate-400 truncate">{notif.emitter_name}</span>
                         )}
                       </div>
                     </div>

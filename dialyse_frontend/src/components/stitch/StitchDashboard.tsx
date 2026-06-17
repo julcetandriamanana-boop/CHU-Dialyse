@@ -506,7 +506,10 @@ export default function StitchDashboard() {
   // ── Chargement ──────────────────────────────
   const loadPatients = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/rendezvous/aujourdhui`);
+      const res = await fetch(`${API_URL}/rendezvous/aujourdhui`, {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(8000),
+      });
       if (!res.ok) { setPatients([]); return; }
 
       const rdvs: any[] = await res.json();

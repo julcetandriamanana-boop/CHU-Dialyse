@@ -56,7 +56,7 @@ export interface ArchiveStats {
 
 export interface TimelineEvent {
   type:     string;
-  date:     Date;
+  date:     Date | null;
   titre:    string;
   details:  string;
   icon:     string;
@@ -109,6 +109,8 @@ export class ArchiveService {
         category: 'ARCHIVE',
         icon:     'archive',
         is_read:  false,
+        patient_ref_id: module === 'patients' ? String(id) : undefined,
+        emitter_name:   archivedBy,
       });
     } catch (e) {
       console.warn('[ArchiveService] Notification archivage échouée:', e?.message);
@@ -128,6 +130,7 @@ export class ArchiveService {
         category: 'ARCHIVE',
         icon:     'restore',
         is_read:  false,
+        patient_ref_id: module === 'patients' ? String(id) : undefined,
       });
     } catch (e) {
       console.warn('[ArchiveService] Notification restauration échouée:', e?.message);
@@ -662,7 +665,11 @@ export class ArchiveService {
     });
 
     // Trier par date DESC
-    timeline.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    timeline.sort((a, b) => {
+      const db = b.date ? new Date(b.date).getTime() : 0;
+      const da = a.date ? new Date(a.date).getTime() : 0;
+      return db - da;
+    });
 
     return { patient, resume, timeline };
   }
