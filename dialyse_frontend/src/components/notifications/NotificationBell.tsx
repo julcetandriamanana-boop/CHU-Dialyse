@@ -216,16 +216,45 @@ export default function NotificationBell() {
     setIsOpen(o => !o);
   };
 
+
+  function resolveNotificationLink(notif: NotificationDB): string {
+    const patientId = notif.patient_ref_id;
+    const entityId  = (notif as any).entite_ref_id;
+
+    if (notif.category === 'avis_inter_service') {
+      const params = new URLSearchParams();
+      if (entityId)  params.set('avisId', String(entityId));
+      if (patientId) params.set('patientId', String(patientId));
+      const q = params.toString();
+      return `/demandes-avis${q ? `?${q}` : ''}`;
+    }
+
+    if (notif.category === 'rendez_vous' && patientId) {
+      return `/rendez-vous?patientId=${patientId}`;
+    }
+
+    if ((notif.category === 'ordonnance' || notif.category === 'prescription') && patientId) {
+      return `/dialyses?patientId=${patientId}`;
+    }
+
+    if (notif.category === 'ARCHIVE' && patientId) {
+      return `/archive?patientId=${patientId}&tab=historique`;
+    }
+
+    return notif.link || '/notifications';
+  }
+
   const handleClick = async (notif: NotificationDB) => {
     if (!notif.is_read) {
       await markAsRead(notif.id);
       storeDecrement(1); // ✅ Diminue le badge sidebar immédiatement
-      setUnreadCount(c => Math.max(0, c - 1));
       setNotifications(prev =>
         prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n)
       );
     }
-    if (notif.link) router.push(notif.link);
+
+    const target = resolveNotificationLink(notif);
+    if (target) router.push(target);
     setIsOpen(false);
   };
 

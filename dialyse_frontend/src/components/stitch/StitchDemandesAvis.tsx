@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { formatDateMedium, formatDateTime } from '@/src/utils/date.utils';
 import {
   AvisAPI, DemandeAvis, AvisStats,
@@ -250,6 +251,7 @@ function CarteAvis({ avis, onVoir, onRepondre, isDisp }: {
 
 // ─── Composant Principal ──────────────────────────────────────
 export default function StitchDemandesAvis() {
+  const searchParams             = useSearchParams();
   const [tab, setTab]             = useState<TabId>('en_attente');
   const [loading, setLoading]     = useState(true);
   const [toast, setToast]         = useState<{ m: string; t: 'success' | 'error' } | null>(null);
@@ -333,6 +335,16 @@ export default function StitchDemandesAvis() {
   const liste = tab === 'en_attente' ? enAttente : historique;
   const vis = liste.slice(0, visible);
   const hasMore = visible < liste.length;
+
+  // ✅ Si URL contient ?avisId=..., ouvrir automatiquement la demande
+  useEffect(() => {
+    const avisId = searchParams.get('avisId');
+    if (!avisId || allAvis.length === 0) return;
+    const found = allAvis.find(a => String(a.id) === String(avisId));
+    if (found) {
+      setModal({ type: 'detail', avis: found });
+    }
+  }, [searchParams, allAvis]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
