@@ -23,7 +23,6 @@ function SectionParamedicalInner() {
   const [infirmier, setInfirmier]             = useState<InfirmierProfil | null>(null);
   const [showDropdown, setShowDropdown]       = useState(false);
   const [showProfilModal, setShowProfilModal]  = useState(false);
-  const [showProfilModal, setShowProfilModal]  = useState(false);
 
   const loadAll = useCallback(async () => {
     try {
