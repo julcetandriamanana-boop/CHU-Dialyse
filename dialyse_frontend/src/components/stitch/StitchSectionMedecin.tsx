@@ -171,15 +171,6 @@ function SectionMedecinInner() {
 
   const cartes: CarteAction[] = [
     {
-      icon:   'vaccines',
-      titre:  'Vérification Kit',
-      desc:   'Ordonnance hémodialyse',
-      detail: 'Contrôle du kit 1ère séance et séances suivantes. Vérification du matériel de soin cathéter.',
-      btn:    'Ouvrir la vérification',
-      href:   `/dialyses/verification-kit${urlSuffix}`,
-      color:  'blue',
-    },
-    {
       icon:   'settings_input_component',
       titre:  'Conductivité & Paramètres',
       desc:   'Prescription de la séance',

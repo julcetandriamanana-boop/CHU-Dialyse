@@ -63,6 +63,13 @@ function SectionParamedicalInner() {
       btn: 'Accéder',
       href: `/dialyses/soins${urlSuffix}`,
     },
+    {
+      icon: 'vaccines',
+      titre: 'Vérification Kit',
+      desc: 'Contrôle matériel et cathéter',
+      btn: 'Vérifier',
+      href: `/dialyses/verification-kit${urlSuffix}`,
+    },
   ];
 
   const formatHeureRdv = () => {
