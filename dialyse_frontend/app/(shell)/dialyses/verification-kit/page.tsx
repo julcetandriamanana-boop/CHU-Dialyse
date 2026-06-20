@@ -11,6 +11,7 @@ interface KitItem {
   qty: string | number;
   prixUnit: string;
   montant: string;
+  checked?: boolean;
 }
 
 type SeanceType = 'premiere' | 'suivante';
@@ -85,18 +86,67 @@ function playBipSuccess() {
   } catch {}
 }
 
-
-function KitTable({ rows, onChange }: {
+function KitTable({
+  rows,
+  onChange,
+  onToggleCheck,
+  onToggleAll,
+}: {
   rows: KitItem[];
   onChange: (idx: number, field: keyof KitItem, val: string) => void;
+  onToggleCheck: (idx: number, val: boolean) => void;
+  onToggleAll: (val: boolean) => void;
 }) {
   const total = rows.reduce((acc, r) => acc + (parseFloat(r.montant) || 0), 0);
+  const checkedCount = rows.filter(r => r.checked).length;
+  const allChecked = checkedCount === rows.length;
+  const someChecked = checkedCount > 0 && !allChecked;
+  const pct = rows.length ? Math.round((checkedCount / rows.length) * 100) : 0;
 
   return (
     <div className="overflow-x-auto">
+      {/* Barre de progression */}
+      <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/60 flex items-center gap-3">
+        <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider whitespace-nowrap">
+          Verification
+        </span>
+        <div className="flex-1 h-2 rounded-full bg-slate-200 overflow-hidden">
+          <motion.div
+            className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"
+            initial={{ width: 0 }}
+            animate={{ width: `${pct}%` }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+        <span className={`text-xs font-black min-w-[52px] text-right ${
+          allChecked ? 'text-emerald-600' : 'text-slate-500'
+        }`}>
+          {checkedCount} / {rows.length}
+        </span>
+        {allChecked && (
+          <motion.span
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full"
+          >
+            Tout verifie
+          </motion.span>
+        )}
+      </div>
+
       <table className="w-full">
         <thead>
           <tr className="bg-gradient-to-r from-cyan-100 via-blue-100 to-indigo-100 border-b-2 border-blue-200">
+            <th className="px-3 py-3 w-10 text-center">
+              <input
+                type="checkbox"
+                checked={allChecked}
+                ref={el => { if (el) el.indeterminate = someChecked; }}
+                onChange={e => onToggleAll(e.target.checked)}
+                className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                title="Tout cocher"
+              />
+            </th>
             <th className="px-4 py-3 text-[10px] font-black text-blue-900 uppercase tracking-wider text-left">Designation</th>
             <th className="px-3 py-3 text-[10px] font-black text-blue-900 uppercase tracking-wider w-24 text-center">Quantite</th>
             <th className="px-3 py-3 text-[10px] font-black text-blue-900 uppercase tracking-wider w-32 text-center">Prix unit. (Ar)</th>
@@ -105,37 +155,83 @@ function KitTable({ rows, onChange }: {
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <motion.tr key={i}
-              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+            <motion.tr
+              key={i}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.025, type: 'spring', stiffness: 200 }}
-              className={`border-b border-slate-100 hover:bg-blue-50/40 transition-colors ${i % 2 === 0 ? 'bg-slate-50/30' : 'bg-white'}`}>
-              <td className="px-4 py-2.5 text-xs font-semibold text-slate-700">{row.name}</td>
-              <td className="px-3 py-2.5">
-                <input type="text" value={row.qty}
-                  onChange={e => onChange(i, 'qty', e.target.value)}
-                  className="w-full px-2 py-1.5 text-xs font-bold text-center border-2 border-cyan-100 rounded-lg bg-cyan-50/30 focus:outline-none focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-100 transition-all" />
+              className={`border-b border-slate-100 transition-colors ${
+                row.checked
+                  ? 'bg-emerald-50/60'
+                  : i % 2 === 0 ? 'bg-slate-50/30 hover:bg-blue-50/40' : 'bg-white hover:bg-blue-50/40'
+              }`}
+            >
+              <td className="px-3 py-2.5 text-center">
+                <motion.div
+                  whileTap={{ scale: 0.85 }}
+                  className="flex items-center justify-center"
+                >
+                  <input
+                    type="checkbox"
+                    checked={!!row.checked}
+                    onChange={e => onToggleCheck(i, e.target.checked)}
+                    className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                  />
+                </motion.div>
+              </td>
+              <td className={`px-4 py-2.5 text-xs font-semibold transition-all ${
+                row.checked ? 'text-emerald-700 line-through decoration-emerald-400' : 'text-slate-700'
+              }`}>
+                <div className="flex items-center gap-2">
+                  {row.checked && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="material-symbols-outlined text-emerald-500 text-sm flex-shrink-0"
+                    >
+                      check_circle
+                    </motion.span>
+                  )}
+                  {row.name}
+                </div>
               </td>
               <td className="px-3 py-2.5">
-                <input type="number" value={row.prixUnit} placeholder="0"
+                <input
+                  type="text"
+                  value={row.qty}
+                  onChange={e => onChange(i, 'qty', e.target.value)}
+                  className="w-full px-2 py-1.5 text-xs font-bold text-center border-2 border-cyan-100 rounded-lg bg-cyan-50/30 focus:outline-none focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-100 transition-all"
+                />
+              </td>
+              <td className="px-3 py-2.5">
+                <input
+                  type="number"
+                  value={row.prixUnit}
+                  placeholder="0"
                   onChange={e => {
                     onChange(i, 'prixUnit', e.target.value);
                     const qty = parseFloat(String(row.qty)) || 0;
-                    const pu  = parseFloat(e.target.value) || 0;
+                    const pu = parseFloat(e.target.value) || 0;
                     onChange(i, 'montant', String(qty * pu));
                   }}
-                  className="w-full px-2 py-1.5 text-xs font-semibold text-right border-2 border-blue-100 rounded-lg bg-blue-50/30 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all" />
+                  className="w-full px-2 py-1.5 text-xs font-semibold text-right border-2 border-blue-100 rounded-lg bg-blue-50/30 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all"
+                />
               </td>
               <td className="px-3 py-2.5">
-                <input type="number" value={row.montant} placeholder="0"
+                <input
+                  type="number"
+                  value={row.montant}
+                  placeholder="0"
                   onChange={e => onChange(i, 'montant', e.target.value)}
-                  className="w-full px-2 py-1.5 text-xs font-semibold text-right border-2 border-indigo-100 rounded-lg bg-indigo-50/30 focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all" />
+                  className="w-full px-2 py-1.5 text-xs font-semibold text-right border-2 border-indigo-100 rounded-lg bg-indigo-50/30 focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all"
+                />
               </td>
             </motion.tr>
           ))}
         </tbody>
         <tfoot>
           <tr className="border-t-2 border-blue-300 bg-gradient-to-r from-cyan-50 to-blue-50">
-            <td colSpan={3} className="px-4 py-3 text-xs font-black text-blue-700 text-right uppercase tracking-wider">Total</td>
+            <td colSpan={4} className="px-4 py-3 text-xs font-black text-blue-700 text-right uppercase tracking-wider">Total</td>
             <td className="px-3 py-3 text-right">
               <span className="text-sm font-black text-blue-700 bg-white px-3 py-1 rounded-lg border-2 border-blue-300 shadow-sm">
                 {total.toLocaleString('fr-MG')} Ar
@@ -169,17 +265,20 @@ function VuCard({ title, onReopen }: { title: string; onReopen: () => void }) {
         <p className="text-[10px] text-emerald-600 mt-0.5 font-semibold">Enregistre en base de donnees</p>
       </div>
       <span className="px-3 py-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-black rounded-full shadow-md shadow-emerald-200">VU</span>
-      <button onClick={onReopen}
+      <button
+        onClick={onReopen}
         className="text-emerald-600 hover:text-emerald-800 p-1.5 hover:bg-emerald-100 rounded-lg cursor-pointer transition-colors"
-        title="Rouvrir">
+        title="Rouvrir"
+      >
         <span className="material-symbols-outlined text-base">expand_more</span>
       </button>
     </motion.div>
   );
 }
 
-
-function KitSection({ icon, title, sub, gradient, accent, rows, onChangeRow, onReset, status, onVu }: {
+function KitSection({
+  icon, title, sub, gradient, accent, rows, onChangeRow, onToggleCheck, onToggleAll, onReset, status, onVu,
+}: {
   icon: string;
   title: string;
   sub: string;
@@ -187,6 +286,8 @@ function KitSection({ icon, title, sub, gradient, accent, rows, onChangeRow, onR
   accent: 'blue' | 'emerald' | 'amber';
   rows: KitItem[];
   onChangeRow: (i: number, f: keyof KitItem, v: string) => void;
+  onToggleCheck: (i: number, val: boolean) => void;
+  onToggleAll: (val: boolean) => void;
   onReset: () => void;
   status: SectionStatus;
   onVu: () => void;
@@ -196,6 +297,8 @@ function KitSection({ icon, title, sub, gradient, accent, rows, onChangeRow, onR
   useEffect(() => {
     if (status === 'vu') setOpen(false);
   }, [status]);
+
+  const allChecked = rows.length > 0 && rows.every(r => r.checked);
 
   const btnGrad = {
     blue:    'from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 shadow-blue-200',
@@ -225,8 +328,10 @@ function KitSection({ icon, title, sub, gradient, accent, rows, onChangeRow, onR
         {status === 'vu' && (
           <span className="px-2 py-0.5 bg-white/20 text-white text-[10px] font-black rounded-full border border-white/30">VU</span>
         )}
-        <button onClick={() => setOpen(o => !o)}
-          className="p-1.5 hover:bg-white/20 rounded-lg cursor-pointer transition-colors">
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="p-1.5 hover:bg-white/20 rounded-lg cursor-pointer transition-colors"
+        >
           <span className="material-symbols-outlined text-white text-lg">
             {open ? 'expand_less' : 'expand_more'}
           </span>
@@ -242,7 +347,13 @@ function KitSection({ icon, title, sub, gradient, accent, rows, onChangeRow, onR
             transition={{ duration: 0.25 }}
             style={{ overflow: 'hidden' }}
           >
-            <KitTable rows={rows} onChange={onChangeRow} />
+            <KitTable
+              rows={rows}
+              onChange={onChangeRow}
+              onToggleCheck={onToggleCheck}
+              onToggleAll={onToggleAll}
+            />
+
             <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between gap-2 bg-slate-50/50">
               <motion.button
                 whileHover={{ scale: 1.03 }}
@@ -253,7 +364,14 @@ function KitSection({ icon, title, sub, gradient, accent, rows, onChangeRow, onR
                 Reinitialiser
               </motion.button>
 
-              <div className="flex gap-2">
+              <div className="flex items-center gap-3">
+                {!allChecked && (
+                  <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full flex items-center gap-1">
+                    <span className="material-symbols-outlined text-xs">warning</span>
+                    Cochez tous les elements
+                  </span>
+                )}
+
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
@@ -265,11 +383,16 @@ function KitSection({ icon, title, sub, gradient, accent, rows, onChangeRow, onR
                 </motion.button>
 
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={onVu}
-                  disabled={status === 'saving'}
-                  className={`px-5 py-2 text-xs font-black text-white rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md disabled:opacity-60 bg-gradient-to-r ${btnGrad}`}
+                  whileHover={allChecked ? { scale: 1.05 } : {}}
+                  whileTap={allChecked ? { scale: 0.95 } : {}}
+                  onClick={allChecked ? onVu : undefined}
+                  disabled={status === 'saving' || !allChecked}
+                  title={!allChecked ? 'Cochez tous les elements pour valider' : ''}
+                  className={`px-5 py-2 text-xs font-black text-white rounded-xl transition-all flex items-center gap-1.5 shadow-md bg-gradient-to-r ${btnGrad} ${
+                    !allChecked || status === 'saving'
+                      ? 'opacity-40 cursor-not-allowed'
+                      : 'cursor-pointer'
+                  }`}
                 >
                   {status === 'saving' ? (
                     <>
@@ -313,7 +436,6 @@ function Toast({ msg, type }: { msg: string; type: 'success' | 'error' }) {
   );
 }
 
-
 function VerificationKitInner() {
   const searchParams   = useSearchParams();
   const patientIdParam = searchParams.get('patientId');
@@ -329,9 +451,9 @@ function VerificationKitInner() {
     date: new Date().toISOString().split('T')[0],
   });
 
-  const [rows1, setRows1]       = useState<KitItem[]>(KIT_PREMIERE.map((i) => ({ ...i })));
-  const [rows2, setRows2]       = useState<KitItem[]>(KIT_SUIVANTE.map((i) => ({ ...i })));
-  const [rowsSoin, setRowsSoin] = useState<KitItem[]>(KIT_SOIN.map((i) => ({ ...i })));
+  const [rows1, setRows1]       = useState<KitItem[]>(KIT_PREMIERE.map(i => ({ ...i, checked: false })));
+  const [rows2, setRows2]       = useState<KitItem[]>(KIT_SUIVANTE.map(i => ({ ...i, checked: false })));
+  const [rowsSoin, setRowsSoin] = useState<KitItem[]>(KIT_SOIN.map(i => ({ ...i, checked: false })));
 
   const [status1, setStatus1]       = useState<SectionStatus>('idle');
   const [status2, setStatus2]       = useState<SectionStatus>('idle');
@@ -347,10 +469,10 @@ function VerificationKitInner() {
   useEffect(() => {
     if (!patientIdParam) return;
     fetch(`${API_URL}/patients/${patientIdParam}`)
-      .then((r) => r.json())
-      .then((data) => {
+      .then(r => r.json())
+      .then(data => {
         if (data?.nom) {
-          setPatient((p) => ({
+          setPatient(p => ({
             ...p,
             nom: `${data.prenom || ''} ${data.nom || ''}`.trim(),
             age: data.age || '',
@@ -362,7 +484,7 @@ function VerificationKitInner() {
   }, [patientIdParam]);
 
   const goBack = () => {
-    window.location.href = `/dialyses/section-medecin?patientId=${patientIdParam || ''}&rendezVousId=${rdvId || ''}&seanceNum=${seanceNum}`;
+    window.location.href = `/dialyses/section-paramedical?patientId=${patientIdParam || ''}&rendezVousId=${rdvId || ''}&seanceNum=${seanceNum}`;
   };
 
   const updateRow = (
@@ -371,7 +493,22 @@ function VerificationKitInner() {
     field: keyof KitItem,
     val: string,
   ) => {
-    setter((prev) => prev.map((r, i) => (i === idx ? { ...r, [field]: val } : r)));
+    setter(prev => prev.map((r, i) => (i === idx ? { ...r, [field]: val } : r)));
+  };
+
+  const toggleCheck = (
+    setter: React.Dispatch<React.SetStateAction<KitItem[]>>,
+    idx: number,
+    val: boolean,
+  ) => {
+    setter(prev => prev.map((r, i) => (i === idx ? { ...r, checked: val } : r)));
+  };
+
+  const toggleAll = (
+    setter: React.Dispatch<React.SetStateAction<KitItem[]>>,
+    val: boolean,
+  ) => {
+    setter(prev => prev.map(r => ({ ...r, checked: val })));
   };
 
   const handleVu = async (
@@ -386,8 +523,8 @@ function VerificationKitInner() {
     setStatus('saving');
     try {
       const promises = rows
-        .filter((r) => r.name && String(r.qty).trim() !== '')
-        .map((row) =>
+        .filter(r => r.name && String(r.qty).trim() !== '')
+        .map(row =>
           fetch(`${API_URL}/prescriptions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -402,13 +539,13 @@ function VerificationKitInner() {
           }),
         );
       const results = await Promise.all(promises);
-      if (!results.every((r) => r.ok)) throw new Error('Erreur');
+      if (!results.every(r => r.ok)) throw new Error('Erreur');
       setStatus('vu');
       playBipSuccess();
       showToast(`Kit "${kitLabel}" enregistre`, 'success');
     } catch {
       setStatus('idle');
-      showToast("Erreur enregistrement", 'error');
+      showToast('Erreur enregistrement', 'error');
     }
   };
 
@@ -416,7 +553,6 @@ function VerificationKitInner() {
   const allVu = isPremiereSeance
     ? status1 === 'vu' && statusSoin === 'vu'
     : status2 === 'vu';
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50/30 via-blue-50/20 to-indigo-50/20 p-6 space-y-5 max-w-6xl mx-auto">
@@ -464,7 +600,7 @@ function VerificationKitInner() {
         <span className={`text-sm font-bold ${patientIdParam ? 'text-blue-800' : 'text-amber-800'}`}>
           {patientIdParam
             ? `Patient ID #${patientIdParam}${patient.nom ? ' - ' + patient.nom : ''} - Seance N${seanceNum}`
-            : 'Aucun patient lie - revenez depuis les choix medecin'
+            : 'Aucun patient lie - revenez depuis les choix paramedical'
           }
         </span>
       </motion.div>
@@ -526,25 +662,29 @@ function VerificationKitInner() {
 
         <div className="p-5 grid grid-cols-2 md:grid-cols-3 gap-4">
           {[
-            { label: 'Nom et Prenoms',   key: 'nom',     type: 'text',   ph: 'Rakoto Jean'   },
-            { label: 'Age',              key: 'age',     type: 'number', ph: '45'            },
-            { label: 'Adresse',          key: 'adresse', type: 'text',   ph: 'Fianarantsoa'  },
-            { label: 'Service',          key: 'service', type: 'text',   ph: 'Hemodialyse'   },
-            { label: "Date ordonnance",  key: 'date',    type: 'date',   ph: ''              },
+            { label: 'Nom et Prenoms',  key: 'nom',     type: 'text',   ph: 'Rakoto Jean'  },
+            { label: 'Age',             key: 'age',     type: 'number', ph: '45'           },
+            { label: 'Adresse',         key: 'adresse', type: 'text',   ph: 'Fianarantsoa' },
+            { label: 'Service',         key: 'service', type: 'text',   ph: 'Hemodialyse'  },
+            { label: 'Date ordonnance', key: 'date',    type: 'date',   ph: ''             },
           ].map(f => (
             <motion.div key={f.key} whileHover={{ y: -2 }}>
               <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">{f.label}</label>
-              <input type={f.type} placeholder={f.ph}
+              <input
+                type={f.type}
+                placeholder={f.ph}
                 value={(patient as any)[f.key]}
                 onChange={e => setPatient(p => ({ ...p, [f.key]: e.target.value }))}
-                className="w-full px-3 py-2 text-sm font-semibold border-2 border-blue-100 rounded-xl bg-blue-50/30 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all" />
+                className="w-full px-3 py-2 text-sm font-semibold border-2 border-blue-100 rounded-xl bg-blue-50/30 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
+              />
             </motion.div>
           ))}
           <div>
             <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Sexe</label>
             <div className="flex gap-2">
               {['M', 'F'].map(s => (
-                <motion.button key={s}
+                <motion.button
+                  key={s}
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setPatient(p => ({ ...p, sexe: s }))}
@@ -554,7 +694,8 @@ function VerificationKitInner() {
                         ? 'bg-gradient-to-r from-blue-500 to-cyan-600 border-blue-600 text-white shadow-md shadow-blue-200'
                         : 'bg-gradient-to-r from-pink-500 to-rose-600 border-pink-600 text-white shadow-md shadow-pink-200'
                       : 'bg-white border-slate-200 text-slate-500 hover:border-slate-400'
-                  }`}>
+                  }`}
+                >
                   {s}
                 </motion.button>
               ))}
@@ -563,15 +704,14 @@ function VerificationKitInner() {
         </div>
       </motion.div>
 
-
       {/* SECTIONS KITS */}
       <AnimatePresence mode="wait">
         {isPremiereSeance && (
           <motion.div key="premiere" className="space-y-5"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}>
-
+            exit={{ opacity: 0, y: -12 }}
+          >
             <KitSection
               icon="vaccines"
               title="Kit Hemodialyse - 1ere Seance"
@@ -580,11 +720,12 @@ function VerificationKitInner() {
               accent="blue"
               rows={rows1}
               onChangeRow={(i, f, v) => updateRow(setRows1, i, f, v)}
-              onReset={() => setRows1(KIT_PREMIERE.map(i => ({ ...i })))}
+              onToggleCheck={(i, v) => toggleCheck(setRows1, i, v)}
+              onToggleAll={v => toggleAll(setRows1, v)}
+              onReset={() => setRows1(KIT_PREMIERE.map(i => ({ ...i, checked: false })))}
               status={status1}
               onVu={() => handleVu(rows1, '1ere seance hemodialyse', setStatus1)}
             />
-
             <KitSection
               icon="medical_services"
               title="Ordonnance Kit 1er Soin - Service Hemodialyse"
@@ -593,7 +734,9 @@ function VerificationKitInner() {
               accent="amber"
               rows={rowsSoin}
               onChangeRow={(i, f, v) => updateRow(setRowsSoin, i, f, v)}
-              onReset={() => setRowsSoin(KIT_SOIN.map(i => ({ ...i })))}
+              onToggleCheck={(i, v) => toggleCheck(setRowsSoin, i, v)}
+              onToggleAll={v => toggleAll(setRowsSoin, v)}
+              onReset={() => setRowsSoin(KIT_SOIN.map(i => ({ ...i, checked: false })))}
               status={statusSoin}
               onVu={() => handleVu(rowsSoin, 'Kit 1er soin catheter', setStatusSoin)}
             />
@@ -604,8 +747,8 @@ function VerificationKitInner() {
           <motion.div key="suivante"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}>
-
+            exit={{ opacity: 0, y: -12 }}
+          >
             <KitSection
               icon="autorenew"
               title="Kit Hemodialyse - Seances Suivantes"
@@ -614,7 +757,9 @@ function VerificationKitInner() {
               accent="emerald"
               rows={rows2}
               onChangeRow={(i, f, v) => updateRow(setRows2, i, f, v)}
-              onReset={() => setRows2(KIT_SUIVANTE.map(i => ({ ...i })))}
+              onToggleCheck={(i, v) => toggleCheck(setRows2, i, v)}
+              onToggleAll={v => toggleAll(setRows2, v)}
+              onReset={() => setRows2(KIT_SUIVANTE.map(i => ({ ...i, checked: false })))}
               status={status2}
               onVu={() => handleVu(rows2, 'Seances suivantes hemodialyse', setStatus2)}
             />
@@ -669,7 +814,7 @@ function VerificationKitInner() {
                   className="px-5 py-2.5 bg-white text-emerald-700 text-xs font-black rounded-xl hover:bg-emerald-50 transition-all cursor-pointer flex items-center gap-2 shadow-md"
                 >
                   <span className="material-symbols-outlined text-base">arrow_back</span>
-                  Retour aux choix medecin
+                  Retour section paramedical
                 </motion.button>
               </div>
             </div>
