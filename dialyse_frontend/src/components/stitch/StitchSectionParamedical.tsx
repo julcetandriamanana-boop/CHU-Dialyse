@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import InfirmierProfilModal, { InfirmierProfil, getInfirmierActif, setInfirmierActif } from '@/src/components/profil/InfirmierProfilModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -21,7 +20,6 @@ function SectionParamedicalInner() {
   const [constantes, setConstantes] = useState<Constantes | null>(null);
   const [rdv, setRdv]               = useState<RdvInfo | null>(null);
   const [infirmier, setInfirmier]             = useState<InfirmierProfil | null>(null);
-  const [showProfilModal, setShowProfilModal] = useState(false);
   const [showDropdown, setShowDropdown]       = useState(false);
 
   const loadAll = useCallback(async () => {
@@ -40,28 +38,6 @@ function SectionParamedicalInner() {
       }
     } catch (e) { console.error(e); }
   }, [patientId, rdvId]);
-
-  useEffect(() => { loadAll(); }, [loadAll]);
-
-  // Charger profil infirmier au démarrage — popup OBLIGATOIRE si absent
-  useEffect(() => {
-    const inf = getInfirmierActif();
-    if (inf) {
-      setInfirmier(inf);
-    } else {
-      setShowProfilModal(true);
-    }
-  }, []);
-
-  // Charger profil infirmier au démarrage — popup si absent
-  useEffect(() => {
-    const inf = getInfirmierActif();
-    if (inf) {
-      setInfirmier(inf);
-    } else {
-      setShowProfilModal(true);
-    }
-  }, []);
 
   const urlSuffix = `?patientId=${patientId || ''}&rendezVousId=${rdvId || ''}&seanceNum=${seanceNum}`;
 
@@ -178,7 +154,6 @@ function SectionParamedicalInner() {
                   Changer d'infirmier
                 </button>
                 <button
-                  onClick={() => { setInfirmierActif(null); setInfirmier(null); setShowProfilModal(true); setShowDropdown(false); }}
                   className="w-full px-4 py-2.5 text-left text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer border-t border-slate-100"
                 >
                   <span className="material-symbols-outlined text-base">logout</span>
@@ -225,16 +200,6 @@ function SectionParamedicalInner() {
           </div>
         ))}
       </motion.div>
-
-      {/* Modal sélection infirmier — OBLIGATOIRE si pas de profil */}
-      <InfirmierProfilModal
-        open={showProfilModal}
-        onClose={() => {
-          // Empêcher la fermeture si aucun infirmier sélectionné
-          if (infirmier) setShowProfilModal(false);
-        }}
-        onSelect={(inf) => { setInfirmier(inf); setShowProfilModal(false); }}
-      />
 
       {/* Bouton retour */}
       <div className="flex justify-center pt-2">
