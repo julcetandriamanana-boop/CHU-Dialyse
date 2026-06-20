@@ -8,7 +8,6 @@ import { PrescriptionKitEnvoyee } from '../entities/prescription-kit-envoyee.ent
 import { SeanceHemodialyse }      from '../entities/seance-hemodialyse.entity';
 import { SoinsSeance }            from '../entities/soins-seance.entity';
 import { SurveillanceSeance }     from '../entities/surveillance-seance.entity';
-import { DemandeAvis }            from '../entities/demande-avis.entity';
 import { Notification }           from '../entities/notification.entity';
 
 import { NotificationsModule }   from '../notifications/notifications.module';
@@ -25,7 +24,6 @@ import { ArchiveService }        from './archive.service';
       SeanceHemodialyse,
       SoinsSeance,
       SurveillanceSeance,
-      DemandeAvis,
       Notification,
     ]),
     NotificationsModule,

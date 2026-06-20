@@ -1,7 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany, Index } from 'typeorm';
 import { RendezVous } from './rendez-vous.entity';
 import { Prescription } from './prescription.entity';
-import { DemandeAvis } from './demande-avis.entity';
 
 @Entity({ name: 'medecin' })
 export class Medecin {
@@ -24,9 +23,5 @@ export class Medecin {
   @OneToMany(() => Prescription, (prescription) => prescription.medecin)
   prescriptions: Prescription[];
 
-  @OneToMany(() => DemandeAvis, (demandeAvis) => demandeAvis.emetteur)
-  demandes_emises: DemandeAvis[];
 
-  @OneToMany(() => DemandeAvis, (demandeAvis) => demandeAvis.destinataire)
-  demandes_recues: DemandeAvis[];
 }

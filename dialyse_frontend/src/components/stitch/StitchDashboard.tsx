@@ -508,7 +508,6 @@ export default function StitchDashboard() {
     try {
       const res = await fetch(`${API_URL}/rendezvous/aujourdhui`, {
         cache: 'no-store',
-        signal: AbortSignal.timeout(8000),
       });
       if (!res.ok) { setPatients([]); return; }
 

@@ -1,4 +1,5 @@
 'use client';
+import { formatTime } from '@/src/utils/date.utils';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
@@ -70,20 +71,52 @@ const TYPE_STYLES: Record<RDVFormatted['type'], { bg: string; border: string; te
 
 function formatRDV(rdv: RDV): RDVFormatted | null {
   if (!rdv.patient) return null;
+
+  // ✅ Méthode propre : utiliser Intl.DateTimeFormat pour Madagascar
   const d = new Date(rdv.date_heure);
-  const dEnd = new Date(d.getTime() + 4 * 3600000);
-  const jourSemaine = d.getDay() === 0 ? 6 : d.getDay() - 1;
+
+  // Extraire les composantes en heure Madagascar
+  const parts = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Indian/Antananarivo',
+    year:   'numeric',
+    month:  '2-digit',
+    day:    '2-digit',
+    hour:   '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(d);
+
+  const pick = (type: string) => parts.find(p => p.type === type)?.value || '00';
+
+  const year   = parseInt(pick('year'));
+  const month  = parseInt(pick('month'));
+  const day    = parseInt(pick('day'));
+  let hour     = parseInt(pick('hour'));
+  if (hour === 24) hour = 0;
+  const minute = parseInt(pick('minute'));
+
+  // Construire la date Madagascar (juste pour getDay())
+  const mada = new Date(year, month - 1, day, hour, minute, 0);
+
+  // Heure fin = +4h
+  const endHour = hour + 4;
+  const heureEnd = `${String(endHour % 24).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
+  const heure    = `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
+
+  const jourSemaine = mada.getDay() === 0 ? 6 : mada.getDay() - 1;
+
   return {
     id: rdv.id,
     patientId: rdv.patient.id,
     patientNom: rdv.patient.nom,
     patientPrenom: rdv.patient.prenom,
-    heure: `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`,
-    heureEnd: `${String(dEnd.getHours()).padStart(2,'0')}:${String(dEnd.getMinutes()).padStart(2,'0')}`,
-    dateObj: d,
-    jour: d.getDate(),
-    mois: d.getMonth() + 1,
-    annee: d.getFullYear(),
+    heure,
+    heureEnd,
+    dateObj: mada,
+    jour:   day,
+    mois:   month,
+    annee:  year,
     jourSemaine,
     motif: rdv.motif,
     statut: rdv.statut,
@@ -491,8 +524,20 @@ function StitchRendezVousCalendrierInner() {
     return true;
   });
 
-  const getRdvJour = (jour: Date) =>
-    rdvsFiltres.filter(r => r.jour===jour.getDate() && r.mois===jour.getMonth()+1 && r.annee===jour.getFullYear());
+  // ✅ Helper pour obtenir composants Madagascar d'une date
+  const getMadaParts = (d: Date) => {
+    const parts = new Intl.DateTimeFormat('fr-FR', {
+      timeZone: 'Indian/Antananarivo',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+    }).formatToParts(d);
+    const pick = (t: string) => parseInt(parts.find(p => p.type === t)?.value || '0');
+    return { day: pick('day'), month: pick('month'), year: pick('year') };
+  };
+
+  const getRdvJour = (jour: Date) => {
+    const p = getMadaParts(jour);
+    return rdvsFiltres.filter(r => r.jour === p.day && r.mois === p.month && r.annee === p.year);
+  };
 
   const getRdvMois = (jour: number) =>
     rdvsFiltres.filter(r => r.jour===jour && r.mois===currentDate.getMonth()+1 && r.annee===currentDate.getFullYear());
@@ -509,7 +554,11 @@ function StitchRendezVousCalendrierInner() {
   const postesUtilises    = new Set(rdvsFiltres.filter(r => r.jour===now.getDate() && r.mois===now.getMonth()+1 && r.annee===now.getFullYear()).map(r => r.poste));
   const postesDisponibles = Math.max(0, 8 - postesUtilises.size);
 
-  const getTop    = (h: string) => { const [hh,mm]=h.split(':').map(Number); return ((hh-7)+mm/60)*CELL_H; };
+  const getTop = (h: string) => {
+    const [hh, mm] = h.split(':').map(Number);
+    const top = ((hh - 7) + mm / 60) * CELL_H;
+    return Math.max(0, top); // ✅ Clamp pour éviter valeurs négatives
+  };
   const getHeight = (h1: string, h2: string) => {
     const [a,b]=h1.split(':').map(Number); const [c,d]=h2.split(':').map(Number);
     return Math.max(((c-a)+(d-b)/60)*CELL_H, 28);
@@ -622,8 +671,8 @@ function StitchRendezVousCalendrierInner() {
 
         {viewMode === 'semaine' && (
           <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="grid grid-cols-[52px_repeat(7,1fr)] border-b border-slate-200 bg-slate-50 flex-shrink-0">
-              <div />
+            <div className="grid grid-cols-[60px_repeat(7,minmax(0,1fr))] border-b border-slate-200 bg-slate-50 flex-shrink-0">
+              <div className="border-r border-slate-200" />
               {joursSemaine.map((jour,i) => {
                 const today = isToday(jour);
                 const nbRdv = getRdvJour(jour).length;
@@ -639,7 +688,7 @@ function StitchRendezVousCalendrierInner() {
               })}
             </div>
             <div className="flex-1 overflow-y-auto">
-              <div className="grid grid-cols-[52px_repeat(7,1fr)]" style={{ minHeight:`${CELL_H*13}px` }}>
+              <div className="grid grid-cols-[60px_repeat(7,minmax(0,1fr))]" style={{ minHeight:`${CELL_H*13}px` }}>
                 <div>
                   {HEURES_GRILLE.map(h => (
                     <div key={h} className="text-right pr-2 text-[10px] text-slate-400" style={{ height:`${CELL_H}px`, paddingTop:'2px' }}>{h}:00</div>
@@ -649,7 +698,7 @@ function StitchRendezVousCalendrierInner() {
                   const rdvJour = getRdvJour(jour);
                   const today   = isToday(jour);
                   return (
-                    <div key={di} className="relative border-l border-slate-200 cursor-crosshair group"
+                    <div key={di} className="relative border-l border-slate-200 cursor-crosshair group overflow-hidden"
                       onClick={e => handleSlotClick(e, jour)}>
                       {HEURES_GRILLE.map(h => (
                         <div key={h} className="border-b border-slate-100 group-hover:border-blue-50 transition-colors" style={{ height:`${CELL_H}px` }} />
@@ -670,7 +719,7 @@ function StitchRendezVousCalendrierInner() {
                         return (
                           <motion.div key={rdv.id}
                             initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }}
-                            style={{ top:`${top}px`, height:`${height}px`, left:'2px', right:'2px', position:'absolute', zIndex:10 }}
+                            style={{ top:`${top}px`, height:`${height}px`, left:'2px', width:'calc(100% - 4px)', position:'absolute', zIndex:10 }}
                             className={`rdv-card ${s.bg} border-l-[3px] ${s.border} rounded-r-lg px-2 py-1 overflow-hidden cursor-pointer hover:brightness-95 transition-all shadow-sm`}>
                             <p className={`text-[10px] font-bold ${s.text}`}>{rdv.heure}</p>
                             <p className={`text-[11px] font-semibold ${s.text} truncate`}>{rdv.patientPrenom} {rdv.patientNom}</p>

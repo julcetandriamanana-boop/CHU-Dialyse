@@ -9,7 +9,6 @@ import { PrescriptionKitEnvoyee } from '../entities/prescription-kit-envoyee.ent
 import { SeanceHemodialyse }      from '../entities/seance-hemodialyse.entity';
 import { SoinsSeance }            from '../entities/soins-seance.entity';
 import { SurveillanceSeance }     from '../entities/surveillance-seance.entity';
-import { DemandeAvis }            from '../entities/demande-avis.entity';
 
 import { ArchiveActionDto }  from './dto/archive-action.dto';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -88,7 +87,6 @@ export class ArchiveService {
     @InjectRepository(SeanceHemodialyse)      private seanceRepo:     Repository<SeanceHemodialyse>,
     @InjectRepository(SoinsSeance)            private soinsRepo:      Repository<SoinsSeance>,
     @InjectRepository(SurveillanceSeance)     private survRepo:       Repository<SurveillanceSeance>,
-    @InjectRepository(DemandeAvis)            private demandeRepo:    Repository<DemandeAvis>,
     private notifService:                     NotificationsService,
   ) {}
 

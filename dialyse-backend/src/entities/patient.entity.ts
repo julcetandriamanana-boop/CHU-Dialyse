@@ -6,7 +6,6 @@ import { Prescription }      from './prescription.entity';
 import { RendezVous }        from './rendez-vous.entity';
 import { SeanceHemodialyse } from './seance-hemodialyse.entity';
 import { Service }           from './service.entity';
-import { DemandeAvis }       from './demande-avis.entity';
 
 export type TraitementStatut = 'actif' | 'suspendu' | 'terminé';
 
@@ -97,6 +96,4 @@ export class Patient {
   @OneToMany(() => SeanceHemodialyse, (s) => s.patient)
   seances: SeanceHemodialyse[];
 
-  @OneToMany(() => DemandeAvis, (d) => d.patient)
-  demandes_avis: DemandeAvis[];
 }
