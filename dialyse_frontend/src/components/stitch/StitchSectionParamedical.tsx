@@ -22,6 +22,8 @@ function SectionParamedicalInner() {
   const [rdv, setRdv]               = useState<RdvInfo | null>(null);
   const [infirmier, setInfirmier]             = useState<InfirmierProfil | null>(null);
   const [showDropdown, setShowDropdown]       = useState(false);
+  const [showProfilModal, setShowProfilModal]  = useState(false);
+  const [showProfilModal, setShowProfilModal]  = useState(false);
 
   const loadAll = useCallback(async () => {
     try {

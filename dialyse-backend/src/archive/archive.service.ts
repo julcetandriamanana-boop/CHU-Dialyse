@@ -23,6 +23,7 @@ export type ModuleArchive =
   | 'seances'
   | 'soins'
   | 'surveillance'
+  | 'demandes-avis'
 
 export interface ArchiveItem {
   module:       ModuleArchive;

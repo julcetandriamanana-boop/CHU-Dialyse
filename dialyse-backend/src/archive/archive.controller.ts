@@ -8,8 +8,7 @@ import { ArchiveActionDto }              from './dto/archive-action.dto';
 import { ArchiveQueryDto }               from './dto/archive-query.dto';
 
 const MODULES_VALIDES: ModuleArchive[] = [
-  'patients', 'rendezvous', 'prescriptions', 'kits',
-  'seances', 'soins', 'surveillance', 'demandes-avis',
+  'patients', 'rendezvous', 'prescriptions', 'kits', 'seances', 'soins', 'surveillance', 'demandes-avis',
 ];
 
 @ApiTags('Archives')
@@ -56,7 +55,6 @@ export class ArchiveController {
   @ApiOperation({ summary: 'Lister les archives d\'un module spécifique' })
   @ApiParam({
     name: 'module',
-    enum: ['patients', 'rendezvous', 'prescriptions', 'kits', 'seances', 'soins', 'surveillance', 'demandes-avis'],
     example: 'patients',
   })
   @ApiQuery({ name: 'search',    required: false })
