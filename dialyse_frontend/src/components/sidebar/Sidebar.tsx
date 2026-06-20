@@ -64,7 +64,6 @@ function SidebarContent({ onLinkClick }: { onLinkClick: () => void }) {
       items: [
         { label: "Rendez-vous",      href: "/rendez-vous",   icon: "event",           badge: counts.rendezvous || null,   badgeType: counts.rendezvous > 0 ? "blue" : null     },
         { label: "Dialyses",         href: "/dialyses",      icon: "monitor_heart",   badge: counts.dialyses || null,     badgeType: counts.dialyses > 0 ? "amber" : null      },
-        { label: "Demandes d'avis",  href: "/demandes-avis", icon: "clinical_notes",  badge: counts.demandesAvis || null, badgeType: counts.demandesAvis > 0 ? "purple" : null  },
         { label: "Rapports",         href: "/rapports",      icon: "lab_profile",     badge: counts.rapports || null,     badgeType: counts.rapports > 0 ? "green" : null       },
         { label: "Archive",          href: "/archive",       icon: "archive",         badge: counts.archives || null,     badgeType: counts.archives > 0 ? "slate" : null       },
       ],

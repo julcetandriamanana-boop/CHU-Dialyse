@@ -329,7 +329,6 @@ export default function StitchArchives() {
     { id: 'seances'      as TabId, label: 'Séances',        icon: 'vaccine',         count: stats?.par_module?.seances || 0 },
     { id: 'soins'        as TabId, label: 'Soins',          icon: 'healing',         count: stats?.par_module?.soins || 0 },
     { id: 'surveillance' as TabId, label: 'Surveillance',   icon: 'monitor_heart',   count: stats?.par_module?.surveillance || 0 },
-    { id: 'demandes-avis'as TabId, label: 'Demandes',       icon: 'question_answer', count: stats?.par_module?.['demandes-avis'] || 0 },
     { id: 'historique'   as TabId, label: 'Historique',     icon: 'history',         count: null },
   ], [stats]);
 
