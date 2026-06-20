@@ -23,7 +23,6 @@ export type ModuleArchive =
   | 'seances'
   | 'soins'
   | 'surveillance'
-  | 'demandes-avis';
 
 export interface ArchiveItem {
   module:       ModuleArchive;
@@ -71,7 +70,6 @@ export interface HistoriquePatient {
     seances:       number;
     soins:         number;
     surveillance:  number;
-    demandes_avis: number;
   };
   timeline: TimelineEvent[];
 }
@@ -146,7 +144,6 @@ export class ArchiveService {
       'seances':      this.seanceRepo,
       'soins':        this.soinsRepo,
       'surveillance': this.survRepo,
-      'demandes-avis': this.demandeRepo,
     };
     return map[module];
   }
@@ -167,7 +164,6 @@ export class ArchiveService {
         return `Soins #${item.id}`;
       case 'surveillance':
         return `Surveillance #${item.id}`;
-      case 'demandes-avis':
         return `Demande d'avis #${item.id}`;
       default:
         return `#${item.id}`;
@@ -190,7 +186,6 @@ export class ArchiveService {
         return `Accès: ${item.acces_type || '-'} - Validé: ${item.validation_infirmier ? 'Oui' : 'Non'}`;
       case 'surveillance':
         return `Kt/V: ${item.kt_v || '-'} - Recirculation: ${item.recirculation || '-'}`;
-      case 'demandes-avis':
         return `Priorité: ${item.priorite || '-'} - ${item.date_envoi ? new Date(item.date_envoi).toLocaleDateString('fr-FR') : '-'}`;
       default:
         return '';
@@ -228,7 +223,6 @@ export class ArchiveService {
 
     const modules: ModuleArchive[] = [
       'patients', 'rendezvous', 'prescriptions', 'kits',
-      'seances', 'soins', 'surveillance', 'demandes-avis',
     ];
 
     const allItems: ArchiveItem[] = [];
@@ -356,14 +350,13 @@ export class ArchiveService {
       archive_motif: `Archivé avec le patient #${patientId} - ${dto.motif}`,
     };
 
-    const [rdvs, prescs, kits, seances, soins, survs, demandes] = await Promise.all([
+    const [rdvs, prescs, kits, seances, soins, survs] = await Promise.all([
       this.rdvRepo.find({ where: { patient: { id: patientId }, is_archived: false } }),
       this.prescRepo.find({ where: { patient: { id: patientId }, is_archived: false } }),
       this.kitRepo.find({ where: { patient_id: patientId, is_archived: false } }),
       this.seanceRepo.find({ where: { patient: { id: patientId }, is_archived: false } }),
       this.soinsRepo.find({ where: { patient_id: patientId, is_archived: false } }),
       this.survRepo.find({ where: { patient_id: patientId, is_archived: false } }),
-      this.demandeRepo.find({ where: { patient: { id: patientId }, is_archived: false } }),
     ]);
 
     await Promise.all([
@@ -373,7 +366,6 @@ export class ArchiveService {
       seances.length  ? this.seanceRepo.update(seances.map(s => s.id), archiveData) : null,
       soins.length    ? this.soinsRepo.update(soins.map(s => s.id), archiveData)    : null,
       survs.length    ? this.survRepo.update(survs.map(s => s.id), archiveData)     : null,
-      demandes.length ? this.demandeRepo.update(demandes.map(d => d.id), archiveData) : null,
     ]);
 
     return {
@@ -383,7 +375,6 @@ export class ArchiveService {
       seances_archivees:       seances.length,
       soins_archives:          soins.length,
       surveillance_archivees:  survs.length,
-      demandes_archivees:      demandes.length,
     };
   }
 
@@ -431,14 +422,13 @@ export class ArchiveService {
 
     const motifCascade = `Archivé avec le patient #${patientId}`;
 
-    const [rdvs, prescs, kits, seances, soins, survs, demandes] = await Promise.all([
+    const [rdvs, prescs, kits, seances, soins, survs] = await Promise.all([
       this.rdvRepo.find({ where: { patient: { id: patientId }, is_archived: true } }),
       this.prescRepo.find({ where: { patient: { id: patientId }, is_archived: true } }),
       this.kitRepo.find({ where: { patient_id: patientId, is_archived: true } }),
       this.seanceRepo.find({ where: { patient: { id: patientId }, is_archived: true } }),
       this.soinsRepo.find({ where: { patient_id: patientId, is_archived: true } }),
       this.survRepo.find({ where: { patient_id: patientId, is_archived: true } }),
-      this.demandeRepo.find({ where: { patient: { id: patientId }, is_archived: true } }),
     ]);
 
     // Restaurer uniquement ceux archivés par cascade
@@ -448,7 +438,6 @@ export class ArchiveService {
     const seancesCascade  = seances.filter(s => (s.archive_motif || '').includes(motifCascade));
     const soinsCascade    = soins.filter(s => (s.archive_motif || '').includes(motifCascade));
     const survsCascade    = survs.filter(s => (s.archive_motif || '').includes(motifCascade));
-    const demandesCascade = demandes.filter(d => (d.archive_motif || '').includes(motifCascade));
 
     await Promise.all([
       rdvsCascade.length     ? this.rdvRepo.update(rdvsCascade.map(r => r.id), restoreData)         : null,
@@ -457,7 +446,6 @@ export class ArchiveService {
       seancesCascade.length  ? this.seanceRepo.update(seancesCascade.map(s => s.id), restoreData)   : null,
       soinsCascade.length    ? this.soinsRepo.update(soinsCascade.map(s => s.id), restoreData)      : null,
       survsCascade.length    ? this.survRepo.update(survsCascade.map(s => s.id), restoreData)       : null,
-      demandesCascade.length ? this.demandeRepo.update(demandesCascade.map(d => d.id), restoreData) : null,
     ]);
 
     return {
@@ -467,7 +455,6 @@ export class ArchiveService {
       seances_restaurees:      seancesCascade.length,
       soins_restaures:         soinsCascade.length,
       surveillance_restaurees: survsCascade.length,
-      demandes_restaurees:     demandesCascade.length,
     };
   }
 
@@ -476,7 +463,6 @@ export class ArchiveService {
   async getStatistiques(): Promise<ArchiveStats> {
     const modules: ModuleArchive[] = [
       'patients', 'rendezvous', 'prescriptions', 'kits',
-      'seances', 'soins', 'surveillance', 'demandes-avis',
     ];
 
     const counts = await Promise.all(
@@ -532,14 +518,13 @@ export class ArchiveService {
     if (!patient) throw new NotFoundException(`Patient #${patientId} introuvable`);
 
     // Récupérer toutes les données du patient (archivées ou non)
-    const [rdvs, prescs, kits, seances, soins, survs, demandes] = await Promise.all([
+    const [rdvs, prescs, kits, seances, soins, survs] = await Promise.all([
       this.rdvRepo.find({ where: { patient: { id: patientId } }, order: { date_heure: 'DESC' }, take: 50 }),
       this.prescRepo.find({ where: { patient: { id: patientId } }, order: { date_prescription: 'DESC' }, take: 20 }),
       this.kitRepo.find({ where: { patient_id: patientId } }),
       this.seanceRepo.find({ where: { patient: { id: patientId } } }),
       this.soinsRepo.find({ where: { patient_id: patientId } }),
       this.survRepo.find({ where: { patient_id: patientId } }),
-      this.demandeRepo.find({ where: { patient: { id: patientId } }, relations: ['emetteur', 'destinataire'] }),
     ]);
 
     // Résumé
@@ -550,7 +535,6 @@ export class ArchiveService {
       seances:       seances.length,
       soins:         soins.length,
       surveillance:  survs.length,
-      demandes_avis: demandes.length,
     };
 
     // Timeline
@@ -640,18 +624,6 @@ export class ArchiveService {
       });
     }
 
-    // Demandes d'avis
-    for (const d of demandes) {
-      timeline.push({
-        type:    'demande_avis',
-        date:    d.date_envoi,
-        titre:   `Demande d'avis`,
-        details: `${d.emetteur?.nom || '-'} → ${d.destinataire?.nom || '-'} | Priorité: ${d.priorite}`,
-        icon:    'question_answer',
-        couleur: 'orange',
-      });
-    }
-
     // Création patient (approximée)
     timeline.push({
       type:    'creation',
@@ -692,7 +664,6 @@ export class ArchiveService {
       case 'seances':       return ['patient'];
       case 'soins':         return ['patient'];
       case 'surveillance':  return ['patient'];
-      case 'demandes-avis': return ['patient', 'emetteur', 'destinataire'];
       default:              return [];
     }
   }
