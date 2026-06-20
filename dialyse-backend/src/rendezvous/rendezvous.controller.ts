@@ -19,6 +19,12 @@ export class RendezVousController {
     return this.rendezVousService.findAujourdhui();
   }
 
+  @Get('necessitant-kit')
+  @ApiOperation({ summary: 'RDV futurs nécessitant une prescription de kit' })
+  async necessitantKit(): Promise<RendezVous[]> {
+    return this.rendezVousService.findNecessitantKit();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Détail d\'un rendez-vous' })
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<RendezVous> {

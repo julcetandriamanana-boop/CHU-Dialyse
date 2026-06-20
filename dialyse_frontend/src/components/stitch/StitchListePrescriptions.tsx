@@ -9,6 +9,7 @@ import {
   fetchPatientsKitStatus,
   fetchKitsEnvoyesPatient,
   fetchPrescriptionsCliniques,
+  fetchRdvNecessitantKit,
   urgenceColors,
   PatientKitStatus,
   KitEnvoye,
@@ -59,7 +60,7 @@ export default function StitchListePrescriptions() {
   const [prescCliniques, setPrescCliniques] = useState<PrescriptionClinique[]>([]);
   const [detailsKits, setDetailsKits]       = useState<Record<number, KitEnvoye[]>>({});
   const [openDetails, setOpenDetails]       = useState<number | null>(null);
-  const [activeTab, setActiveTab]           = useState<'a_traiter' | 'traites'>('a_traiter');
+  const [activeTab, setActiveTab]           = useState<'a_traiter' | 'rdv_kit' | 'traites'>('a_traiter');
   const [now, setNow]                       = useState(Date.now());
 
   // Timer pour actualiser toutes les 10s (suivi du 1 min)
@@ -80,15 +81,13 @@ export default function StitchListePrescriptions() {
         fetch(`${API_URL}/prescriptions/validees?${params}`).then(r => r.json()).catch(() => []),
         fetchPatientsKitStatus(),
         fetchPrescriptionsCliniques(),
-        fetch(`${API_URL}/rendezvous`).then(r => r.json()).catch(() => []),
+        fetchRdvNecessitantKit(),
       ]);
       if (Array.isArray(resPresc)) setPrescriptions(resPresc);
       setKitsStatus(status);
       setPrescCliniques(cliniques);
       if (Array.isArray(rdvData)) {
-        const now = new Date();
-        const futurs = rdvData.filter((r: any) => r.patient && new Date(r.date_heure) >= now && (r.statut === "planifié" || r.statut === "confirmé"));
-        setRdvFuturs(futurs);
+        setRdvFuturs(rdvData);
       }
     } catch (err) { console.error(err); }
     setLoading(false);
@@ -149,16 +148,12 @@ export default function StitchListePrescriptions() {
     })
     .sort((a, b) => new Date(b.derniereDate).getTime() - new Date(a.derniereDate).getTime());
 
-
-
-  // Ajouter patients qui ont un RDV futur mais pas encore dans la liste
+  // Patients qui ont un RDV futur mais pas encore dans la liste de prescriptions
   const patientsAvecRdv = rdvFuturs.reduce((acc: PatientGroupe[], rdv: any) => {
     const patientId = rdv.patient?.id;
     if (!patientId) return acc;
-    // Verifier si le patient est deja dans patientsGroupes
     const dejaPresent = patientsGroupes.find(g => g.patient.id === patientId);
     if (dejaPresent) return acc;
-    // Verifier si deja ajoute dans acc
     const dejaAcc = acc.find(g => g.patient.id === patientId);
     if (dejaAcc) return acc;
     acc.push({
@@ -180,40 +175,47 @@ export default function StitchListePrescriptions() {
   // Combiner prescriptions + RDV
   const patientsCombines = [...patientsGroupes, ...patientsAvecRdv];
 
-  // Séparer patients: à traiter vs traités aujourd'hui (logique 1 min + journée Madagascar)
   const today = todayMadagascar();
 
+  // Onglet 1 — Prescriptions reçues : nouvelles prescriptions cliniques, pas encore de kit aujourd'hui
   const patientsATraiter = patientsCombines.filter(g => {
     const kit = kitsStatus[g.patient.id];
-    if (!kit || !kit.dernier) return true; // Pas de kit = à traiter
-
+    // Doit avoir au moins une prescription clinique (venant d'un service)
+    if (g.prescriptions.length === 0) return false;
+    if (!kit || !kit.dernier) return true;
     const kitDate = toInputDate(kit.dernier);
     const elapsed = now - new Date(kit.dernier).getTime();
-
-    // Si kit d'un autre jour → ne compte pas comme "traité aujourd'hui"
     if (kitDate !== today) return true;
-
-    // Kit envoyé aujourd'hui mais il y a moins d'1 min → encore visible dans "À traiter"
     return elapsed < DELAI_DISPARITION_MS;
   });
 
+  // Onglet 2 — RDV nécessitant un kit : patients avec RDV futur (suivi ou nouveau) sans kit envoyé aujourd'hui
+  const patientsRdvKit = patientsCombines.filter(g => {
+    const hasRdv = rdvFuturs.some((r: any) => r.patient?.id === g.patient.id);
+    if (!hasRdv) return false;
+    const kit = kitsStatus[g.patient.id];
+    if (!kit || !kit.dernier) return true;
+    const kitDate = toInputDate(kit.dernier);
+    const elapsed = now - new Date(kit.dernier).getTime();
+    if (kitDate !== today) return true;
+    return elapsed < DELAI_DISPARITION_MS;
+  });
+
+  // Onglet 3 — Prescriptions kit effectuées : kit envoyé aujourd'hui depuis plus d'1 minute
   const patientsTraites = patientsCombines.filter(g => {
     const kit = kitsStatus[g.patient.id];
     if (!kit || !kit.dernier) return false;
-
     const kitDate = toInputDate(kit.dernier);
     const elapsed = now - new Date(kit.dernier).getTime();
-
-    // Doit être aujourd'hui uniquement
     if (kitDate !== today) return false;
-
-    // Après 1 minute → passe dans "Traités aujourd'hui"
     return elapsed >= DELAI_DISPARITION_MS;
   });
 
-  const listeAffichee = activeTab === "a_traiter" ? patientsATraiter : patientsTraites;
+  const listeAffichee =
+    activeTab === 'a_traiter' ? patientsATraiter :
+    activeTab === 'rdv_kit'   ? patientsRdvKit :
+    patientsTraites;
 
-  // Cartes cohérentes avec la logique de la journée
   const totalPatients = patientsATraiter.length + patientsTraites.length;
   const totalPrescriptions = [...patientsATraiter, ...patientsTraites]
     .reduce((acc, g) => acc + (g.prescriptions?.length || 0), 0);
@@ -223,13 +225,11 @@ export default function StitchListePrescriptions() {
 
   // Trouve la prescription clinique pour un patient (via numero_dossier)
   const findPrescriptionClinique = (numeroDossier?: string, externalId?: string): PrescriptionClinique | null => {
-    // Matcher par external_patient_id OU par numero_dossier
     let matchs = prescCliniques.filter(p =>
       (externalId && p.patientId === externalId) ||
       (numeroDossier && p.patientId === numeroDossier)
     );
     if (matchs.length === 0) return null;
-    // Retourner la plus récente
     return matchs.sort((a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )[0];
@@ -238,6 +238,24 @@ export default function StitchListePrescriptions() {
   const formatDateEnvoi = (d: string) => {
     const date = new Date(d);
     return `${formatDate(date)} à ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+  };
+
+  const emptyMessages: Record<string, { icon: string; title: string; subtitle: string }> = {
+    a_traiter: {
+      icon: 'inbox',
+      title: 'Aucune prescription reçue',
+      subtitle: 'Les nouvelles prescriptions des services cliniques apparaîtront ici.',
+    },
+    rdv_kit: {
+      icon: 'event_available',
+      title: 'Aucun RDV nécessitant un kit',
+      subtitle: 'Les rendez-vous de dialyse nécessitant une prescription de kit apparaîtront ici.',
+    },
+    traites: {
+      icon: 'check_circle',
+      title: 'Aucune prescription kit effectuée aujourd\'hui',
+      subtitle: 'Les kits envoyés aujourd\'hui apparaîtront ici après confirmation.',
+    },
   };
 
   return (
@@ -334,36 +352,73 @@ export default function StitchListePrescriptions() {
           </div>
         </motion.div>
 
-
-        {/* Onglets A traiter / Traites */}
+        {/* Onglets — 3 tabs */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex items-center gap-2 mb-4"
+          className="flex items-center gap-2 mb-4 flex-wrap"
         >
+          {/* Onglet 1 — Prescriptions reçues */}
           <button
-            onClick={() => setActiveTab("a_traiter")}
+            onClick={() => setActiveTab('a_traiter')}
             className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer flex items-center gap-2 ${
-              activeTab === "a_traiter"
-                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-200"
-                : "bg-white border-2 border-slate-200 text-slate-600 hover:border-blue-300"
+              activeTab === 'a_traiter'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-200'
+                : 'bg-white border-2 border-slate-200 text-slate-600 hover:border-blue-300'
             }`}
           >
-            <span className="material-symbols-outlined text-base">pending_actions</span>
-            À traiter ({patientsATraiter.length})
+            <span className="material-symbols-outlined text-base">inbox</span>
+            📥 Prescriptions reçues ({patientsATraiter.length})
           </button>
+
+          {/* Onglet 2 — RDV nécessitant un kit */}
           <button
-            onClick={() => setActiveTab("traites")}
+            onClick={() => setActiveTab('rdv_kit')}
             className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer flex items-center gap-2 ${
-              activeTab === "traites"
-                ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-200"
-                : "bg-white border-2 border-slate-200 text-slate-600 hover:border-emerald-300"
+              activeTab === 'rdv_kit'
+                ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-200'
+                : 'bg-white border-2 border-slate-200 text-slate-600 hover:border-cyan-300'
+            }`}
+          >
+            <span className="material-symbols-outlined text-base">event_available</span>
+            📅 RDV nécessitant un kit ({patientsRdvKit.length})
+          </button>
+
+          {/* Onglet 3 — Prescriptions kit effectuées */}
+          <button
+            onClick={() => setActiveTab('traites')}
+            className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer flex items-center gap-2 ${
+              activeTab === 'traites'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-200'
+                : 'bg-white border-2 border-slate-200 text-slate-600 hover:border-emerald-300'
             }`}
           >
             <span className="material-symbols-outlined text-base">check_circle</span>
-            Traités aujourd'hui ({patientsTraites.length})
+            ✅ Prescriptions kit effectuées ({patientsTraites.length})
           </button>
         </motion.div>
+
+        {/* Bandeau descriptif de l'onglet actif */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className={`rounded-xl px-4 py-2.5 mb-4 text-xs font-semibold flex items-center gap-2 ${
+              activeTab === 'a_traiter'
+                ? 'bg-blue-50 border border-blue-200 text-blue-700'
+                : activeTab === 'rdv_kit'
+                ? 'bg-cyan-50 border border-cyan-200 text-cyan-700'
+                : 'bg-emerald-50 border border-emerald-200 text-emerald-700'
+            }`}
+          >
+            <span className="material-symbols-outlined text-sm">info</span>
+            {activeTab === 'a_traiter' && 'Affiche toutes les nouvelles prescriptions de dialyse reçues depuis les services cliniques et nécessitant une prise en charge initiale.'}
+            {activeTab === 'rdv_kit' && 'Affiche tous les rendez-vous de dialyse nécessitant une prescription de kit, y compris les patients déjà suivis ayant une nouvelle séance programmée.'}
+            {activeTab === 'traites' && 'Affiche tous les rendez-vous pour lesquels la prescription de kit a déjà été réalisée aujourd\'hui.'}
+          </motion.div>
+        </AnimatePresence>
 
         {/* Liste */}
         {loading ? (
@@ -373,11 +428,11 @@ export default function StitchListePrescriptions() {
           </div>
         ) : listeAffichee.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-12 text-center">
-            <span className="material-symbols-outlined text-5xl text-slate-300 mb-4">inventory_2</span>
-            <h3 className="text-lg font-bold text-slate-500 mb-2">{activeTab === 'a_traiter' ? 'Aucune prescription à traiter' : 'Aucun patient traité aujourd\'hui'}</h3>
-            <p className="text-xs text-slate-400">
-              Les prescriptions validées par le service clinique apparaîtront ici.
-            </p>
+            <span className="material-symbols-outlined text-5xl text-slate-300 mb-4 block">
+              {emptyMessages[activeTab].icon}
+            </span>
+            <h3 className="text-lg font-bold text-slate-500 mb-2">{emptyMessages[activeTab].title}</h3>
+            <p className="text-xs text-slate-400">{emptyMessages[activeTab].subtitle}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -386,11 +441,11 @@ export default function StitchListePrescriptions() {
               const isExpanded     = expandedId === patient.id;
               const isOpenDetails  = openDetails === patient.id;
               const kitInfo        = kitsStatus[patient.id];
-              const clinique     = findPrescriptionClinique(patient.numero_dossier, patient.external_patient_id);
-              const urgColors    = clinique ? urgenceColors(clinique.urgence) : null;
+              const clinique       = findPrescriptionClinique(patient.numero_dossier, patient.external_patient_id);
+              const urgColors      = clinique ? urgenceColors(clinique.urgence) : null;
               const kitEnvoye      = !!kitInfo;
-              const hasRdvFutur  = rdvFuturs.some((r: any) => r.patient?.id === patient.id);
-              const nbPrescs     = pp.length;
+              const hasRdvFutur    = rdvFuturs.some((r: any) => r.patient?.id === patient.id);
+              const nbPrescs       = pp.length;
               const detailsList    = detailsKits[patient.id] || [];
 
               return (
@@ -407,6 +462,8 @@ export default function StitchListePrescriptions() {
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0 shadow-md ${
                       kitEnvoye
                         ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200'
+                        : activeTab === 'rdv_kit'
+                        ? 'bg-gradient-to-br from-cyan-500 to-blue-600 shadow-cyan-200'
                         : 'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-blue-200'
                     }`}>
                       <span className="text-base font-black">
@@ -416,12 +473,16 @@ export default function StitchListePrescriptions() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">
-                          ✓ Validé
-                        </span>
-                        <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
-                          RDV OK
-                        </span>
+                        {pp.length > 0 && (
+                          <span className="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">
+                            ✓ Validé
+                          </span>
+                        )}
+                        {hasRdvFutur && (
+                          <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
+                            RDV OK
+                          </span>
+                        )}
                         {/* Badge urgence clinique */}
                         {clinique && urgColors && (
                           <motion.span
@@ -456,7 +517,7 @@ export default function StitchListePrescriptions() {
                             className="text-[10px] font-black bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full shadow-md shadow-cyan-200 flex items-center gap-1"
                           >
                             <span className="material-symbols-outlined text-[10px]">event_available</span>
-                            NOUVEAU RDV
+                            {pp.length === 0 ? 'SUIVI — RDV PROGRAMMÉ' : 'NOUVEAU RDV'}
                           </motion.span>
                         )}
                         <span className="text-[10px] text-slate-400">#{patient.id}</span>
@@ -465,7 +526,9 @@ export default function StitchListePrescriptions() {
                         {patient.prenom} {patient.nom}
                       </p>
                       <p className="text-[10px] text-slate-400">
-                        {pp.length} prescription(s) · Dernière : {formatDate(derniereDate)}
+                        {pp.length > 0
+                          ? `${pp.length} prescription(s) · Dernière : ${formatDate(derniereDate)}`
+                          : `Patient suivi · Prochain RDV : ${formatDate(derniereDate)}`}
                       </p>
                       {/* Infos cliniques */}
                       {clinique?.alertes && (
@@ -494,24 +557,25 @@ export default function StitchListePrescriptions() {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setExpandedId(isExpanded ? null : patient.id)}
-                        className={`p-2 rounded-xl transition-all cursor-pointer ${
-                          isExpanded
-                            ? 'bg-blue-100 text-blue-600'
-                            : 'bg-slate-100 text-slate-500 hover:bg-blue-50 hover:text-blue-600'
-                        }`}
-                        title="Prescriptions"
-                      >
-                        <span className="material-symbols-outlined text-lg">
-                          {isExpanded ? 'visibility_off' : 'visibility'}
-                        </span>
-                      </motion.button>
+                      {pp.length > 0 && (
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setExpandedId(isExpanded ? null : patient.id)}
+                          className={`p-2 rounded-xl transition-all cursor-pointer ${
+                            isExpanded
+                              ? 'bg-blue-100 text-blue-600'
+                              : 'bg-slate-100 text-slate-500 hover:bg-blue-50 hover:text-blue-600'
+                          }`}
+                          title="Prescriptions"
+                        >
+                          <span className="material-symbols-outlined text-lg">
+                            {isExpanded ? 'visibility_off' : 'visibility'}
+                          </span>
+                        </motion.button>
+                      )}
 
                       {kitEnvoye ? (
-                        // Bouton "Voir Détails" (lecture seule)
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
@@ -524,12 +588,15 @@ export default function StitchListePrescriptions() {
                           Voir Détails
                         </motion.button>
                       ) : (
-                        // Bouton "Prescription Kit"
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => { setModalPatient(patient); setModalRdvId(undefined); }}
-                          className="px-4 py-2 bg-gradient-to-r from-violet-600 to-pink-600 text-white rounded-xl text-[11px] font-black hover:shadow-lg shadow-md shadow-violet-200 transition-all cursor-pointer flex items-center gap-1.5"
+                          className={`px-4 py-2 text-white rounded-xl text-[11px] font-black hover:shadow-lg shadow-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                            activeTab === 'rdv_kit'
+                              ? 'bg-gradient-to-r from-cyan-600 to-blue-600 shadow-cyan-200'
+                              : 'bg-gradient-to-r from-violet-600 to-pink-600 shadow-violet-200'
+                          }`}
                         >
                           <span className="material-symbols-outlined text-sm">prescriptions</span>
                           Prescription Kit
@@ -598,7 +665,7 @@ export default function StitchListePrescriptions() {
 
                   {/* Détails prescriptions */}
                   <AnimatePresence>
-                    {isExpanded && (
+                    {isExpanded && pp.length > 0 && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}

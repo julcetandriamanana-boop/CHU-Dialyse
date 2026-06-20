@@ -366,6 +366,19 @@ export async function fetchPatientsKitStatus(): Promise<Record<number, PatientKi
 }
 
 /**
+ * RDV futurs necessitant une prescription de kit
+ */
+export async function fetchRdvNecessitantKit(): Promise<any[]> {
+  try {
+    const res = await fetch(`${DIALYSE_API}/rendezvous/necessitant-kit`);
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Liste des kits envoyés pour un patient
  */
 export async function fetchKitsEnvoyesPatient(patientId: number): Promise<KitEnvoye[]> {

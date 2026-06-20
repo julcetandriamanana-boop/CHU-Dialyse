@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, MoreThan } from 'typeorm';
 import { RendezVous } from '../entities/rendez-vous.entity';
 import { Prescription } from '../entities/prescription.entity';
 
@@ -29,6 +29,19 @@ export class RendezVousService {
     const end   = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
     const data  = await this.repo.find({
       where: { date_heure: Between(start, end) },
+      relations: ['patient', 'medecin'],
+      order: { date_heure: 'ASC' },
+    });
+    return data.filter((r) => !!r.patient);
+  }
+
+  async findNecessitantKit(): Promise<RendezVous[]> {
+    const now = new Date();
+    const data = await this.repo.find({
+      where: [
+        { date_heure: MoreThan(now), statut: 'planifié',  is_archived: false },
+        { date_heure: MoreThan(now), statut: 'confirmé',  is_archived: false },
+      ],
       relations: ['patient', 'medecin'],
       order: { date_heure: 'ASC' },
     });
