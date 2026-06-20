@@ -8,7 +8,7 @@ import { ArchiveActionDto }              from './dto/archive-action.dto';
 import { ArchiveQueryDto }               from './dto/archive-query.dto';
 
 const MODULES_VALIDES: ModuleArchive[] = [
-  'patients', 'rendezvous', 'prescriptions', 'kits', 'seances', 'soins', 'surveillance', 'demandes-avis',
+  'patients', 'rendezvous', 'prescriptions', 'kits', 'seances', 'soins', 'surveillance',
 ];
 
 @ApiTags('Archives')
